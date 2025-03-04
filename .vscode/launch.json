@@ -11,11 +11,13 @@
       "request": "launch",
       "args": [
         "--extensionDevelopmentPath=${workspaceFolder}/vscode-extension",
-        "--extensionDevelopmentPath=${workspaceFolder}/angular-extension"
+        "--extensionDevelopmentPath=${workspaceFolder}/angular-extension",
+        "--extensionDevelopmentPath=${workspaceFolder}/react-extension"
       ],
       "outFiles": [
         "${workspaceFolder}/vscode-extension/out/**/*.js",
-        "${workspaceFolder}/angular-extension/dist/**/*.js"
+        "${workspaceFolder}/angular-extension/dist/**/*.js",
+        "${workspaceFolder}/react-extension/dist/**/*.js"
       ],
       "preLaunchTask": "${defaultBuildTask}"
     },
@@ -34,6 +36,14 @@
       "preLaunchTask": "npm: test",
       "url": "http://localhost:9876/debug.html",
       "webRoot": "${workspaceFolder}/angular-extension/webview-ui"
+    },
+    {
+      "name": "Start React",
+      "type": "chrome",
+      "request": "launch",
+      "preLaunchTask": "npm: dev",
+      "url": "http://localhost:5173/",
+      "webRoot": "${workspaceFolder}/react-extension/webview-ui"
     }
   ]
 }

@@ -1738,3 +1738,1093 @@ Add `@vscode-elements/elements-lite` as a dependency in the _package.json_ and r
   ```
 
 If you now restart the application, the input fields in the webview of the custom editor will look like native Visual Studio Code components.
+
+## React Webview Implementation
+
+When discussing about which Javascript framework should be used for implementing the webview, there can be several answers. The most prominent are Angular or React as far as I can tell. There are also others like Vue or Svelte, but well, in that area you are never done.
+
+In the following chapter we create a React project that serves as the webview frontend of the Visual Studio Code Extension.
+
+_**Note:**_  
+The following description is based on the [vscode-webview-ui-toolkit-samples Hello World (React + Vite) example](https://github.com/microsoft/vscode-webview-ui-toolkit-samples/tree/main/frameworks/hello-world-react-vite). I reused several parts of the sample code and adapted it where necessary.  
+Also note that I am not an expert in developing React applications. So probably the following sample can be more efficient, but the goal is to help getting started in setting up a Visual Studio Code Extension with a React webview.
+
+- Create a new Visual Studio Code Extension project.
+
+  - Open a **Terminal** and execute the following command
+
+    ```
+    yo code
+    ```
+
+  - Answer the questions of the wizard for example like shown below:
+
+    ```
+    # ? What type of extension do you want to create? New Extension (TypeScript)
+    # ? What's the name of your extension? react-extension
+    # ? What's the identifier of your extension? react-extension
+    # ? What's the description of your extension? LEAVE BLANK
+    # ? Initialize a git repository? N
+    # ? Which bundler to use? unbundled
+    # ? Which package manager to use? npm
+
+    # ? Do you want to open the new folder with Visual Studio Code? Skip
+    ```
+
+- Delete the created _react-extension/.vscode_ folder
+
+  ```
+  rm -rf react-extension/.vscode
+  ```
+
+- Open the _.vscode/launch.json_
+
+  - Add the `extensionDevelopmentPath` to the newly created _react-extension_ to the `args` get both extensions started on launch
+  - Add the path to the build result directory of the newly created _react-extension_ to the `outFiles`
+
+    ```json
+    {
+      "version": "0.2.0",
+      "configurations": [
+        {
+          "name": "Run Extension",
+          "type": "extensionHost",
+          "request": "launch",
+          "args": [
+            "--extensionDevelopmentPath=${workspaceFolder}/vscode-extension",
+            "--extensionDevelopmentPath=${workspaceFolder}/angular-extension",
+            "--extensionDevelopmentPath=${workspaceFolder}/react-extension"
+          ],
+          "outFiles": [
+            "${workspaceFolder}/vscode-extension/out/**/*.js",
+            "${workspaceFolder}/angular-extension/dist/**/*.js",
+            "${workspaceFolder}/react-extension/out/**/*.js"
+          ],
+          "preLaunchTask": "${defaultBuildTask}"
+        }
+      ]
+    }
+    ```
+
+To create a React application you typically use either [CRA](https://create-react-app.dev/) or [Vite](https://vite.dev/guide/).
+I tried to use CRA and came across issue [React Issue 32016](https://github.com/facebook/react/issues/32016).
+There is a statement that "CRA has become somewhat outdated".
+Instead of trying to workaround the issue, I therefore decided to switch to [Vite](https://vite.dev/guide/) directly.
+
+- Create a React App using [Vite](https://vite.dev/guide/)
+
+  - Open a **Terminal**
+  - Switch to the _react-extension_ folder
+  - Execute the following command to create the react application
+
+    ```
+    npm create vite@latest webview-ui
+    ```
+
+    The wizard will ask the following questions. Answer them for example like shown below:
+
+    ```console
+    Need to install the following packages:
+    create-vite@6.1.1
+    Ok to proceed? (y) y
+
+
+    > react-extension@0.0.1 npx
+    > create-vite webview-ui
+
+    ✔ Select a framework: › React
+    ✔ Select a variant: › TypeScript
+    ```
+
+    This command creates a new React project in the Typescript variant in the folder _react-extension/webview-ui_.
+
+  - Switch to the new generated `webview-ui` folder and install the dependencies
+
+    ```
+    cd webview-ui
+    npm install
+    ```
+
+  - Update the _launch.json_
+
+    - Add the following configuration to _.vscode/launch.json_
+
+      ```json
+      {
+        "name": "Start React",
+        "type": "chrome",
+        "request": "launch",
+        "preLaunchTask": "npm: dev",
+        "url": "http://localhost:5173/",
+        "webRoot": "${workspaceFolder}/react-extension/webview-ui"
+      }
+      ```
+
+  - Update the _tasks.json_
+
+    - Add the following configuration to _.vscode/tasks.json_ and add the `cwd` option
+
+      ```json
+      {
+        "type": "npm",
+        "script": "dev",
+        "isBackground": true,
+        "problemMatcher": {
+          "owner": "typescript",
+          "pattern": "$tsc",
+          "background": {
+            "activeOnStart": true,
+            "beginsPattern": {
+              "regexp": "(.*?)"
+            },
+            "endsPattern": {
+              "regexp": "VITE v(.*)  ready in \\d* ms"
+            }
+          }
+        },
+        "options": {
+          "cwd": "${workspaceFolder}/react-extension/webview-ui"
+        }
+      }
+      ```
+
+  - Update the _react-extension/webview-ui/package.json_
+
+    - Change the `name` to `react-webview-ui`
+    - Update the `dev` script to ensure that the server is started on port 5173
+
+      ```json
+      "dev": "vite --port 5173",
+      ```
+
+  To verify that the setup works, you can now either run the task via
+
+- Press _F1_ - _Tasks: Run Task_ - _npm:dev_
+- Run the launch configuration via _Run and Debug_ - Select _Start React_ in the dropdown - _Start Debugging_
+
+This will start the React + Vite + TS application and host it via http://localhost:5173.
+
+### Prepare the React application as webview
+
+In the next steps the two projects need to be configured so the React application can be used as webview in the Visual Studio Code Extension.
+
+- Update _react-extension/tsconfig.json_
+
+  - Change the `outDir` to `./dist`  
+    This might not be really necessary, but having a good naming convention for the folders helps in understanding the structure. The `dist` folder will contain the content that gets distributed in the packaged Visual Studio Code Extension.
+  - Add `DOM` to the `lib` configuration
+  - Configure `exclude` to avoid `node_modules` and `webview-ui` being included in the codebase
+
+    ```json
+    {
+      "compilerOptions": {
+        "module": "Node16",
+        "target": "ES2022",
+        "outDir": "./dist",
+        "lib": ["ES2022", "DOM"],
+        "sourceMap": true,
+        "rootDir": "src",
+        "strict": true
+      },
+      "exclude": ["node_modules", ".vscode-test", "webview-ui"]
+    }
+    ```
+
+- Update _react-extension/package.json_
+  - Change `main` to point to `./dist/extension.js`
+- Update _.vscode/launch.json_
+  - Correct the `outFiles` value to `"${workspaceFolder}/react-extension/dist/**/*.js"`
+- Update _react-extension/.vscodeignore_ to ignore all _webview-ui_ files except the _build_ directory
+
+  ```
+  # Ignore extension configs
+  .vscode/**
+
+  # Ignore test files
+  .vscode-test/**
+  out/test/**
+
+  # Ignore source code
+  src/**
+
+  # Ignore all webview-ui files except the build directory
+  webview-ui/src/**
+  webview-ui/public/**
+  webview-ui/scripts/**
+  webview-ui/index.html
+  webview-ui/README.md
+  webview-ui/package.json
+  webview-ui/package-lock.json
+  webview-ui/node_modules/**
+
+  # Ignore Misc
+  .yarnrc
+  vsc-extension-quickstart.md
+  **/.gitignore
+  **/tsconfig.json
+  **/vite.config.ts
+  **/.eslintrc.json
+  **/*.map
+  **/*.ts
+  ```
+
+- Update the _react-extension/webview-ui/vite.config.ts_
+
+  - Add `build` options to specify the output folder and the `rollupOptions` to disable the filename hashing in the build result and configure a relative base path via `base: ""` as described in [vite.dev - Public Base Path](https://vite.dev/guide/build.html#public-base-path)
+
+    ```typescript
+    import { defineConfig } from "vite";
+    import react from "@vitejs/plugin-react";
+
+    // https://vite.dev/config/
+    export default defineConfig({
+      plugins: [react()],
+      base: "",
+      build: {
+        outDir: "build",
+        rollupOptions: {
+          output: {
+            entryFileNames: `assets/[name].js`,
+            chunkFileNames: `assets/[name].js`,
+            assetFileNames: `assets/[name].[ext]`,
+          },
+        },
+      },
+    });
+    ```
+
+- Delete the file _vite.config.js_ and _vite.config.map.js_ if they exist
+- Update _react-extension/webview-ui/.gitignore_
+  - Add the _build_ folder
+- After we changed the output folder to _build_ in the _vite.config.ts_ you can delete the folder _react-extension/webview-ui/dist_ if it was already created.
+- After we changed the output folder to _dist_ in the _tsconfig.json_ you can delete the folder _react-extension/out_ if it was already created.
+
+Test if the build succeeds
+
+- Open a **Terminal**
+  - Switch to the _react-extension/webview-ui_ folder
+  - Call `npm run build`  
+    This should create the folder _react-extension/webview-ui/build_
+  - Switch to the _react-extension_ folder
+  - Call `npm run compile`  
+    This should create the folder _react-extension/dist_
+
+### Use the React Application as webview
+
+The next step is to use the React Application as a Visual Studio Code Extension WebView.
+For this we need to perform the same steps as described previously in [Implement the Visual Studio Code Extension](#implement-the-visual-studio-code-extension).
+
+- Open the _react-extension/package.json_
+
+  - Replace the `contributes` section with the following snippet:
+
+    ```json
+    "contributes": {
+      "customEditors": [
+        {
+          "viewType": "react-extension.personEditor",
+          "displayName": "React Person Editor",
+          "selector": [
+            {
+              "filenamePattern": "*.person"
+            }
+          ]
+        }
+      ]
+    },
+    ```
+
+- Create a new file _react-extension/src/personEditor.ts_
+
+  - Copy the content from _vscode-extension/src/personEditor.ts_  
+    _**Note:**_  
+    If you have not created that file in the previous vanilla HTML, CSS, Javascript part, follow the steps in [Implement the Visual Studio Code Extension](#implement-the-visual-studio-code-extension)
+  - Change the value of `viewType` to `react-extension.personEditor`
+
+    ```typescript
+    private static readonly viewType = "react-extension.personEditor";
+    ```
+
+  - Optional:  
+    Extend the `webview.options` to restrict the webview to only load resources from _dist_ and _webview-ui/build_ directories
+
+    ```typescript
+    // Setup initial content for the webview
+    webviewPanel.webview.options = {
+      // Enable scripts in the webview
+      enableScripts: true,
+
+      // Restrict the webview to only load resources from the `dist` and `webview-ui/build` directories
+      localResourceRoots: [
+        vscode.Uri.joinPath(this.context.extensionUri, "dist"),
+        vscode.Uri.joinPath(this.context.extensionUri, "webview-ui/build"),
+      ],
+    };
+    ```
+
+  - Change the implementation of `getWebviewHtml()` so that it basically returns the same HTML as in _react-extension/webview-ui/index.html_. But instead of relative URLs to resources like CSS and the Javascript files, special WebView URIs are used. This is necessary so the resources can be correctly resolved inside a webview, which is described in [Loading local content](https://code.visualstudio.com/api/extension-guides/webview#loading-local-content).
+
+    ```typescript
+    /**
+     * Get the static html used for the editor webviews.
+     */
+    private getWebviewHtml(webview: vscode.Webview): string {
+      // The CSS file from the React build output
+      const stylesUri = webview.asWebviewUri(
+        vscode.Uri.joinPath(
+          this.context.extensionUri,
+          "webview-ui",
+          "build",
+          "assets",
+          "index.css"
+        )
+      );
+      // The JS file from the React build output
+      const scriptUri = webview.asWebviewUri(
+        vscode.Uri.joinPath(
+          this.context.extensionUri,
+          "webview-ui",
+          "build",
+          "assets",
+          "index.js"
+        )
+      );
+
+      const nonce = this.getNonce();
+
+      // Tip: Install the es6-string-html VS Code extension to enable code highlighting below
+      return /*html*/ `
+      <!DOCTYPE html>
+      <html lang="en">
+      <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+          <meta
+            http-equiv="Content-Security-Policy"
+            content="default-src 'none'; img-src ${webview.cspSource}; font-src ${webview.cspSource}; style-src ${webview.cspSource}; script-src 'nonce-${nonce}';">
+        <link rel="stylesheet" type="text/css" href="${stylesUri}">
+        <title>Person Editor</title>
+      </head>
+      <body>
+        <div id="root"></div>
+        <script type="module" nonce="${nonce}" src="${scriptUri}"></script>
+      </body>
+      </html>`;
+    }
+    ```
+
+- Change the content of _react-extension/src/extension.ts_
+
+  - Replace the content with the following code
+
+    ```typescript
+    // The module 'vscode' contains the Visual Studio Code extensibility API
+    // Import the module and reference it with the alias vscode in your code below
+    import * as vscode from "vscode";
+    import { PersonEditorProvider } from "./personEditor";
+
+    // This method is called when your extension is activated
+    export function activate(context: vscode.ExtensionContext) {
+      // Register our custom editor provider
+      context.subscriptions.push(PersonEditorProvider.register(context));
+    }
+
+    // This method is called when your extension is deactivated
+    export function deactivate() {}
+    ```
+
+### Script Updates
+
+We now have a React application project as frontend inside a Visual Studio Code Extension project.
+The build and run scripts are not automatically connected.
+For example, if you change code in the React application and then launch the Visual Studio Code Extension, the changes are not automatically reflected.
+This is because the Visual Studio Code Extension is using the build results of the React Application, and not the sources.
+
+To connect the two projects, we need to update the `scripts` section in _react-extension/webview-ui/package.json_ and _react-extension/package.json_
+
+_**Note:**_  
+The `watch` script needs to execute the watch operations in parallel and not sequentially.
+While one solution to this could be the usage of `&` instead of `&&` on a Unix system, a better and OS independent solution is the usage of [`concurrently`](https://www.npmjs.com/package/concurrently).
+
+- Open the file _react-extension/webview-ui/package.json_
+
+  - Add the following watch script, which is needed because the Visual Studio Code Extension consumes the created static site  
+    See [Building for Production](https://vite.dev/guide/build)
+    ```json
+    "watch": "vite build --watch"
+    ```
+
+- Add `concurrently` as a `devDependency` to the _react-extension/package.json_
+
+  - Open a **Terminal**
+  - Switch to the _react-extension_ folder
+  - Execute the following command
+
+    ```
+    npm i -D concurrently
+    ```
+
+- Open _react-extension/package.json_
+
+  - Add `scripts` for the _webview-ui_
+
+    ```json
+    "start:webview": "npm --prefix webview-ui run dev",
+    "build:webview": "npm --prefix webview-ui run build",
+    "watch:webview": "npm --prefix webview-ui run watch",
+    ```
+
+  - Update `vscode:prepublish` to call the `build:webview` script additionally
+
+    ```json
+    "vscode:prepublish": "npm run build:webview && npm run compile",
+    ```
+
+  - Update the `watch` script to call also `watch:webview` by using `concurrently`
+
+    ```json
+    "watch": "concurrently --kill-others \"npm run watch:webview\" \"tsc -watch -p ./\"",
+    ```
+
+To make the updated `watch` script also work when launching the extension, the corresponding task in _.vscode/tasks.json_ needs to be updated like this (notice the `endsPattern`):
+
+If you only want to watch the _react-extension_, update the configuration like this (notice the `endsPattern`). Replace the `npm:watch` script at the top of the _tasks.json_.
+
+```json
+{
+  "type": "npm",
+  "script": "watch",
+  "problemMatcher": {
+    "base": "$tsc-watch",
+    "background": {
+      "activeOnStart": true,
+      "beginsPattern": {
+        "regexp": "(.*?)"
+      },
+      "endsPattern": {
+        "regexp": "built in \\d*ms"
+      }
+    }
+  },
+  "isBackground": true,
+  "presentation": {
+    "reveal": "never"
+  },
+  "group": {
+    "kind": "build",
+    "isDefault": true
+  },
+  "options": {
+    "cwd": "${workspaceFolder}/react-extension"
+  }
+},
+```
+
+If you want to watch the _vscode-extension_, the _angular-extension_ and the _react-extension_ at the same time, update the configuration like this:
+
+```json
+{
+  "label": "Watch Extensions",
+  "group": {
+    "kind": "build",
+    "isDefault": true
+  },
+  "dependsOn": [
+    "VS Code Extension Watch",
+    "Angular Extension Watch",
+    "React Extension Watch"
+  ]
+},
+{
+  "label": "VS Code Extension Watch",
+  "type": "shell",
+  "command": "npm run watch",
+  "problemMatcher": "$tsc-watch",
+  "isBackground": true,
+  "presentation": {
+    "reveal": "never"
+  },
+  "group": {
+    "kind": "build"
+  },
+  "options": {
+    "cwd": "${workspaceFolder}/vscode-extension"
+  }
+},
+{
+  "label": "Angular Extension Watch",
+  "type": "shell",
+  "command": "npm run watch",
+  "problemMatcher": {
+    "base": "$tsc-watch",
+    "background": {
+      "activeOnStart": true,
+      "beginsPattern": {
+        "regexp": "(.*?)"
+      },
+      "endsPattern": {
+        "regexp": "bundle generation complete"
+      }
+    }
+  },
+  "isBackground": true,
+  "presentation": {
+    "reveal": "never"
+  },
+  "group": {
+    "kind": "build"
+  },
+  "options": {
+    "cwd": "${workspaceFolder}/angular-extension"
+  }
+},
+{
+  "label": "React Extension Watch",
+  "type": "shell",
+  "command": "npm run watch",
+  "problemMatcher": {
+    "base": "$tsc-watch",
+    "background": {
+      "activeOnStart": true,
+      "beginsPattern": {
+        "regexp": "(.*?)"
+      },
+      "endsPattern": {
+        "regexp": "built in \\d*ms"
+      }
+    }
+  },
+  "isBackground": true,
+  "presentation": {
+    "reveal": "never"
+  },
+  "group": {
+    "kind": "build",
+  },
+  "options": {
+    "cwd": "${workspaceFolder}/react-extension"
+  }
+},
+```
+
+The above snippet defines a _Compound Task_, makes it the default task that should be executed via _launch.json_ `preLaunchTask` configuration and changes the task types from `npm` to `shell`.
+This change is necessary because otherwise there is a name collision in the _Task auto-detection_.
+
+To verify that it works
+
+- Launch the Visual Studio Code Extension(s)
+  - Open _Run and Debug_
+  - Ensure _Run Extension_ is selected in the dropdown
+  - Click _Start Debugging_ or press _F5_
+- Right click on the file created in the previous example in the _Explorer_
+- Select _Open With..._ - _React Person Editor_
+
+This should open the webview with the content of the React application
+
+- In the Visual Studio Code instance that is used for development, open the file _react-extension/webview-ui/src/App.tsx_
+- Change something in code, e.g. by adding `May the force by with you`, and save the changes
+- Switch to the Visual Studio Code instance launched for testing the extension
+  - Either close and reopen the webview
+  - Reload the webview by pressing F1 - _Developer: Reload Webviews_
+
+You should now see the applied changes.
+
+- In the Visual Studio Code instance that is used for development, open the file _react-extension/src/personEditor.ts_
+- Change for example the webview HTML by adding `<p>Hello World</p>` in the `<body>`.
+- Switch to the Visual Studio Code instance launched for testing the extension
+- Reload the **Extension Development Host** so that it picks up the changes. You have two options to do this:
+  - Click on the debug restart action
+  - Press `Ctrl + R` / `Cmd + R` in the **Extension Development Host** window
+
+You should see the applied changes now. If not reopen the webview and verify that the applied changes are visible.
+
+_**Note:**_  
+Don't forget to remove the modification to the webview HTML, so it does not affect the next steps.
+
+### React Editor Implementation
+
+The next step is to implement a custom editor, just like in the examples before.
+It uses the same principles with regards to communication between extension and webview, and looks quite the same.
+But of course we use React for the UI implementation.
+
+- Add `@types/vscode-webview` as a `devDependency` to the _react-extension/webview-ui_ project
+
+  - Open a **Terminal**
+  - Switch to the folder _react-extension/webview-ui_
+  - Run the following command
+
+    ```
+    npm i -D @types/vscode-webview
+    ```
+
+- Create a new folder _angular-extension/webview-ui/src/utilities_
+- Create a new file _vscode.ts_ in the new folder
+
+  - Add the following code, which is a copy of [vscode-webview-ui-toolkit-samples](https://github.com/microsoft/vscode-webview-ui-toolkit-samples/blob/main/frameworks/hello-world-react-vite/webview-ui/src/utilities/vscode.ts)
+
+    ```typescript
+    import type { WebviewApi } from "vscode-webview";
+
+    /**
+     * A utility wrapper around the acquireVsCodeApi() function, which enables
+     * message passing and state management between the webview and extension
+     * contexts.
+     *
+     * This utility also enables webview code to be run in a web browser-based
+     * dev server by using native web browser features that mock the functionality
+     * enabled by acquireVsCodeApi.
+     */
+    class VSCodeAPIWrapper {
+      private readonly vsCodeApi: WebviewApi<unknown> | undefined;
+
+      constructor() {
+        // Check if the acquireVsCodeApi function exists in the current development
+        // context (i.e. VS Code development window or web browser)
+        if (typeof acquireVsCodeApi === "function") {
+          this.vsCodeApi = acquireVsCodeApi();
+        }
+      }
+
+      /**
+       * Post a message (i.e. send arbitrary data) to the owner of the webview.
+       *
+       * @remarks When running webview code inside a web browser, postMessage will instead
+       * log the given message to the console.
+       *
+       * @param message Abitrary data (must be JSON serializable) to send to the extension context.
+       */
+      public postMessage(message: unknown) {
+        if (this.vsCodeApi) {
+          this.vsCodeApi.postMessage(message);
+        } else {
+          console.log(message);
+        }
+      }
+
+      /**
+       * Get the persistent state stored for this webview.
+       *
+       * @remarks When running webview source code inside a web browser, getState will retrieve state
+       * from local storage (https://developer.mozilla.org/en-US/docs/Web/API/Window/localStorage).
+       *
+       * @return The current state or `undefined` if no state has been set.
+       */
+      public getState(): unknown | undefined {
+        if (this.vsCodeApi) {
+          return this.vsCodeApi.getState();
+        } else {
+          const state = localStorage.getItem("vscodeState");
+          return state ? JSON.parse(state) : undefined;
+        }
+      }
+
+      /**
+       * Set the persistent state stored for this webview.
+       *
+       * @remarks When running webview source code inside a web browser, setState will set the given
+       * state using local storage (https://developer.mozilla.org/en-US/docs/Web/API/Window/localStorage).
+       *
+       * @param newState New persisted state. This must be a JSON serializable object. Can be retrieved
+       * using {@link getState}.
+       *
+       * @return The new state.
+       */
+      public setState<T extends unknown | undefined>(newState: T): T {
+        if (this.vsCodeApi) {
+          return this.vsCodeApi.setState(newState);
+        } else {
+          localStorage.setItem("vscodeState", JSON.stringify(newState));
+          return newState;
+        }
+      }
+    }
+
+    // Exports class singleton to prevent multiple invocations of acquireVsCodeApi.
+    export const vscode = new VSCodeAPIWrapper();
+    ```
+
+  - The `VSCodeAPIWrapper` is used for
+    - Aquiring the VSCode API
+    - Managing the persistent state of the webview
+    - Posting messages from the webview to the extension
+
+- Replace the content of _react-extension/webview-ui/src/App.tsx_ with the following snippet
+
+  ```typescript
+  import { useState } from "react";
+  import { vscode } from "./utilities/vscode";
+  import "./App.css";
+
+  function App() {
+    const [personObject, setPersonObject] = useState(loadState);
+
+    /**
+     * Load the initial state via vscode API or return an empty object as initial state.
+     */
+    function loadState() {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const state = vscode.getState() as any;
+      if (state) {
+        return JSON.parse(state.text);
+      }
+
+      return {
+        firstname: "",
+        lastname: "",
+      };
+    }
+
+    // Handle messages sent from the extension to the webview
+    window.addEventListener("message", (event) => {
+      const message = event.data; // The json data that the extension sent
+      switch (message.type) {
+        case "update": {
+          const text = message.text;
+
+          // Update our webview's content
+          updateContent(text);
+
+          // Then persist state information.
+          // This state is returned in the call to `vscode.getState` below when a webview is reloaded.
+          vscode.setState({ text });
+
+          return;
+        }
+      }
+    });
+
+    /**
+     * Update the data shown in the document in the webview.
+     */
+    function updateContent(text: string) {
+      if (text !== "") {
+        const parsed = JSON.parse(text);
+        setPersonObject({
+          firstname: parsed.firstname,
+          lastname: parsed.lastname,
+        });
+      }
+    }
+
+    /**
+     * Update the document in the extension.
+     */
+    function updateDocument() {
+      vscode.postMessage({
+        type: "updateDocument",
+        text: JSON.stringify(personObject, null, 2),
+      });
+    }
+
+    return (
+      <>
+        <main className="main">
+          <h1>React Person Editor</h1>
+          <div className="content">
+            <div className="person">
+              <div className="row">
+                <label htmlFor="firstname">Firstname:</label>
+                <div className="value">
+                  <input
+                    type="text"
+                    id="firstname"
+                    value={personObject.firstname}
+                    onChange={(event) => {
+                      personObject.firstname = event.target.value;
+                      updateDocument();
+                    }}
+                  />
+                </div>
+              </div>
+              <div className="row">
+                <label htmlFor="lastname">Lastname:</label>
+                <div className="value">
+                  <input
+                    type="text"
+                    id="lastname"
+                    value={personObject.lastname}
+                    onChange={(event) => {
+                      personObject.lastname = event.target.value;
+                      updateDocument();
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </main>
+      </>
+    );
+  }
+
+  export default App;
+  ```
+
+- Update _react-extension/webview-ui/src/index.css_
+  - Delete the whole content of the file
+- Replace the content of _react-extension/webview-ui/src/App.css_ with the following snippet
+
+  ```css
+  label {
+    font-weight: 600;
+    display: block;
+  }
+  ```
+
+- Verify the changes and launch the Visual Studio Code Extension(s)
+  - Open _Run and Debug_
+  - Ensure _Run Extension_ is selected in the dropdown
+  - Click _Start Debugging_ or press _F5_
+- Right click on the file created in the previous example in the _Explorer_
+- Select _Open With..._ - _React Person Editor_
+  - This should open the webview with the two input fields
+
+### Install scripts
+
+Like with the Visual Studio Code Extension project and the Angular project before, add a install script to the _react-extension_ that is called on `postCreateCommand` of the Dev Container. It needs to run `npm install` for the extension and the contained webview-ui project.
+
+- Open the _react-extension/package.json_ and add the following script to the `scripts` section
+
+  ```json
+  "install:all": "npm install && cd webview-ui && npm install",
+  ```
+
+- Open the _package.json_ in the repository root and modify the `install:all` script to also handle the _react-extension_ project
+
+  ```json
+  {
+    "name": "vscode-theia-cookbook",
+    "version": "0.0.0",
+    "private": true,
+    "scripts": {
+      "install:all": "cd vscode-extension && npm install && cd ../angular-extension && npm run install:all && cd ../react-extension && npm run install:all"
+    }
+  }
+  ```
+
+### VSCode Elements Lite
+
+Like the vanilla HTML, CSS, Javascript example in the first section of this tutorial, the UI components do not look like native Visual Studio Code components. To get a more native Visual Studio Code look and feel you would need to spend quite some time to implement this yourself.
+
+To avoid this effort, we can also use the [VSCode Elements](https://vscode-elements.github.io/) component library, or in case of vanilla HTML and CSS, [VSCode Elements Lite](https://vscode-elements.github.io/elements-lite/).
+
+As a first step, we will only use the styling variant by using [VSCode Elements Lite](https://vscode-elements.github.io/elements-lite/).
+
+Add `@vscode-elements/elements-lite` as a dependency in the _package.json_ and reference the CSS files in the webview HTML.
+
+- Open a **Terminal**
+- Switch to the _react-extension/webview-ui_ folder
+- Install `@vscode-elements/elements-lite` as a `dependency`
+
+  ```
+  npm install @vscode-elements/elements-lite
+  ```
+
+- Open the file _react-extension/webview-ui/src/App.tsx_
+
+  - Import the VSCode Elements Lite CSS files
+
+    ```typescript
+    import "../node_modules/@vscode-elements/elements-lite/components/label/label.css";
+    import "../node_modules/@vscode-elements/elements-lite/components/textfield/textfield.css";
+    ```
+
+  - Add `className="vscode-label"` to the `label` tags, and `className="vscode-textfield"` to the `input` fields
+
+    ```typescript
+    return (
+      <>
+        <main className="main">
+          <h1>React Person Editor</h1>
+          <div className="content">
+            <div className="person">
+              <div className="row">
+                <label htmlFor="firstname" className="vscode-label">
+                  Firstname:
+                </label>
+                <div className="value">
+                  <input
+                    type="text"
+                    id="firstname"
+                    className="vscode-textfield"
+                    value={personObject.firstname}
+                    onChange={(event) => {
+                      personObject.firstname = event.target.value;
+                      updateDocument();
+                    }}
+                  />
+                </div>
+              </div>
+              <div className="row">
+                <label htmlFor="lastname" className="vscode-label">
+                  Lastname:
+                </label>
+                <div className="value">
+                  <input
+                    type="text"
+                    id="lastname"
+                    className="vscode-textfield"
+                    value={personObject.lastname}
+                    onChange={(event) => {
+                      personObject.lastname = event.target.value;
+                      updateDocument();
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </main>
+      </>
+    );
+    ```
+
+If you now restart the application, the input fields in the webview of the custom editor will look like native Visual Studio Code components.
+
+### VSCode Elements
+
+If you like to use the Javascript enabled web components, you can use the [VSCode Elements](https://vscode-elements.github.io/) component library.
+In the previous section we only applied the styling approach by using VSCode Elements Lite.
+But since React 19 web components are fully supported, therefore it is easy to use them directly.
+
+Add `@vscode-elements/elements` as a dependency in the _package.json_ and reference the CSS files in the webview HTML.
+
+- Open a **Terminal**
+- Switch to the _react-extension/webview-ui_ folder
+- Install `@vscode-elements/elements` as a `dependency`
+
+  ```
+  npm install @vscode-elements/elements
+  ```
+
+To use custom tag names, you must configure the TypeScript parser to recognize the custom elements.
+This can be done via a TypeScript definition.
+
+- Create the file _react-extension/webview-ui/src/global.d.ts_
+
+  - Add the following content
+
+    ```typescript
+    import { VscodeLabel, VscodeTextfield } from "@vscode-elements/elements";
+
+    type ElementProps<I> = Partial<Omit<I, keyof HTMLElement>>;
+    type CustomEventHandler<E> = (e: E) => void;
+
+    type WebComponentProps<I extends HTMLElement> = React.DetailedHTMLProps<
+      React.HTMLAttributes<I>,
+      I
+    > &
+      ElementProps<I>;
+
+    declare module "react" {
+      namespace JSX {
+        interface IntrinsicElements {
+          "vscode-label": WebComponentProps<VscodeLabel>;
+          "vscode-textfield": WebComponentProps<VscodeTextfield>;
+        }
+      }
+    }
+    ```
+
+    _**Note:**_  
+    A more complete example TypeScript definition can be found in the [VSCode Elements Examples Repository](https://github.com/vscode-elements/examples/blob/react-vite/react-vite/src/global.d.ts).
+
+- Update the file _react-extension/webview-ui/src/App.tsx_
+
+  - Add the imports for `vscode-label` and `vscode-textfield`  
+    If you applied the VSCode Elements Lite CSS files before, replace them with the following imports.
+
+    ```typescript
+    import "@vscode-elements/elements/dist/vscode-label";
+    import "@vscode-elements/elements/dist/vscode-textfield";
+    ```
+
+  - Replace the `label` tag with `vscode-label`, and the `input` tag with `vscode-textfield`
+  - Remove the `className` attributes if you applied the VSCode Elements Lite CSS before.
+  - For `vscode-textfield` replace the `onChange` with `onInput`  
+    _**Note:**_  
+    React chose to make `onChange` behave like `onInput`.
+    The VSCode Elements web component library does not follow this decision.
+    Therefore we need to change `onChange` to `onInput` to achieve the same behavior as before.
+  - In the `onInput` function retrieve the value via `event.currentTarget.value`
+
+    ```typescript
+    return (
+      <>
+        <main className="main">
+          <h1>React Person Editor</h1>
+          <div className="content">
+            <div className="person">
+              <div className="row">
+                <vscode-label htmlFor="firstname">Firstname:</vscode-label>
+                <div className="value">
+                  <vscode-textfield
+                    type="text"
+                    id="firstname"
+                    value={personObject.firstname}
+                    onInput={(event) => {
+                      personObject.firstname = event.currentTarget.value;
+                      updateDocument();
+                    }}
+                  />
+                </div>
+              </div>
+              <div className="row">
+                <vscode-label htmlFor="lastname">Lastname:</vscode-label>
+                <div className="value">
+                  <vscode-textfield
+                    id="lastname"
+                    value={personObject.lastname}
+                    onInput={(event) => {
+                      personObject.lastname = event.currentTarget.value;
+                      updateDocument();
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </main>
+      </>
+    );
+    ```
+
+If you now restart the application, the input fields in the webview of the custom editor will look and behave like native Visual Studio Code components.
+
+## Conclusion
+
+At the end this blog post got again longer than I initially intended.
+And it contains more information than I planned.
+But as I use my blog posts as _my external memory_ I am quite satisfied with the outcome.
+
+To summarize again what the blog post covered:
+
+- Getting started with Visual Studio Code Extension development
+- Creation of a custom Visual Studio Code Editor using Webviews
+- Creating a Webview using
+  - Vanilla HTML, CSS and Javascript
+  - Angular
+  - React
+- Usage of VSCode Elements to get an almost native Visual Studio Code look and feel
+
+If you have any improvements you would like to share, feel free to open an issue in the corresponding Github repository.
+I am happy to learn and to improve this blog post and my external memory.
+
+The sources for this and the following tutorials are located in my [Github repository](https://github.com/fipro78/vscode_theia_cookbook).
+
+I hope you enjoyed this tutorial and I could share some information that I had to gather via various resources.
+
+## Link Collection
+
+- [Tutorial Sources](https://github.com/fipro78/vscode_theia_cookbook)
+- Visual Studio Code Resources
+  - [Webview API](https://code.visualstudio.com/api/extension-guides/webview)
+  - [Webview API Sample](https://github.com/microsoft/vscode-extension-samples/blob/main/webview-sample)
+  - [Custom Editor API](https://code.visualstudio.com/api/extension-guides/custom-editors)
+  - [Custom Editor API Samples](https://github.com/microsoft/vscode-extension-samples/tree/main/custom-editor-sample)
+  - [vscode-webview-ui-toolkit-samples (deprecated)](https://github.com/microsoft/vscode-webview-ui-toolkit-samples/tree/main/frameworks)
+- [angular.dev - Docs](https://angular.dev/overview)
+- [react.dev - Learn React](https://react.dev/learn)
+- [Vite](https://vite.dev/guide/)
+- [VSCode Elements](https://vscode-elements.github.io/)
+- [VSCode Elements Lite](https://vscode-elements.github.io/elements-lite/)

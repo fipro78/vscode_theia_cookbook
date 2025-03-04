@@ -3,6 +3,6 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "install:all": "cd vscode-extension && npm install && cd ../angular-extension && npm run install:all"
+    "install:all": "cd vscode-extension && npm install && cd ../angular-extension && npm run install:all && cd ../react-extension && npm run install:all"
   }
 }
