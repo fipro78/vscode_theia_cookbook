@@ -13,3 +13,6 @@ echo 'fi' >> ~/.bashrc
 echo '' >> ~/.bashrc
 
 source ~/.bashrc
+
+# Install the npm packages
+npm run install:all

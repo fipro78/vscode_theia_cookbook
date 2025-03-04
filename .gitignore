@@ -1,0 +1,17 @@
+# Compiled output
+dist
+out
+tmp
+out-tsc
+
+# Node
+node_modules
+
+# Visual Studio Code
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.history/*
+*.vsix
