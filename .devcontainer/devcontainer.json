@@ -24,7 +24,8 @@
         "ms-azuretools.vscode-docker",
         "spmeesseman.vscode-taskexplorer",
         "yzhang.markdown-all-in-one",
-        "esbenp.prettier-vscode"
+        "esbenp.prettier-vscode",
+        "angular.ng-template"
       ]
     }
   },
