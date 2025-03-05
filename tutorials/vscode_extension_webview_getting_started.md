@@ -1732,16 +1732,14 @@ Like with the Visual Studio Code Extension project before, add a install script 
   }
   ```
 
-### VSCode Elements / VSCode Elements Lite
+### VSCode Elements Lite
 
-Like the vanilla HTML, CSS, Javascript example in the first section of this tutorial, the UI components do not look like native Visual Studio Code components. To get a more native Visual Studio Code look and feel you would need to spend quite some time to implement this yourself.
+Like the vanilla HTML, CSS, Javascript example in the first section of this tutorial, the UI components do not look like native Visual Studio Code components.
+To get a more native Visual Studio Code look and feel you would need to spend quite some time to implement this yourself.
 
-An alterative to implementing this yourself is to use [VSCode Elements](https://vscode-elements.github.io/) or [VSCode Elements Lite](https://vscode-elements.github.io/elements-lite/). Unfortunately the implementation of [VSCode Elements](https://vscode-elements.github.io/) is based on the [Lit](https://lit.dev/) library. And using Lit Webcomponents with Angular is not a trivial task.
+An alterative to implementing this yourself is to use [VSCode Elements](https://vscode-elements.github.io/) or [VSCode Elements Lite](https://vscode-elements.github.io/elements-lite/).
 
-_**Note:**_  
-Searching the web there are approaches that should make it work, by implementing a [ControlValueAccessor](https://angular.dev/api/forms/ControlValueAccessor) as a [Directive](https://angular.dev/guide/directives/directive-composition-api). This is for example explained somehow in [Master Web Component Forms Integration](https://www.thinktecture.com/en/web-components/web-component-forms-integration-with-lit-and-angular/). Unfortunately I was not able to get this working with VSCode Elements, as the change events were not handled. Somehow it should be possible, but I was missing something. If you have any idea how to make it work, please let me know.
-
-Although I was not able to get VSCode Elements working with an Angular webview, it is possible to at least add the styling by using [VSCode Elements Lite](https://vscode-elements.github.io/elements-lite/).
+First let's use the styling variant by using [VSCode Elements Lite](https://vscode-elements.github.io/elements-lite/).
 
 Add `@vscode-elements/elements-lite` as a dependency in the _package.json_ and reference the CSS files in the webview HTML.
 
@@ -1754,7 +1752,41 @@ Add `@vscode-elements/elements-lite` as a dependency in the _package.json_ and r
   ```
 
 - Open the file _angular-extension/webview-ui/src/app/app.component.html_
+
   - Add `class="vscode-label"` to the `label` tags, and `class="vscode-textfield"` to the `input` fields
+
+    ```html
+    <main class="main">
+      <h1>Angular Person Editor</h1>
+      <div class="content">
+        <div class="person">
+          <div class="row">
+            <label for="firstname" class="vscode-label">Firstname:</label>
+            <div class="value">
+              <input
+                type="text"
+                class="vscode-textfield"
+                [formControl]="firstname"
+                (input)="updateDocument()"
+              />
+            </div>
+          </div>
+          <div class="row">
+            <label for="lastname" class="vscode-label">Lastname:</label>
+            <div class="value">
+              <input
+                type="text"
+                class="vscode-textfield"
+                [formControl]="lastname"
+                (input)="updateDocument()"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+    ```
+
 - Open the file _angular-extension/webview-ui/angular.json_
 
   - Add the VSCode Elements Lite CSS files to the `architect/build/options/styles`
@@ -1768,6 +1800,163 @@ Add `@vscode-elements/elements-lite` as a dependency in the _package.json_ and r
     ```
 
 If you now restart the application, the input fields in the webview of the custom editor will look like native Visual Studio Code components.
+
+### VSCode Elements
+
+If you like to use the Javascript enabled web components, you can use the [VSCode Elements](https://vscode-elements.github.io/) component library.
+Unfortunately the implementation of [VSCode Elements](https://vscode-elements.github.io/) is based on the [Lit](https://lit.dev/) library.
+And using Lit Webcomponents with Angular requires some more work.
+
+Add `@vscode-elements/elements` as a dependency in the _package.json_ and reference the CSS files in the webview HTML.
+
+- Open a **Terminal**
+- Switch to the _vscode-extension_ folder
+- Install `@vscode-elements/elements` as a `dependency`
+
+  ```
+  npm install @vscode-elements/elements
+  ```
+
+To be able to use Lit Webcomponents in an Angular application, you need to implement a [ControlValueAccessor](https://angular.dev/api/forms/ControlValueAccessor) as a [Directive](https://angular.dev/guide/directives/directive-composition-api).
+
+- Create a new file _angular-extension/webview-ui/src/app/vscode-textfield-input.directive.ts_
+
+  - Implement `ControlValueAccessor` with the name `VscodeTextfieldInputDirective`
+  - Specify a `Directive` with the selector for the `vscode-textfield` HTML tag
+  - Add listener for _change_ and _input_ events
+
+  ```typescript
+  import {
+    Directive,
+    ElementRef,
+    forwardRef,
+    HostListener,
+    Provider,
+  } from "@angular/core";
+  import { ControlValueAccessor, NG_VALUE_ACCESSOR } from "@angular/forms";
+
+  const VSCODE_TEXTFIELD_INPUT_VALUE_ACCESSOR: Provider = {
+    provide: NG_VALUE_ACCESSOR,
+    useExisting: forwardRef(() => VscodeTextfieldInputDirective),
+    multi: true,
+  };
+
+  @Directive({
+    selector: "vscode-textfield",
+    providers: [VSCODE_TEXTFIELD_INPUT_VALUE_ACCESSOR],
+  })
+  export class VscodeTextfieldInputDirective implements ControlValueAccessor {
+    val = "";
+    onChange: any = () => {};
+    onTouched: any = () => {};
+
+    get value() {
+      return this.val;
+    }
+
+    set value(value: any) {
+      if (!value || value === this.val) return;
+      this.val = value;
+      this.elRef.nativeElement.value = this.value;
+
+      this.onChange(this.val);
+      this.onTouched();
+    }
+
+    constructor(private elRef: ElementRef) {}
+
+    registerOnChange(fn: any): void {
+      this.onChange = fn;
+    }
+
+    registerOnTouched(fn: any): void {
+      this.onTouched = fn;
+    }
+
+    writeValue(value: string): void {
+      this.val = value;
+      this.elRef.nativeElement.value = value;
+    }
+
+    @HostListener("change", ["$event"])
+    onHostChange(event: Event) {
+      this.value = this.elRef.nativeElement.value;
+    }
+
+    @HostListener("input", ["$event"])
+    onHostInput(event: Event) {
+      this.value = this.elRef.nativeElement.value;
+    }
+  }
+  ```
+
+- Open the file _angular-extension/webview-ui/src/app/app.component.ts_
+
+  - Import the VSCode Elements webcomponents
+  - Import the `ControlValueAccessor`
+  - Add the `CUSTOM_ELEMENTS_SCHEMA`
+
+  ```typescript
+  import { Component, CUSTOM_ELEMENTS_SCHEMA, HostListener } from '@angular/core';
+  import { FormControl, ReactiveFormsModule } from '@angular/forms';
+  import { vscode } from './utilities/vscode';
+  import { VscodeTextfieldInputDirective } from './vscode-textfield-input.directive';
+  import '../../node_modules/@vscode-elements/elements/dist/vscode-label';
+  import '../../node_modules/@vscode-elements/elements/dist/vscode-textfield';
+
+  @Component({
+    selector: 'app-root',
+    imports: [ReactiveFormsModule, VscodeTextfieldInputDirective],
+    templateUrl: './app.component.html',
+    styleUrl: './app.component.css',
+    schemas: [CUSTOM_ELEMENTS_SCHEMA],
+  })
+  export class AppComponent {
+  ```
+
+- Open the file _angular-extension/webview-ui/src/app/app.component.html_
+
+  - Replace the `label` tag with `vscode-label`, and the `input` tag with `vscode-textfield`
+  - Remove the `className` attributes if you applied the VSCode Elements Lite CSS before.
+
+  ```html
+  <main class="main">
+    <h1>Angular Person Editor</h1>
+    <div class="content">
+      <div class="person">
+        <div class="row">
+          <vscode-label for="firstname">Firstname:</vscode-label>
+          <div class="value">
+            <vscode-textfield
+              type="text"
+              [formControl]="firstname"
+              (input)="updateDocument()"
+            />
+          </div>
+        </div>
+        <div class="row">
+          <vscode-label for="lastname">Lastname:</vscode-label>
+          <div class="value">
+            <vscode-textfield
+              type="text"
+              [formControl]="lastname"
+              (input)="updateDocument()"
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+  ```
+
+If you now restart the application, the input fields in the webview of the custom editor will look and behave like native Visual Studio Code components.
+
+Here are some links that helped me finding the above solution:
+
+- [Master Web Component Forms Integration](https://www.thinktecture.com/en/web-components/web-component-forms-integration-with-lit-and-angular/)
+- [Stackoverflow - Use lit-element web component in Angular reactive form](https://stackoverflow.com/a/76307099/2955861)
+- [How to integrate Web Components using Lit in Angular](https://luixaviles.com/2021/10/how-to-integrate-web-components-using-lit-in-angular/)
+- [Angular: custom form components and the ControlValueAccessor](https://www.holisticon.de/en/knowledge-hub/angular-custom-form-components-and-the-controlvalueaccessor)
 
 ## React Webview Implementation
 

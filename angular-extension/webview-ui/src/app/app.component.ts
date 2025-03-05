@@ -1,12 +1,16 @@
-import { Component, HostListener } from '@angular/core';
+import { Component, CUSTOM_ELEMENTS_SCHEMA, HostListener } from '@angular/core';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { vscode } from './utilities/vscode';
+import { VscodeTextfieldInputDirective } from './vscode-textfield-input.directive';
+import '../../node_modules/@vscode-elements/elements/dist/vscode-label';
+import '../../node_modules/@vscode-elements/elements/dist/vscode-textfield';
 
 @Component({
   selector: 'app-root',
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, VscodeTextfieldInputDirective],
   templateUrl: './app.component.html',
   styleUrl: './app.component.css',
+  schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
 export class AppComponent {
   firstname = new FormControl('');
