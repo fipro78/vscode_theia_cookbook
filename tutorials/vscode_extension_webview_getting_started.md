@@ -1,4 +1,4 @@
-# Visual Studio Code Extension Webview Getting Started
+# Getting Started with Visual Studio Code Extension Development
 
 This tutorial is a _Getting Started_ for developing Visual Studio Code Extensions that contribute a custom editor using a webview. It is intended for developers that are not familiar with Visual Studio Code Extension development and covers the following topics:
 
