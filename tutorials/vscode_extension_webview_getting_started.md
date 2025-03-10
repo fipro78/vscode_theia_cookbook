@@ -36,34 +36,34 @@ Prepare the project to provide a Dev Container for the development:
 - Create a file _devcontainer.json_  
   The simplest form of a _devcontainer.json_ for starting to develop a Visual Studio Code Extension could look like this:
 
-```json
-// For format details, see https://aka.ms/devcontainer.json. For config options, see the
-// README at: https://github.com/devcontainers/templates/tree/main/src/typescript-node
-{
-  "name": "Node.js & TypeScript",
-  // Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
-  "image": "mcr.microsoft.com/devcontainers/typescript-node:1-20-bookworm",
-  "customizations": {
-    "vscode": {
-      "extensions": [
-        "dbaeumer.vscode-eslint",
-        "amodio.tsl-problem-matcher",
-        "ms-vscode.extension-test-runner"
-      ]
-    }
-  },
-  // Features to add to the dev container. More info: https://containers.dev/features.
-  // "features": {},
-  // Use 'forwardPorts' to make a list of ports inside the container available locally.
-  // "forwardPorts": [],
-  // Enable to connect the dev container to the host network, needed in case of WSL with networkingMode=mirrored
-  // "runArgs": ["--network=host"],
-  // Use 'postCreateCommand' to run commands after the container is created.
-  "postCreateCommand": "npm install -g npm yo generator-code @vscode/vsce"
-  // Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
-  // "remoteUser": "root"
-}
-```
+  ```json
+  // For format details, see https://aka.ms/devcontainer.json. For config options, see the
+  // README at: https://github.com/devcontainers/templates/tree/main/src/typescript-node
+  {
+    "name": "Node.js & TypeScript",
+    // Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
+    "image": "mcr.microsoft.com/devcontainers/typescript-node:1-20-bookworm",
+    "customizations": {
+      "vscode": {
+        "extensions": [
+          "dbaeumer.vscode-eslint",
+          "amodio.tsl-problem-matcher",
+          "ms-vscode.extension-test-runner"
+        ]
+      }
+    },
+    // Features to add to the dev container. More info: https://containers.dev/features.
+    // "features": {},
+    // Use 'forwardPorts' to make a list of ports inside the container available locally.
+    // "forwardPorts": [],
+    // Enable to connect the dev container to the host network, needed in case of WSL with networkingMode=mirrored
+    // "runArgs": ["--network=host"],
+    // Use 'postCreateCommand' to run commands after the container is created.
+    "postCreateCommand": "npm install -g npm yo generator-code @vscode/vsce"
+    // Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
+    // "remoteUser": "root"
+  }
+  ```
 
 The above _devcontainer.json_ uses the predefined Dev Container template for Typescript and Node, adds the recommended extensions and installs a new version of `npm`, the code generator for Visual Studio Code Extensions and the Visual Studio Code Extension Manager used for packaging.
 
@@ -189,25 +189,25 @@ To verify that the setup works, open the file _vscode-extension/src/extension.ts
 - Create a _.gitignore_ in the repository root  
   As we did not initialize a git repository by the code generator, there is no _.gitignore_. We therefore need to create one ourselves to ensure that not too much will be added to the repository.
 
-```
-# Compiled output
-dist
-out
-tmp
-out-tsc
+  ```
+  # Compiled output
+  dist
+  out
+  tmp
+  out-tsc
 
-# Node
-node_modules
+  # Node
+  node_modules
 
-# Visual Studio Code
-.vscode/*
-!.vscode/settings.json
-!.vscode/tasks.json
-!.vscode/launch.json
-!.vscode/extensions.json
-.history/*
-*.vsix
-```
+  # Visual Studio Code
+  .vscode/*
+  !.vscode/settings.json
+  !.vscode/tasks.json
+  !.vscode/launch.json
+  !.vscode/extensions.json
+  .history/*
+  *.vsix
+  ```
 
 ### Implement the Visual Studio Code Extension
 
@@ -217,169 +217,171 @@ Instead of showing a message or opening a simple example view, we will create a 
 
   - Replace the `contributes` section with the following snippet:
 
-  ```json
-  "contributes": {
-    "customEditors": [
-      {
-        "viewType": "vscode-extension.personEditor",
-        "displayName": "Visual Studio Code Person Editor",
-        "selector": [
-          {
-            "filenamePattern": "*.person"
-          }
-        ],
-        "priority": "default"
-      }
-    ]
-  },
-  ```
+    ```json
+    "contributes": {
+      "customEditors": [
+        {
+          "viewType": "vscode-extension.personEditor",
+          "displayName": "Visual Studio Code Person Editor",
+          "selector": [
+            {
+              "filenamePattern": "*.person"
+            }
+          ],
+          "priority": "default"
+        }
+      ]
+    },
+    ```
 
 - Create a new file _vscode-extension/src/personEditor.ts_
 
   - Implement `vscode.CustomTextEditorProvider`
 
-  ```typescript
-  import * as vscode from "vscode";
+    ```typescript
+    import * as vscode from "vscode";
 
-  export class PersonEditorProvider implements vscode.CustomTextEditorProvider {
-    private static readonly viewType = "vscode-extension.personEditor";
+    export class PersonEditorProvider
+      implements vscode.CustomTextEditorProvider
+    {
+      private static readonly viewType = "vscode-extension.personEditor";
 
-    constructor(private readonly context: vscode.ExtensionContext) {}
-  }
-  ```
+      constructor(private readonly context: vscode.ExtensionContext) {}
+    }
+    ```
 
   - Add the following `register()` method that is used to register the provider via `vscode.window.registerCustomEditorProvider()`
 
-  ```typescript
-  public static register(context: vscode.ExtensionContext): vscode.Disposable {
-    const provider = new PersonEditorProvider(context);
-    const providerRegistration = vscode.window.registerCustomEditorProvider(
-      PersonEditorProvider.viewType,
-      provider
-    );
-    return providerRegistration;
-  }
-  ```
+    ```typescript
+    public static register(context: vscode.ExtensionContext): vscode.Disposable {
+      const provider = new PersonEditorProvider(context);
+      const providerRegistration = vscode.window.registerCustomEditorProvider(
+        PersonEditorProvider.viewType,
+        provider
+      );
+      return providerRegistration;
+    }
+    ```
 
   - Implement `resolveCustomTextEditor()` that uses a webview
 
-  ```typescript
-  public async resolveCustomTextEditor(
-    document: vscode.TextDocument,
-    webviewPanel: vscode.WebviewPanel,
-    _token: vscode.CancellationToken
-  ): Promise<void> {
-    // Setup initial content for the webview
-    webviewPanel.webview.options = {
-      // Enable scripts in the webview
-      enableScripts: true,
-    };
+    ```typescript
+    public async resolveCustomTextEditor(
+      document: vscode.TextDocument,
+      webviewPanel: vscode.WebviewPanel,
+      _token: vscode.CancellationToken
+    ): Promise<void> {
+      // Setup initial content for the webview
+      webviewPanel.webview.options = {
+        // Enable scripts in the webview
+        enableScripts: true,
+      };
 
-    webviewPanel.webview.html = this.getWebviewHtml(webviewPanel.webview);
+      webviewPanel.webview.html = this.getWebviewHtml(webviewPanel.webview);
 
-    // Hook up event handlers so that we can synchronize the webview with the text document.
-    //
-    // The text document acts as our model, so we have to sync change in the document to our
-    // editor and sync changes in the editor back to the document.
-    //
-    // Remember that a single text document can also be shared between multiple custom
-    // editors (this happens for example when you split a custom editor)
+      // Hook up event handlers so that we can synchronize the webview with the text document.
+      //
+      // The text document acts as our model, so we have to sync change in the document to our
+      // editor and sync changes in the editor back to the document.
+      //
+      // Remember that a single text document can also be shared between multiple custom
+      // editors (this happens for example when you split a custom editor)
 
-    const changeDocumentSubscription = vscode.workspace.onDidChangeTextDocument(
-      (e) => {
-        if (e.document.uri.toString() === document.uri.toString()) {
-          this.updateWebview(webviewPanel, document);
+      const changeDocumentSubscription = vscode.workspace.onDidChangeTextDocument(
+        (e) => {
+          if (e.document.uri.toString() === document.uri.toString()) {
+            this.updateWebview(webviewPanel, document);
+          }
         }
-      }
-    );
+      );
 
-    // Make sure we get rid of the listener when our editor is closed.
-    webviewPanel.onDidDispose(() => {
-      changeDocumentSubscription.dispose();
-    });
+      // Make sure we get rid of the listener when our editor is closed.
+      webviewPanel.onDidDispose(() => {
+        changeDocumentSubscription.dispose();
+      });
 
-    this.updateWebview(webviewPanel, document);
-  }
-  ```
+      this.updateWebview(webviewPanel, document);
+    }
+    ```
 
   - Implement the bidirectional messaging between webview and editor
 
     - Add the following code in `resolveCustomTextEditor()`
 
-    ```typescript
-    // Receive message from the webview.
-    webviewPanel.webview.onDidReceiveMessage((e) => {
-      switch (e.type) {
-        case "updateDocument":
-          this.updateDocument(document, e.text);
-          return;
-      }
-    });
-    ```
+      ```typescript
+      // Receive message from the webview.
+      webviewPanel.webview.onDidReceiveMessage((e) => {
+        switch (e.type) {
+          case "updateDocument":
+            this.updateDocument(document, e.text);
+            return;
+        }
+      });
+      ```
 
     - Add the following methods to the `PersonEditorProvider`
 
-    ```typescript
-    /**
-     * Updates the webview with the content of the current document.
-     * @param webviewPanel The webview panel to post the message to.
-     * @param document The current document.
-     */
-    private updateWebview(
-      webviewPanel: vscode.WebviewPanel,
-      document: vscode.TextDocument
-    ) {
-      // Post message with text of the document to the webview
-      webviewPanel.webview.postMessage({
-        type: "update",
-        text: document.getText(),
-      });
-    }
+      ```typescript
+      /**
+       * Updates the webview with the content of the current document.
+      * @param webviewPanel The webview panel to post the message to.
+      * @param document The current document.
+      */
+      private updateWebview(
+        webviewPanel: vscode.WebviewPanel,
+        document: vscode.TextDocument
+      ) {
+        // Post message with text of the document to the webview
+        webviewPanel.webview.postMessage({
+          type: "update",
+          text: document.getText(),
+        });
+      }
 
-    /**
-     * Applies a set of text edits to a document.
-     * @param document The current document.
-     * @param text The text to set to the document.
-     * @returns A thenable that resolves when the edit could be applied.
-     */
-    private updateDocument(document: vscode.TextDocument, text: string) {
-      const edit = new vscode.WorkspaceEdit();
-      edit.replace(
-        document.uri,
-        new vscode.Range(0, 0, document.lineCount, 0),
-        text
-      );
-      return vscode.workspace.applyEdit(edit);
-    }
+      /**
+       * Applies a set of text edits to a document.
+      * @param document The current document.
+      * @param text The text to set to the document.
+      * @returns A thenable that resolves when the edit could be applied.
+      */
+      private updateDocument(document: vscode.TextDocument, text: string) {
+        const edit = new vscode.WorkspaceEdit();
+        edit.replace(
+          document.uri,
+          new vscode.Range(0, 0, document.lineCount, 0),
+          text
+        );
+        return vscode.workspace.applyEdit(edit);
+      }
 
-    /**
-     * Get the static html used for the editor webviews.
-     */
-    private getWebviewHtml(webview: vscode.Webview): string {
-      // TODO implement
-      return "";
-    }
-    ```
+      /**
+       * Get the static html used for the editor webviews.
+      */
+      private getWebviewHtml(webview: vscode.Webview): string {
+        // TODO implement
+        return "";
+      }
+      ```
 
 - Change _vscode-extension/src/extension.ts_
 
   - Replace the existing example code with the following snippet
 
-  ```typescript
-  // The module 'vscode' contains the Visual Studio Code extensibility API
-  // Import the module and reference it with the alias vscode in your code below
-  import * as vscode from "vscode";
-  import { PersonEditorProvider } from "./personEditor";
+    ```typescript
+    // The module 'vscode' contains the Visual Studio Code extensibility API
+    // Import the module and reference it with the alias vscode in your code below
+    import * as vscode from "vscode";
+    import { PersonEditorProvider } from "./personEditor";
 
-  // This method is called when your extension is activated
-  export function activate(context: vscode.ExtensionContext) {
-    // Register our custom editor provider
-    context.subscriptions.push(PersonEditorProvider.register(context));
-  }
+    // This method is called when your extension is activated
+    export function activate(context: vscode.ExtensionContext) {
+      // Register our custom editor provider
+      context.subscriptions.push(PersonEditorProvider.register(context));
+    }
 
-  // This method is called when your extension is deactivated
-  export function deactivate() {}
-  ```
+    // This method is called when your extension is deactivated
+    export function deactivate() {}
+    ```
 
 ### Implement the webview
 
@@ -387,187 +389,188 @@ _**Note:**_
 The following code is inspired and adapted from [Custom Editor API Samples](https://github.com/microsoft/vscode-extension-samples/tree/main/custom-editor-sample).
 
 - Open the file _vscode-extension/src/personEditor.ts_
+
   - Replace the `getWebviewHtml()` method that was added before
   - Add the `getNonce()` method to `PersonEditorProvider`
 
-```typescript
-/**
- * Get the static html used for the editor webviews.
- */
-private getWebviewHtml(webview: vscode.Webview): string {
-  // Local path to script and css for the webview
-  const stylesUri = webview.asWebviewUri(
-    vscode.Uri.joinPath(this.context.extensionUri, "media", "styles.css")
-  );
-  const scriptUri = webview.asWebviewUri(
-    vscode.Uri.joinPath(this.context.extensionUri, "media", "main.js")
-  );
+    ```typescript
+    /**
+     * Get the static html used for the editor webviews.
+    */
+    private getWebviewHtml(webview: vscode.Webview): string {
+      // Local path to script and css for the webview
+      const stylesUri = webview.asWebviewUri(
+        vscode.Uri.joinPath(this.context.extensionUri, "media", "styles.css")
+      );
+      const scriptUri = webview.asWebviewUri(
+        vscode.Uri.joinPath(this.context.extensionUri, "media", "main.js")
+      );
 
-  const nonce = this.getNonce();
+      const nonce = this.getNonce();
 
-  // Tip: Install the es6-string-html Visual Studio Code extension to enable code highlighting below
-  return /* html */ `
-  <!DOCTYPE html>
-  <html lang="en">
-  <head>
-      <meta charset="UTF-8">
+      // Tip: Install the es6-string-html Visual Studio Code extension to enable code highlighting below
+      return /* html */ `
+      <!DOCTYPE html>
+      <html lang="en">
+      <head>
+          <meta charset="UTF-8">
 
-      <!--
-      Use a content security policy to only allow loading images, styles and fonts from https or from our extension directory,
-      and only allow scripts that have a specific nonce.
-      -->
-      <meta
-        http-equiv="Content-Security-Policy"
-        content="default-src 'none'; img-src ${webview.cspSource}; font-src ${webview.cspSource}; style-src ${webview.cspSource}; script-src 'nonce-${nonce}';">
+          <!--
+          Use a content security policy to only allow loading images, styles and fonts from https or from our extension directory,
+          and only allow scripts that have a specific nonce.
+          -->
+          <meta
+            http-equiv="Content-Security-Policy"
+            content="default-src 'none'; img-src ${webview.cspSource}; font-src ${webview.cspSource}; style-src ${webview.cspSource}; script-src 'nonce-${nonce}';">
 
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-      <link href="${stylesUri}" rel="stylesheet" />
+          <link href="${stylesUri}" rel="stylesheet" />
 
-      <title>Person Editor</title>
-  </head>
-  <body>
-      <h1>Visual Studio Code Person Editor</h1>
-      <div class="person">
-        <div class="row">
-          <label for="firstname">Firstname:</label>
-          <div class="value">
-            <input type="text" id="firstname"/>
+          <title>Person Editor</title>
+      </head>
+      <body>
+          <h1>Visual Studio Code Person Editor</h1>
+          <div class="person">
+            <div class="row">
+              <label for="firstname">Firstname:</label>
+              <div class="value">
+                <input type="text" id="firstname"/>
+              </div>
+            </div>
+            <div class="row">
+              <label for="lastname">Lastname:</label>
+              <div class="value">
+                <input type="text" id="lastname"/>
+              </div>
+            </div>
           </div>
-        </div>
-        <div class="row">
-          <label for="lastname">Lastname:</label>
-          <div class="value">
-            <input type="text" id="lastname"/>
-          </div>
-        </div>
-      </div>
 
-      <script nonce="${nonce}" src="${scriptUri}"></script>
-  </body>
-  </html>`;
-}
+          <script nonce="${nonce}" src="${scriptUri}"></script>
+      </body>
+      </html>`;
+    }
 
-/**
- * A helper function that returns a unique alphanumeric identifier called a nonce.
- *
- * @remarks This function is primarily used to help enforce content security
- * policies for resources/scripts being executed in a webview context.
- *
- * @returns A nonce
- */
-getNonce() {
-  let text = "";
-  const possible =
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-  for (let i = 0; i < 32; i++) {
-    text += possible.charAt(Math.floor(Math.random() * possible.length));
-  }
-  return text;
-}
-```
+    /**
+     * A helper function that returns a unique alphanumeric identifier called a nonce.
+    *
+    * @remarks This function is primarily used to help enforce content security
+    * policies for resources/scripts being executed in a webview context.
+    *
+    * @returns A nonce
+    */
+    getNonce() {
+      let text = "";
+      const possible =
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+      for (let i = 0; i < 32; i++) {
+        text += possible.charAt(Math.floor(Math.random() * possible.length));
+      }
+      return text;
+    }
+    ```
 
 - Create the folder _vscode-extension/media_
 - Create the file _vscode-extension/media/main.js_ with the following content
 
-```javascript
-// Script run within the webview itself.
-(function () {
-  // Get a reference to the Visual Studio Code webview api.
-  // We use this API to post messages back to our extension.
+  ```javascript
+  // Script run within the webview itself.
+  (function () {
+    // Get a reference to the Visual Studio Code webview api.
+    // We use this API to post messages back to our extension.
 
-  const vscode = acquireVsCodeApi();
+    const vscode = acquireVsCodeApi();
 
-  const personContainer = /** @type {HTMLElement} */ (
-    document.querySelector(".person")
-  );
+    const personContainer = /** @type {HTMLElement} */ (
+      document.querySelector(".person")
+    );
 
-  const errorContainer = document.createElement("div");
-  document.body.appendChild(errorContainer);
-  errorContainer.className = "error";
-  errorContainer.style.display = "none";
-
-  /**
-   * Render the document in the webview.
-   */
-  function updateContent(/** @type {string} */ text) {
-    let json;
-    try {
-      if (!text) {
-        text = "{}";
-      }
-      json = JSON.parse(text);
-    } catch {
-      personContainer.style.display = "none";
-      errorContainer.innerText = "Error: Document is not valid json";
-      errorContainer.style.display = "";
-      return;
-    }
-    personContainer.style.display = "";
+    const errorContainer = document.createElement("div");
+    document.body.appendChild(errorContainer);
+    errorContainer.className = "error";
     errorContainer.style.display = "none";
 
-    const firstname = document.getElementById("firstname");
-    const lastname = document.getElementById("lastname");
-
-    if (json.firstname) {
-      firstname.value = json.firstname;
-    }
-    if (json.lastname) {
-      lastname.value = json.lastname;
-    }
-
-    firstname.oninput = () => {
-      json.firstname = firstname.value;
-      vscode.postMessage({
-        type: "updateDocument",
-        text: JSON.stringify(json, null, 2),
-      });
-    };
-
-    lastname.oninput = () => {
-      json.lastname = lastname.value;
-      vscode.postMessage({
-        type: "updateDocument",
-        text: JSON.stringify(json, null, 2),
-      });
-    };
-  }
-
-  // Handle messages sent from the extension to the webview
-  window.addEventListener("message", (event) => {
-    const message = event.data; // The json data that the extension sent
-    switch (message.type) {
-      case "update":
-        const text = message.text;
-
-        // Update our webview's content
-        updateContent(text);
-
-        // Then persist state information.
-        // This state is returned in the call to `vscode.getState` below when a webview is reloaded.
-        vscode.setState({ text });
-
+    /**
+     * Render the document in the webview.
+     */
+    function updateContent(/** @type {string} */ text) {
+      let json;
+      try {
+        if (!text) {
+          text = "{}";
+        }
+        json = JSON.parse(text);
+      } catch {
+        personContainer.style.display = "none";
+        errorContainer.innerText = "Error: Document is not valid json";
+        errorContainer.style.display = "";
         return;
-    }
-  });
+      }
+      personContainer.style.display = "";
+      errorContainer.style.display = "none";
 
-  // Webviews are normally torn down when not visible and re-created when they become visible again.
-  // State lets us save information across these re-loads
-  const state = vscode.getState();
-  if (state) {
-    updateContent(state.text);
-  }
-})();
-```
+      const firstname = document.getElementById("firstname");
+      const lastname = document.getElementById("lastname");
+
+      if (json.firstname) {
+        firstname.value = json.firstname;
+      }
+      if (json.lastname) {
+        lastname.value = json.lastname;
+      }
+
+      firstname.oninput = () => {
+        json.firstname = firstname.value;
+        vscode.postMessage({
+          type: "updateDocument",
+          text: JSON.stringify(json, null, 2),
+        });
+      };
+
+      lastname.oninput = () => {
+        json.lastname = lastname.value;
+        vscode.postMessage({
+          type: "updateDocument",
+          text: JSON.stringify(json, null, 2),
+        });
+      };
+    }
+
+    // Handle messages sent from the extension to the webview
+    window.addEventListener("message", (event) => {
+      const message = event.data; // The json data that the extension sent
+      switch (message.type) {
+        case "update":
+          const text = message.text;
+
+          // Update our webview's content
+          updateContent(text);
+
+          // Then persist state information.
+          // This state is returned in the call to `vscode.getState` below when a webview is reloaded.
+          vscode.setState({ text });
+
+          return;
+      }
+    });
+
+    // Webviews are normally torn down when not visible and re-created when they become visible again.
+    // State lets us save information across these re-loads
+    const state = vscode.getState();
+    if (state) {
+      updateContent(state.text);
+    }
+  })();
+  ```
 
 - Create the file _vscode-extension/media/styles.css_ with the following content
 
-```css
-label {
-  font-weight: 600;
-  display: block;
-}
-```
+  ```css
+  label {
+    font-weight: 600;
+    display: block;
+  }
+  ```
 
 If everything is correctly in place, you can verify the editor by
 
@@ -599,16 +602,16 @@ This can be also automated via scripts and a Dev Container configuration.
 
 - Create a _package.json_ in the repository root
 
-```json
-{
-  "name": "vscode-theia-cookbook",
-  "version": "0.0.0",
-  "private": true,
-  "scripts": {
-    "install:all": "cd vscode-extension && npm install"
+  ```json
+  {
+    "name": "vscode-theia-cookbook",
+    "version": "0.0.0",
+    "private": true,
+    "scripts": {
+      "install:all": "cd vscode-extension && npm install"
+    }
   }
-}
-```
+  ```
 
 - Execute the script on `postCreateCommand`
 
@@ -880,9 +883,11 @@ Also note that I am not an expert in developing Angular applications. So probabl
     ```
 
 - Delete the created _angular-extension/.vscode_ folder
+
   ```
   rm -rf angular-extension/.vscode
   ```
+
 - Open the _.vscode/launch.json_
 
   - Add the `extensionDevelopmentPath` to the newly created _angular-extension_ to the `args` get both extensions started on launch
@@ -1035,24 +1040,27 @@ This will start the ng application and host it via http://localhost:4200.
 In the next steps the two projects need to be configured so the NG application can be used as webview in the Visual Studio Code Extension.
 
 - Update _angular-extension/tsconfig.json_
+
   - Change the `outDir` to `./dist`  
     This might not be really necessary, but having a good naming convention for the folders helps in understanding the structure. The `dist` folder will contain the content that gets distributed in the packaged Visual Studio Code Extension.
   - Add `DOM` to the `lib` configuration
   - Configure `exclude` to avoid `node_modules` and `webview-ui` being included in the codebase
-  ```json
-  {
-    "compilerOptions": {
-      "module": "Node16",
-      "target": "ES2022",
-      "outDir": "./dist",
-      "lib": ["ES2022", "DOM"],
-      "sourceMap": true,
-      "rootDir": "src",
-      "strict": true
-    },
-    "exclude": ["node_modules", "webview-ui"]
-  }
-  ```
+
+    ```json
+    {
+      "compilerOptions": {
+        "module": "Node16",
+        "target": "ES2022",
+        "outDir": "./dist",
+        "lib": ["ES2022", "DOM"],
+        "sourceMap": true,
+        "rootDir": "src",
+        "strict": true
+      },
+      "exclude": ["node_modules", "webview-ui"]
+    }
+    ```
+
 - Update _angular-extension/package.json_
   - Change `main` to point to `./dist/extension.js`
 - Update _.vscode/launch.json_
@@ -1088,15 +1096,20 @@ In the next steps the two projects need to be configured so the NG application c
   ```
 
 - Update _angular-extension/webview-ui/tsconfig.json_
+
   - Add the following configurations in the `compilerOptions`
+
     ```json
     "baseUrl": "./",
     "lib": ["ES2022", "dom"],
     "sourceMap": true,
     "declaration": false
     ```
+
 - Update _angular-extension/webview-ui/angular.json_
+
   - Set the `schematics` to the following
+
     ```json
     "schematics": {
       "@schematics/angular:application": {
@@ -1104,7 +1117,9 @@ In the next steps the two projects need to be configured so the NG application c
       }
     },
     ```
+
   - Change the `builder` from `application` to `browser-esbuild`
+
     ```json
     "builder": "@angular-devkit/build-angular:browser-esbuild",
     "options": {
@@ -1123,10 +1138,13 @@ In the next steps the two projects need to be configured so the NG application c
       "scripts": []
     },
     ```
+
   - Ensure that the `outputHashing` is set to `none` for the `production` and the `development` configuration, otherwise resources can not be referenced in the webview correctly.
+
     ```json
     "outputHashing": "none"
     ```
+
 - Update _angular-extension/webview-ui/.gitignore_
   - Add the _/build_ folder
 - After we changed the output folder to _dist_ you can delete the folder _angular-extension/out_ if it was already created.
@@ -1307,24 +1325,33 @@ The `watch` script needs to execute the watch operations in parallel and not seq
 While one solution to this could be the usage of `&` instead of `&&` on a Unix system, a better and OS independent solution is the usage of [`concurrently`](https://www.npmjs.com/package/concurrently).
 
 - Add `concurrently` as a `devDependency` to the _angular-extension/package.json_
+
   - Open a **Terminal**
   - Switch to the _angular-extension_ folder
   - Execute the following command
+
     ```
     npm i -D concurrently
     ```
+
 - Open _angular-extension/package.json_
+
   - Add `scripts` for the _webview-ui_
+
     ```json
     "start:webview": "npm --prefix webview-ui run start",
     "build:webview": "npm --prefix webview-ui run build",
     "watch:webview": "npm --prefix webview-ui run watch",
     ```
+
   - Update `vscode:prepublish` to call the `build:webview` script additionally
+
     ```json
     "vscode:prepublish": "npm run build:webview && npm run compile",
     ```
+
   - Update the `watch` script to call also `watch:webview` by using `concurrently`
+
     ```json
     "watch": "concurrently --kill-others \"npm run watch:webview\" \"tsc -watch -p ./\"",
     ```
@@ -1460,12 +1487,15 @@ It uses the same principles with regards to communication between extension and 
 But of course we use Angular for the UI implementation, in this case [Reactive forms](https://angular.dev/guide/forms/reactive-forms) for the implementation.
 
 - Add `@types/vscode-webview` as a `devDependency` to the _angular-extension/webview-ui_ project
+
   - Open a **Terminal**
   - Switch to the folder _angular-extension/webview-ui_
   - Run the following command
+
     ```
     npm i -D @types/vscode-webview
     ```
+
 - Create a new folder _angular-extension/webview-ui/src/app/utilities_
 - Create a new file _vscode.ts_ in the new folder
 
@@ -1729,13 +1759,13 @@ Add `@vscode-elements/elements-lite` as a dependency in the _package.json_ and r
 
   - Add the VSCode Elements Lite CSS files to the `architect/build/options/styles`
 
-  ```json
-  "styles": [
-    "src/styles.css",
-    "node_modules/@vscode-elements/elements-lite/components/label/label.css",
-    "node_modules/@vscode-elements/elements-lite/components/textfield/textfield.css"
-  ],
-  ```
+    ```json
+    "styles": [
+      "src/styles.css",
+      "node_modules/@vscode-elements/elements-lite/components/label/label.css",
+      "node_modules/@vscode-elements/elements-lite/components/textfield/textfield.css"
+    ],
+    ```
 
 If you now restart the application, the input fields in the webview of the custom editor will look like native Visual Studio Code components.
 
@@ -1808,7 +1838,7 @@ Also note that I am not an expert in developing React applications. So probably 
 
 To create a React application you typically use either [CRA](https://create-react-app.dev/) or [Vite](https://vite.dev/guide/).
 I tried to use CRA and came across issue [React Issue 32016](https://github.com/facebook/react/issues/32016).
-There is a statement that "CRA has become somewhat outdated".
+There is a statement that _"CRA has become somewhat outdated"_.
 Instead of trying to workaround the issue, I therefore decided to switch to [Vite](https://vite.dev/guide/) directly.
 
 - Create a React App using [Vite](https://vite.dev/guide/)
@@ -2150,6 +2180,7 @@ While one solution to this could be the usage of `&` instead of `&&` on a Unix s
 
   - Add the following watch script, which is needed because the Visual Studio Code Extension consumes the created static site  
     See [Building for Production](https://vite.dev/guide/build)
+
     ```json
     "watch": "vite build --watch"
     ```
