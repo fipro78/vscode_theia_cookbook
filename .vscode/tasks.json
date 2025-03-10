@@ -9,7 +9,11 @@
         "kind": "build",
         "isDefault": true
       },
-      "dependsOn": ["VS Code Extension Watch", "Angular Extension Watch"]
+      "dependsOn": [
+        "VS Code Extension Watch",
+        "Angular Extension Watch",
+        "React Extension Watch"
+      ]
     },
     {
       "label": "VS Code Extension Watch",
@@ -55,6 +59,33 @@
       }
     },
     {
+      "label": "React Extension Watch",
+      "type": "shell",
+      "command": "npm run watch",
+      "problemMatcher": {
+        "base": "$tsc-watch",
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": {
+            "regexp": "(.*?)"
+          },
+          "endsPattern": {
+            "regexp": "built in \\d*ms"
+          }
+        }
+      },
+      "isBackground": true,
+      "presentation": {
+        "reveal": "never"
+      },
+      "group": {
+        "kind": "build"
+      },
+      "options": {
+        "cwd": "${workspaceFolder}/react-extension"
+      }
+    },
+    {
       "type": "npm",
       "script": "start",
       "isBackground": true,
@@ -94,6 +125,27 @@
       },
       "options": {
         "cwd": "${workspaceFolder}/angular-extension/webview-ui"
+      }
+    },
+    {
+      "type": "npm",
+      "script": "dev",
+      "isBackground": true,
+      "problemMatcher": {
+        "owner": "typescript",
+        "pattern": "$tsc",
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": {
+            "regexp": "(.*?)"
+          },
+          "endsPattern": {
+            "regexp": "VITE v(.*)  ready in \\d* ms"
+          }
+        }
+      },
+      "options": {
+        "cwd": "${workspaceFolder}/react-extension/webview-ui"
       }
     }
   ]
