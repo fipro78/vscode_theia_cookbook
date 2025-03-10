@@ -1,0 +1,25 @@
+# Ignore extension configs
+.vscode/**
+
+# Ignore test files
+.vscode-test/**
+**/.vscode-test.*
+dist/test/**
+
+# Ignore source code
+src/**
+
+# Ignore all webview-ui files except the build directory
+node_modules/**
+webview-ui/**
+!webview-ui/build/**
+
+# Ignore Misc
+.yarnrc
+vsc-extension-quickstart.md
+**/.gitignore
+**/tsconfig.json
+**/vite.config.ts
+**/.eslintrc.json
+**/*.map
+**/*.ts

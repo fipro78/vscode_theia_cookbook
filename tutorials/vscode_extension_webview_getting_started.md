@@ -827,3 +827,914 @@ Add `@vscode-elements/elements` as a dependency in the _package.json_ and refere
     ```
 
 If you now restart the application, the input fields in the webview of the custom editor will look and behave like native Visual Studio Code components.
+
+## Angular Webview Implementation
+
+The above steps showed how to create a basic Visual Studio Code Extension with vanilla HTML, Javascript and CSS.
+If the user interface is more complicated than two simple input fields, this can become quite complicated.
+In such a case it can be interesting to use a Javascript framework for the implementation of the webview.
+
+In the following chapter we create an Angular project that serves as the webview frontend of the Visual Studio Code Extension.
+
+_**Note:**_  
+The following description is based on the [vscode-webview-ui-toolkit-samples Hello World (Angular) example](https://github.com/microsoft/vscode-webview-ui-toolkit-samples/tree/main/frameworks/hello-world-angular). I reused several parts of the sample code and adapted it where necessary.  
+Also note that I am not an expert in developing Angular applications. So probably the following sample can be more efficient, but the goal is to help getting started in setting up a Visual Studio Code Extension with Angular webview.
+
+- Add the Angular related extensions and configurations to the Dev Container
+
+  - Edit the _.devcontainer/devcontainer.json_ and add the `angular.ng-template` to the `customizations/vscode/extensions`
+  - Edit the `npm install -g` command to additionally install `@angular/cli`  
+    Dependent on your setup, this is either in the `postCreateCommand` of the _devcontainer.json_ or in the _postCreateCommand.sh_ script file.
+  - Optional:  
+    In case you use the _postCreateCommand.sh_ script file, you can also add the following two instructions to load the Angular CLI autocompletion by default
+
+    ```
+    echo '# Load Angular CLI autocompletion.' >> ~/.bashrc
+    echo 'source <(ng completion script)' >> ~/.bashrc
+    ```
+
+  - Edit the _.vscode/extension.json_ and add the `angular.ng-template` to the `recommendations`
+  - Rebuild the Dev Container  
+    Press F1 - _Dev Containers: Rebuild Container_
+
+- Create a new Visual Studio Code Extension project.
+
+  - Open a **Terminal** and execute the following command
+
+    ```
+    yo code
+    ```
+
+  - Answer the questions of the wizard for example like shown below:
+
+    ```
+    # ? What type of extension do you want to create? New Extension (TypeScript)
+    # ? What's the name of your extension? angular-extension
+    # ? What's the identifier of your extension? angular-extension
+    # ? What's the description of your extension? LEAVE BLANK
+    # ? Initialize a git repository? N
+    # ? Which bundler to use? unbundled
+    # ? Which package manager to use? npm
+
+    # ? Do you want to open the new folder with Visual Studio Code? Skip
+    ```
+
+- Delete the created _angular-extension/.vscode_ folder
+  ```
+  rm -rf angular-extension/.vscode
+  ```
+- Open the _.vscode/launch.json_
+
+  - Add the `extensionDevelopmentPath` to the newly created _angular-extension_ to the `args` get both extensions started on launch
+  - Add the path to the build result directory of the newly created _angular-extension_ to the `outFiles`
+
+    ```json
+    {
+      "version": "0.2.0",
+      "configurations": [
+        {
+          "name": "Run Extension",
+          "type": "extensionHost",
+          "request": "launch",
+          "args": [
+            "--extensionDevelopmentPath=${workspaceFolder}/vscode-extension",
+            "--extensionDevelopmentPath=${workspaceFolder}/angular-extension"
+          ],
+          "outFiles": [
+            "${workspaceFolder}/vscode-extension/out/**/*.js",
+            "${workspaceFolder}/angular-extension/out/**/*.js"
+          ],
+          "preLaunchTask": "${defaultBuildTask}"
+        }
+      ]
+    }
+    ```
+
+- Create a new ng application as described in [Create a workspace and initial application](https://angular.dev/tools/cli/setup-local#create-a-workspace-and-initial-application).  
+  It is created inside the Visual Studio Code Extension project folder, as it serves as the implementation of the webview.
+
+  - Open a **Terminal**
+  - Switch to the _angular-extension_ folder
+  - Execute the following command to create the ng application
+
+    ```
+    ng new webview-ui
+    ```
+
+  - Answer the questions of the wizard for example like shown below:
+
+    ```console
+    # ? Would you like to share pseudonymous usage data ... N
+    # ? Which stylesheet format would you like to use? CSS
+    # ? Do you want to enable Server-Side Rendering (SSR) and Static Site Generation (SSG/Prerendering)? N
+    ```
+
+This command creates a new Angular project in the folder _angular-extension/webview-ui_ with Static Site Generation.
+
+Of course this creates much more than we need for our setup. Therefore we need to cleanup as a next step.
+
+- If no git repository is initialized already, it will be done automatically for the _webview-ui_ folder. In that case delete the generated _.git_ folder.
+
+  ```
+  rm -rf webview-ui/.git
+  ```
+
+- Transfer the generated content in _angular-extension/webview-ui/.vscode_ to the files in _.vscode_.
+
+  - _launch.json_  
+    Copy the two configurations to _.vscode/launch.json_ and add the `webRoot` setting
+
+    ```json
+    {
+      "name": "ng serve",
+      "type": "chrome",
+      "request": "launch",
+      "preLaunchTask": "npm: start",
+      "url": "http://localhost:4200/",
+      "webRoot": "${workspaceFolder}/angular-extension/webview-ui"
+    },
+    {
+      "name": "ng test",
+      "type": "chrome",
+      "request": "launch",
+      "preLaunchTask": "npm: test",
+      "url": "http://localhost:9876/debug.html",
+      "webRoot": "${workspaceFolder}/angular-extension/webview-ui"
+    }
+    ```
+
+  - _tasks.json_  
+    Copy the two configurations to _.vscode/tasks.json_ and add the `cwd` option
+
+    ```json
+    {
+      "type": "npm",
+      "script": "start",
+      "isBackground": true,
+      "problemMatcher": {
+        "owner": "typescript",
+        "pattern": "$tsc",
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": {
+            "regexp": "(.*?)"
+          },
+          "endsPattern": {
+            "regexp": "bundle generation complete"
+          }
+        }
+      },
+      "options": {
+        "cwd": "${workspaceFolder}/angular-extension/webview-ui"
+      }
+    },
+    {
+      "type": "npm",
+      "script": "test",
+      "isBackground": true,
+      "problemMatcher": {
+        "owner": "typescript",
+        "pattern": "$tsc",
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": {
+            "regexp": "(.*?)"
+          },
+          "endsPattern": {
+            "regexp": "bundle generation complete"
+          }
+        }
+      },
+      "options": {
+        "cwd": "${workspaceFolder}/angular-extension/webview-ui"
+      }
+    }
+    ```
+
+  - After the configurations are transfered, the generated _.vscode_ folder can be deleted from the _webview-ui_ folder
+
+    ```
+    rm -rf webview-ui/.vscode
+    ```
+
+  - Update the _angular-extension/webview-ui/package.json_
+    - Change the `name` to `angular-webview-ui`
+
+  To verify that the setup works, you can now either run the task via
+
+- Press _F1_ - _Tasks: Run Task_ - _npm:start_
+- Run the launch configuration
+  - Open _Run and Debug_
+  - Select _ng serve_ in the dropdown
+  - Click _Start Debugging_ or press _F5_
+
+This will start the ng application and host it via http://localhost:4200.
+
+## Prepare the NG Application as webview
+
+In the next steps the two projects need to be configured so the NG application can be used as webview in the Visual Studio Code Extension.
+
+- Update _angular-extension/tsconfig.json_
+  - Change the `outDir` to `./dist`  
+    This might not be really necessary, but having a good naming convention for the folders helps in understanding the structure. The `dist` folder will contain the content that gets distributed in the packaged Visual Studio Code Extension.
+  - Add `DOM` to the `lib` configuration
+  - Configure `exclude` to avoid `node_modules` and `webview-ui` being included in the codebase
+  ```json
+  {
+    "compilerOptions": {
+      "module": "Node16",
+      "target": "ES2022",
+      "outDir": "./dist",
+      "lib": ["ES2022", "DOM"],
+      "sourceMap": true,
+      "rootDir": "src",
+      "strict": true
+    },
+    "exclude": ["node_modules", "webview-ui"]
+  }
+  ```
+- Update _angular-extension/package.json_
+  - Change `main` to point to `./dist/extension.js`
+- Update _.vscode/launch.json_
+  - Correct the `outFiles` value to `"${workspaceFolder}/angular-extension/dist/**/*.js"`
+- Update _angular-extension/.vscodeignore_ to ignore all _webview-ui_ files except the build directory
+
+  ```
+  # Ignore extension configs
+  .vscode/**
+
+  # Ignore test files
+  .vscode-test/**
+  **/.vscode-test.*
+  dist/test/**
+
+  # Ignore source code
+  src/**
+
+  # Ignore all webview-ui files except the build directory
+  node_modules/**
+  webview-ui/**
+  !webview-ui/build/**
+
+  # Ignore Misc
+  .yarnrc
+  vsc-extension-quickstart.md
+  **/.gitignore
+  **/tsconfig.json
+  **/vite.config.ts
+  **/.eslintrc.json
+  **/*.map
+  **/*.ts
+  ```
+
+- Update _angular-extension/webview-ui/tsconfig.json_
+  - Add the following configurations in the `compilerOptions`
+    ```json
+    "baseUrl": "./",
+    "lib": ["ES2022", "dom"],
+    "sourceMap": true,
+    "declaration": false
+    ```
+- Update _angular-extension/webview-ui/angular.json_
+  - Set the `schematics` to the following
+    ```json
+    "schematics": {
+      "@schematics/angular:application": {
+        "strict": true
+      }
+    },
+    ```
+  - Change the `builder` from `application` to `browser-esbuild`
+    ```json
+    "builder": "@angular-devkit/build-angular:browser-esbuild",
+    "options": {
+      "outputPath": "build",
+      "index": "src/index.html",
+      "main": "src/main.ts",
+      "polyfills": ["zone.js"],
+      "tsConfig": "tsconfig.app.json",
+      "assets": [
+        {
+          "glob": "**/*",
+          "input": "public"
+        }
+      ],
+      "styles": ["src/styles.css"],
+      "scripts": []
+    },
+    ```
+  - Ensure that the `outputHashing` is set to `none` for the `production` and the `development` configuration, otherwise resources can not be referenced in the webview correctly.
+    ```json
+    "outputHashing": "none"
+    ```
+- Update _angular-extension/webview-ui/.gitignore_
+  - Add the _/build_ folder
+- After we changed the output folder to _dist_ you can delete the folder _angular-extension/out_ if it was already created.
+
+- Remove the `RouterOutlet`  
+  This is necessary to make the usage of assets from third-party modules that are transfered to the _media_ folder work correctly.
+
+  - Update _angular-extension/webview-ui/src/app/app.component.html_
+    - Remove `<router-outlet />` usage (bottom of the file)
+  - Update _angular-extension/webview-ui/src/app/app.component.ts_
+    - Remove the `RouterOutlet` import
+  - Update _angular-extension/webview-ui/src/app/app.config.ts_
+
+    - Remove the router configuration
+
+      ```typescript
+      import {
+        ApplicationConfig,
+        provideZoneChangeDetection,
+      } from "@angular/core";
+
+      export const appConfig: ApplicationConfig = {
+        providers: [provideZoneChangeDetection({ eventCoalescing: true })],
+      };
+      ```
+
+  - Delete _angular-extension/webview-ui/src/app/app.routes.ts_
+
+- Test if the build succeeds
+  - Open a **Terminal**
+  - Switch to the _angular-extension/webview-ui_ folder
+  - Call `ng build`  
+    This should create the folder _angular-extension/webview-ui/build_
+  - Switch to the _angular-extension_ folder
+  - Call `npm run compile`  
+    This should create the folder _angular-extension/dist_.
+
+## Use the NG Application as webview
+
+The next step is to use the NG Application as a Visual Studio Code Extension WebView.
+For this we need to perform the same steps as described previously in [Implement the Visual Studio Code Extension](#implement-the-visual-studio-code-extension).
+
+- Open the _angular-extension/package.json_
+
+  - Replace the `contributes` section with the following snippet:
+
+    ```json
+    "contributes": {
+      "customEditors": [
+        {
+          "viewType": "angular-extension.personEditor",
+          "displayName": "Angular Person Editor",
+          "selector": [
+            {
+              "filenamePattern": "*.person"
+            }
+          ]
+        }
+      ]
+    },
+    ```
+
+- Create a new file _angular-extension/src/personEditor.ts_
+
+  - Copy the content from _vscode-extension/src/personEditor.ts_  
+    _**Note:**_  
+    If you have not created that file in the previous vanilla HTML, CSS, Javascript part, follow the steps in [Implement the Visual Studio Code Extension](#implement-the-visual-studio-code-extension) to create the content of the file.
+  - Change the value of `viewType` to `angular-extension.personEditor`
+
+    ```typescript
+    private static readonly viewType = "angular-extension.personEditor";
+    ```
+
+  - Optional:  
+    Extend the `webview.options` to restrict the webview to only load resources from _dist_ and _webview-ui/build_ directories
+
+    ```typescript
+    // Setup initial content for the webview
+    webviewPanel.webview.options = {
+      // Enable scripts in the webview
+      enableScripts: true,
+
+      // Restrict the webview to only load resources from the `dist` and `webview-ui/build` directories
+      localResourceRoots: [
+        vscode.Uri.joinPath(this.context.extensionUri, "dist"),
+        vscode.Uri.joinPath(this.context.extensionUri, "webview-ui/build"),
+      ],
+    };
+    ```
+
+  - Change the implementation of `getWebviewHtml()` so that it basically returns the same HTML as in _angular-extension/webview-ui/src/index.html_. But instead of relative URLs to resources like CSS and the Javascript files, special WebView URIs are used. This is necessary so the resources can be correctly resolved inside a webview, which is described in [Loading local content](https://code.visualstudio.com/api/extension-guides/webview#loading-local-content).
+
+    ```typescript
+    /**
+     * Get the static html used for the editor webviews.
+     */
+    private getWebviewHtml(webview: vscode.Webview): string {
+      // The CSS file from the Angular build output
+      const stylesUri = webview.asWebviewUri(
+        vscode.Uri.joinPath(
+          this.context.extensionUri,
+          "webview-ui",
+          "build",
+          "styles.css"
+        )
+      );
+      // The JS files from the Angular build output
+      const polyfillsUri = webview.asWebviewUri(
+        vscode.Uri.joinPath(
+          this.context.extensionUri,
+          "webview-ui",
+          "build",
+          "polyfills.js"
+        )
+      );
+      const scriptUri = webview.asWebviewUri(
+        vscode.Uri.joinPath(
+          this.context.extensionUri,
+          "webview-ui",
+          "build",
+          "main.js"
+        )
+      );
+
+      const nonce = this.getNonce();
+
+      // Tip: Install the es6-string-html VS Code extension to enable code highlighting below
+      return /*html*/ `
+          <!DOCTYPE html>
+          <html lang="en">
+          <head>
+              <meta charset="UTF-8" />
+              <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+              <meta
+                  http-equiv="Content-Security-Policy"
+                  content="default-src 'none'; style-src ${webview.cspSource} 'unsafe-inline'; font-src ${webview.cspSource}; img-src ${webview.cspSource}; script-src 'nonce-${nonce}';">
+              <link rel="stylesheet" type="text/css" href="${stylesUri}">
+              <title>Person Editor</title>
+          </head>
+          <body>
+              <app-root></app-root>
+              <script type="module" nonce="${nonce}" src="${polyfillsUri}"></script>
+              <script type="module" nonce="${nonce}" src="${scriptUri}"></script>
+          </body>
+          </html>
+        `;
+    }
+    ```
+
+- Change the content of _angular-extension/src/extension.ts_
+
+  - Replace the content with the following code
+
+    ```typescript
+    // The module 'vscode' contains the Visual Studio Code extensibility API
+    // Import the module and reference it with the alias vscode in your code below
+    import * as vscode from "vscode";
+    import { PersonEditorProvider } from "./personEditor";
+
+    // This method is called when your extension is activated
+    export function activate(context: vscode.ExtensionContext) {
+      // Register our custom editor provider
+      context.subscriptions.push(PersonEditorProvider.register(context));
+    }
+
+    // This method is called when your extension is deactivated
+    export function deactivate() {}
+    ```
+
+## Script Updates
+
+We now have a NG application project inside a Visual Studio Code Extension project. The build and run scripts are not automatically connected. For example, if you change code in the NG application and then launch the Visual Studio Code Extension, the changes are not automatically reflected. This is because the Visual Studio Code Extension is using the build results of the NG Application, and not the sources.
+
+To connect the two projects, we need to update the `scripts` section in _angular-extension/package.json_
+
+_**Note:**_  
+The `watch` script needs to execute the watch operations in parallel and not sequentially.
+While one solution to this could be the usage of `&` instead of `&&` on a Unix system, a better and OS independent solution is the usage of [`concurrently`](https://www.npmjs.com/package/concurrently).
+
+- Add `concurrently` as a `devDependency` to the _angular-extension/package.json_
+  - Open a **Terminal**
+  - Switch to the _angular-extension_ folder
+  - Execute the following command
+    ```
+    npm i -D concurrently
+    ```
+- Open _angular-extension/package.json_
+  - Add `scripts` for the _webview-ui_
+    ```json
+    "start:webview": "npm --prefix webview-ui run start",
+    "build:webview": "npm --prefix webview-ui run build",
+    "watch:webview": "npm --prefix webview-ui run watch",
+    ```
+  - Update `vscode:prepublish` to call the `build:webview` script additionally
+    ```json
+    "vscode:prepublish": "npm run build:webview && npm run compile",
+    ```
+  - Update the `watch` script to call also `watch:webview` by using `concurrently`
+    ```json
+    "watch": "concurrently --kill-others \"npm run watch:webview\" \"tsc -watch -p ./\"",
+    ```
+
+To make the updated `watch` script also work when launching the extension, the corresponding task in _.vscode/tasks.json_ needs to be updated.
+
+If you only want to watch the _angular-extension_, update the configuration like this (notice the `endsPattern`). Replace the `npm:watch` script at the top of the _tasks.json_.
+
+```json
+{
+  "type": "npm",
+  "script": "watch",
+  "problemMatcher": {
+    "base": "$tsc-watch",
+    "background": {
+      "activeOnStart": true,
+      "beginsPattern": {
+        "regexp": "(.*?)"
+      },
+      "endsPattern": {
+        "regexp": "bundle generation complete"
+      }
+    }
+  },
+  "isBackground": true,
+  "presentation": {
+    "reveal": "never"
+  },
+  "group": {
+    "kind": "build",
+    "isDefault": true
+  },
+  "options": {
+    "cwd": "${workspaceFolder}/angular-extension"
+  }
+},
+```
+
+If you want to watch the _vscode-extension_ and the _angular-extension_ at the same time, update the configuration like this:
+
+```json
+{
+  "label": "Watch Extensions",
+  "group": {
+    "kind": "build",
+    "isDefault": true
+  },
+  "dependsOn": ["VS Code Extension Watch", "Angular Extension Watch"]
+},
+{
+  "label": "VS Code Extension Watch",
+  "type": "shell",
+  "command": "npm run watch",
+  "problemMatcher": "$tsc-watch",
+  "isBackground": true,
+  "presentation": {
+    "reveal": "never"
+  },
+  "group": {
+    "kind": "build"
+  },
+  "options": {
+    "cwd": "${workspaceFolder}/vscode-extension"
+  }
+},
+{
+  "label": "Angular Extension Watch",
+  "type": "shell",
+  "command": "npm run watch",
+  "problemMatcher": {
+    "base": "$tsc-watch",
+    "background": {
+      "activeOnStart": true,
+      "beginsPattern": {
+        "regexp": "(.*?)"
+      },
+      "endsPattern": {
+        "regexp": "bundle generation complete"
+      }
+    }
+  },
+  "isBackground": true,
+  "presentation": {
+    "reveal": "never"
+  },
+  "group": {
+    "kind": "build"
+  },
+  "options": {
+    "cwd": "${workspaceFolder}/angular-extension"
+  }
+},
+```
+
+The above snippet defines a _Compound Task_, makes it the default task that should be executed via _launch.json_ `preLaunchTask` configuration and changes the task types from `npm` to `shell`.
+This change is necessary because otherwise there is a name collision in the _Task auto-detection_.
+
+To verify that it works
+
+- Launch the Visual Studio Code Extension(s)
+  - Open _Run and Debug_
+  - Ensure _Run Extension_ is selected in the dropdown
+  - Click _Start Debugging_ or press _F5_
+- Right click on the file created in the previous example in the _Explorer_
+- Select _Open With..._ - _Angular Person Editor_
+
+This should open the webview with the content of the Angular application.
+
+- In the Visual Studio Code instance that is used for development, open the file _angular-extension/webview-ui/src/app/app.component.html_
+- Search for the string `Congratulations`, change the sentence, e.g. by adding `May the force by with you`, and save the changes
+- Switch to the Visual Studio Code instance launched for testing the extension
+  - Either close and reopen the webview
+  - Reload the webview by pressing F1 - _Developer: Reload Webviews_
+
+You should now see the applied changes.
+
+- In the Visual Studio Code instance that is used for development, open the file _angular-extension/src/personEditor.ts_
+- Change for example the webview HTML by adding `<p>Hello World</p>` in the `<body>`.
+- Switch to the Visual Studio Code instance launched for testing the extension
+- Reload the **Extension Development Host** so that it picks up the changes. You have two options to do this:
+  - Click on the debug restart action
+  - Press `Ctrl + R` / `Cmd + R` in the **Extension Development Host** window
+
+You should see the applied changes now. If not reopen the webview and verify that the applied changes are visible.
+
+_**Note:**_  
+Don't forget to remove the modification to the webview HTML, so it does not affect the next steps.
+
+### Angular Editor Implementation
+
+The next step is to implement a custom editor, just like in the vanilla HTML, CSS, Javascript example before.
+It uses the same principles with regards to communication between extension and webview, and looks quite the same.
+But of course we use Angular for the UI implementation, in this case [Reactive forms](https://angular.dev/guide/forms/reactive-forms) for the implementation.
+
+- Add `@types/vscode-webview` as a `devDependency` to the _angular-extension/webview-ui_ project
+  - Open a **Terminal**
+  - Switch to the folder _angular-extension/webview-ui_
+  - Run the following command
+    ```
+    npm i -D @types/vscode-webview
+    ```
+- Create a new folder _angular-extension/webview-ui/src/app/utilities_
+- Create a new file _vscode.ts_ in the new folder
+
+  - Add the following code, which is a copy of [vscode-webview-ui-toolkit-samples](https://github.com/microsoft/vscode-webview-ui-toolkit-samples/blob/main/frameworks/hello-world-angular/webview-ui/src/app/utilities/vscode.ts)
+
+    ```typescript
+    import type { WebviewApi } from "vscode-webview";
+
+    /**
+     * A utility wrapper around the acquireVsCodeApi() function, which enables
+     * message passing and state management between the webview and extension
+     * contexts.
+     *
+     * This utility also enables webview code to be run in a web browser-based
+     * dev server by using native web browser features that mock the functionality
+     * enabled by acquireVsCodeApi.
+     */
+    class VSCodeAPIWrapper {
+      private readonly vsCodeApi: WebviewApi<unknown> | undefined;
+
+      constructor() {
+        // Check if the acquireVsCodeApi function exists in the current development
+        // context (i.e. VS Code development window or web browser)
+        if (typeof acquireVsCodeApi === "function") {
+          this.vsCodeApi = acquireVsCodeApi();
+        }
+      }
+
+      /**
+       * Post a message (i.e. send arbitrary data) to the owner of the webview.
+       *
+       * @remarks When running webview code inside a web browser, postMessage will instead
+       * log the given message to the console.
+       *
+       * @param message Abitrary data (must be JSON serializable) to send to the extension context.
+       */
+      public postMessage(message: unknown) {
+        if (this.vsCodeApi) {
+          this.vsCodeApi.postMessage(message);
+        } else {
+          console.log(message);
+        }
+      }
+
+      /**
+       * Get the persistent state stored for this webview.
+       *
+       * @remarks When running webview source code inside a web browser, getState will retrieve state
+       * from local storage (https://developer.mozilla.org/en-US/docs/Web/API/Window/localStorage).
+       *
+       * @return The current state or `undefined` if no state has been set.
+       */
+      public getState(): unknown | undefined {
+        if (this.vsCodeApi) {
+          return this.vsCodeApi.getState();
+        } else {
+          const state = localStorage.getItem("vscodeState");
+          return state ? JSON.parse(state) : undefined;
+        }
+      }
+
+      /**
+       * Set the persistent state stored for this webview.
+       *
+       * @remarks When running webview source code inside a web browser, setState will set the given
+       * state using local storage (https://developer.mozilla.org/en-US/docs/Web/API/Window/localStorage).
+       *
+       * @param newState New persisted state. This must be a JSON serializable object. Can be retrieved
+       * using {@link getState}.
+       *
+       * @return The new state.
+       */
+      public setState<T extends unknown | undefined>(newState: T): T {
+        if (this.vsCodeApi) {
+          return this.vsCodeApi.setState(newState);
+        } else {
+          localStorage.setItem("vscodeState", JSON.stringify(newState));
+          return newState;
+        }
+      }
+    }
+
+    // Exports class singleton to prevent multiple invocations of acquireVsCodeApi.
+    export const vscode = new VSCodeAPIWrapper();
+    ```
+
+  - The `VSCodeAPIWrapper` is used for
+    - Aquiring the VSCode API
+    - Managing the persistent state of the webview
+    - Posting messages from the webview to the extension
+
+- Update _angular-extension/webview-ui/src/app/app.component.ts_ by replacing the content with the following code
+
+  ```typescript
+  import { Component, HostListener } from "@angular/core";
+  import { FormControl, ReactiveFormsModule } from "@angular/forms";
+  import { vscode } from "./utilities/vscode";
+
+  @Component({
+    selector: "app-root",
+    imports: [ReactiveFormsModule],
+    templateUrl: "./app.component.html",
+    styleUrl: "./app.component.css",
+  })
+  export class AppComponent {
+    firstname = new FormControl("");
+    lastname = new FormControl("");
+    personObject: any;
+
+    constructor() {
+      // Webviews are normally torn down when not visible and re-created when they become visible again.
+      // State lets us save information across these re-loads
+      const state = vscode.getState() as any;
+      if (state) {
+        this.updateContent(state.text);
+      }
+    }
+
+    // Handle messages sent from the extension to the webview
+    @HostListener("window:message", ["$event"])
+    handleMessage(event: MessageEvent) {
+      const message = event.data; // The json data that the extension sent
+      switch (message.type) {
+        case "update":
+          const text = message.text;
+
+          // Update our webview's content
+          this.updateContent(text);
+
+          // Then persist state information.
+          // This state is returned in the call to `vscode.getState` below when a webview is reloaded.
+          vscode.setState({ text });
+          return;
+      }
+    }
+
+    /**
+     * Update the data shown in the document in the webview.
+     */
+    updateContent(text: string) {
+      if (text !== "") {
+        this.personObject = JSON.parse(text);
+        this.firstname.setValue(this.personObject.firstname);
+        this.lastname.setValue(this.personObject.lastname);
+      }
+    }
+
+    /**
+     * Update the document in the extension.
+     */
+    updateDocument() {
+      this.personObject = {
+        firstname: this.firstname.value,
+        lastname: this.lastname.value,
+      };
+
+      vscode.postMessage({
+        type: "updateDocument",
+        text: JSON.stringify(this.personObject, null, 2),
+      });
+    }
+  }
+  ```
+
+- Update _angular-extension/webview-ui/src/app/app.component.html_ by replacing the content with the following code
+
+  ```html
+  <main class="main">
+    <h1>Angular Person Editor</h1>
+    <div class="content">
+      <div class="person">
+        <div class="row">
+          <label for="firstname">Firstname:</label>
+          <div class="value">
+            <input
+              type="text"
+              [formControl]="firstname"
+              (input)="updateDocument()"
+            />
+          </div>
+        </div>
+        <div class="row">
+          <label for="lastname">Lastname:</label>
+          <div class="value">
+            <input
+              type="text"
+              [formControl]="lastname"
+              (input)="updateDocument()"
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+  ```
+
+- Add the following code to the file _angular-extension/webview-ui/src/app/app.component.css_
+
+  ```css
+  label {
+    font-weight: 600;
+    display: block;
+  }
+  ```
+
+- Verify the changes and launch the Visual Studio Code Extension(s)
+  - Open _Run and Debug_
+  - Ensure _Run Extension_ is selected in the dropdown
+  - Click _Start Debugging_ or press _F5_
+- Right click on the file created in the previous example in the _Explorer_
+- Select _Open With..._ - _Angular Person Editor_
+  - This should open the webview with the two input fields
+
+### Install scripts
+
+Like with the Visual Studio Code Extension project before, add a install script to the _angular-extension_ that is called on `postCreateCommand` of the Dev Container. It needs to run `npm install` for the extension and the contained webview-ui project.
+
+- Open the _angular-extension/package.json_ and add the following script to the `scripts` section
+
+  ```json
+  "install:all": "npm install && cd webview-ui && npm install",
+  ```
+
+- Open the _package.json_ in the repository root and modify the `install:all` script to also handle the _angular-extension_ project
+
+  ```json
+  {
+    "name": "vscode-theia-cookbook",
+    "version": "0.0.0",
+    "private": true,
+    "scripts": {
+      "install:all": "cd vscode-extension && npm install && cd ../angular-extension && npm run install:all"
+    }
+  }
+  ```
+
+### VSCode Elements / VSCode Elements Lite
+
+Like the vanilla HTML, CSS, Javascript example in the first section of this tutorial, the UI components do not look like native Visual Studio Code components. To get a more native Visual Studio Code look and feel you would need to spend quite some time to implement this yourself.
+
+An alterative to implementing this yourself is to use [VSCode Elements](https://vscode-elements.github.io/) or [VSCode Elements Lite](https://vscode-elements.github.io/elements-lite/). Unfortunately the implementation of [VSCode Elements](https://vscode-elements.github.io/) is based on the [Lit](https://lit.dev/) library. And using Lit Webcomponents with Angular is not a trivial task.
+
+_**Note:**_  
+Searching the web there are approaches that should make it work, by implementing a [ControlValueAccessor](https://angular.dev/api/forms/ControlValueAccessor) as a [Directive](https://angular.dev/guide/directives/directive-composition-api). This is for example explained somehow in [Master Web Component Forms Integration](https://www.thinktecture.com/en/web-components/web-component-forms-integration-with-lit-and-angular/). Unfortunately I was not able to get this working with VSCode Elements, as the change events were not handled. Somehow it should be possible, but I was missing something. If you have any idea how to make it work, please let me know.
+
+Although I was not able to get VSCode Elements working with an Angular webview, it is possible to at least add the styling by using [VSCode Elements Lite](https://vscode-elements.github.io/elements-lite/).
+
+Add `@vscode-elements/elements-lite` as a dependency in the _package.json_ and reference the CSS files in the webview HTML.
+
+- Open a **Terminal**
+- Switch to the _angular-extension/webview-ui_ folder
+- Install `@vscode-elements/elements-lite` as a `dependency`
+
+  ```
+  npm install @vscode-elements/elements-lite
+  ```
+
+- Open the file _angular-extension/webview-ui/src/app/app.component.html_
+  - Add `class="vscode-label"` to the `label` tags, and `class="vscode-textfield"` to the `input` fields
+- Open the file _angular-extension/webview-ui/angular.json_
+
+  - Add the VSCode Elements Lite CSS files to the `architect/build/options/styles`
+
+  ```json
+  "styles": [
+    "src/styles.css",
+    "node_modules/@vscode-elements/elements-lite/components/label/label.css",
+    "node_modules/@vscode-elements/elements-lite/components/textfield/textfield.css"
+  ],
+  ```
+
+If you now restart the application, the input fields in the webview of the custom editor will look like native Visual Studio Code components.

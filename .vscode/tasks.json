@@ -4,19 +4,96 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "type": "npm",
-      "script": "watch",
+      "label": "Watch Extensions",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "dependsOn": ["VS Code Extension Watch", "Angular Extension Watch"]
+    },
+    {
+      "label": "VS Code Extension Watch",
+      "type": "shell",
+      "command": "npm run watch",
       "problemMatcher": "$tsc-watch",
       "isBackground": true,
       "presentation": {
         "reveal": "never"
       },
       "group": {
-        "kind": "build",
-        "isDefault": true
+        "kind": "build"
       },
       "options": {
         "cwd": "${workspaceFolder}/vscode-extension"
+      }
+    },
+    {
+      "label": "Angular Extension Watch",
+      "type": "shell",
+      "command": "npm run watch",
+      "problemMatcher": {
+        "base": "$tsc-watch",
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": {
+            "regexp": "(.*?)"
+          },
+          "endsPattern": {
+            "regexp": "bundle generation complete"
+          }
+        }
+      },
+      "isBackground": true,
+      "presentation": {
+        "reveal": "never"
+      },
+      "group": {
+        "kind": "build"
+      },
+      "options": {
+        "cwd": "${workspaceFolder}/angular-extension"
+      }
+    },
+    {
+      "type": "npm",
+      "script": "start",
+      "isBackground": true,
+      "problemMatcher": {
+        "owner": "typescript",
+        "pattern": "$tsc",
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": {
+            "regexp": "(.*?)"
+          },
+          "endsPattern": {
+            "regexp": "bundle generation complete"
+          }
+        }
+      },
+      "options": {
+        "cwd": "${workspaceFolder}/angular-extension/webview-ui"
+      }
+    },
+    {
+      "type": "npm",
+      "script": "test",
+      "isBackground": true,
+      "problemMatcher": {
+        "owner": "typescript",
+        "pattern": "$tsc",
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": {
+            "regexp": "(.*?)"
+          },
+          "endsPattern": {
+            "regexp": "bundle generation complete"
+          }
+        }
+      },
+      "options": {
+        "cwd": "${workspaceFolder}/angular-extension/webview-ui"
       }
     }
   ]
