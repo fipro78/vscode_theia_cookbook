@@ -1,0 +1,8 @@
+{
+  "name": "vscode-theia-cookbook",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "install:all": "cd vscode-extension && npm install"
+  }
+}
