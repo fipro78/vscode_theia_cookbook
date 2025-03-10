@@ -82,8 +82,16 @@ function App() {
                   className="vscode-textfield"
                   value={personObject.firstname}
                   onInput={(event) => {
-                    personObject.firstname = event.currentTarget.value;
-                    updateDocument();
+                    const value = event.currentTarget.value;
+                    const target = event.currentTarget;
+                    // wait 500 ms before updating the document
+                    // only update if in the meantime no other input was given
+                    setTimeout(() => {
+                      if (value === target.value) {
+                        personObject.firstname = value;
+                        updateDocument();
+                      }
+                    }, 500);
                   }}
                 />
               </div>
@@ -99,8 +107,16 @@ function App() {
                   className="vscode-textfield"
                   value={personObject.lastname}
                   onInput={(event) => {
-                    personObject.lastname = event.currentTarget.value;
-                    updateDocument();
+                    const value = event.currentTarget.value;
+                    const target = event.currentTarget;
+                    // wait 500 ms before updating the document
+                    // only update if in the meantime no other input was given
+                    setTimeout(() => {
+                      if (value === target.value) {
+                        personObject.lastname = value;
+                        updateDocument();
+                      }
+                    }, 500);
                   }}
                 />
               </div>

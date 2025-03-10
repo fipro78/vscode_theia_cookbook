@@ -44,19 +44,33 @@
     }
 
     firstname.oninput = () => {
-      json.firstname = firstname.value;
-      vscode.postMessage({
-        type: "updateDocument",
-        text: JSON.stringify(json, null, 2),
-      });
+      let value = firstname.value;
+      // wait 500 ms before updating the document
+      // only update if in the meantime no other input was given
+      setTimeout(() => {
+        if (value === firstname.value) {
+          json.firstname = firstname.value;
+          vscode.postMessage({
+            type: "updateDocument",
+            text: JSON.stringify(json, null, 2),
+          });
+        }
+      }, 500);
     };
 
     lastname.oninput = () => {
-      json.lastname = lastname.value;
-      vscode.postMessage({
-        type: "updateDocument",
-        text: JSON.stringify(json, null, 2),
-      });
+      let value = lastname.value;
+      // wait 500 ms before updating the document
+      // only update if in the meantime no other input was given
+      setTimeout(() => {
+        if (value === lastname.value) {
+          json.lastname = lastname.value;
+          vscode.postMessage({
+            type: "updateDocument",
+            text: JSON.stringify(json, null, 2),
+          });
+        }
+      }, 500);
     };
   }
 

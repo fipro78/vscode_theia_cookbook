@@ -520,19 +520,33 @@ The following code is inspired and adapted from [Custom Editor API Samples](http
       }
 
       firstname.oninput = () => {
-        json.firstname = firstname.value;
-        vscode.postMessage({
-          type: "updateDocument",
-          text: JSON.stringify(json, null, 2),
-        });
+        let value = firstname.value;
+        // wait 500 ms before updating the document
+        // only update if in the meantime no other input was given
+        setTimeout(() => {
+          if (value === firstname.value) {
+            json.firstname = firstname.value;
+            vscode.postMessage({
+              type: "updateDocument",
+              text: JSON.stringify(json, null, 2),
+            });
+          }
+        }, 500);
       };
 
       lastname.oninput = () => {
-        json.lastname = lastname.value;
-        vscode.postMessage({
-          type: "updateDocument",
-          text: JSON.stringify(json, null, 2),
-        });
+        let value = lastname.value;
+        // wait 500 ms before updating the document
+        // only update if in the meantime no other input was given
+        setTimeout(() => {
+          if (value === lastname.value) {
+            json.lastname = lastname.value;
+            vscode.postMessage({
+              type: "updateDocument",
+              text: JSON.stringify(json, null, 2),
+            });
+          }
+        }, 500);
       };
     }
 
@@ -1647,15 +1661,27 @@ But of course we use Angular for the UI implementation, in this case [Reactive f
      * Update the document in the extension.
      */
     updateDocument() {
-      this.personObject = {
-        firstname: this.firstname.value,
-        lastname: this.lastname.value,
-      };
+      let firstname = this.firstname.value;
+      let lastname = this.lastname.value;
 
-      vscode.postMessage({
-        type: "updateDocument",
-        text: JSON.stringify(this.personObject, null, 2),
-      });
+      // wait 500 ms before updating the document
+      // only update if in the meantime no other input was given
+      setTimeout(() => {
+        if (
+          this.firstname.value === firstname &&
+          this.lastname.value === lastname
+        ) {
+          this.personObject = {
+            firstname: this.firstname.value,
+            lastname: this.lastname.value,
+          };
+
+          vscode.postMessage({
+            type: "updateDocument",
+            text: JSON.stringify(this.personObject, null, 2),
+          });
+        }
+      }, 500);
     }
   }
   ```
@@ -2750,8 +2776,16 @@ But of course we use React for the UI implementation.
                     id="firstname"
                     value={personObject.firstname}
                     onChange={(event) => {
-                      personObject.firstname = event.target.value;
-                      updateDocument();
+                      const value = event.currentTarget.value;
+                      const target = event.currentTarget;
+                      // wait 500 ms before updating the document
+                      // only update if in the meantime no other input was given
+                      setTimeout(() => {
+                        if (value === target.value) {
+                          personObject.firstname = value;
+                          updateDocument();
+                        }
+                      }, 500);
                     }}
                   />
                 </div>
@@ -2764,8 +2798,16 @@ But of course we use React for the UI implementation.
                     id="lastname"
                     value={personObject.lastname}
                     onChange={(event) => {
-                      personObject.lastname = event.target.value;
-                      updateDocument();
+                      const value = event.currentTarget.value;
+                      const target = event.currentTarget;
+                      // wait 500 ms before updating the document
+                      // only update if in the meantime no other input was given
+                      setTimeout(() => {
+                        if (value === target.value) {
+                          personObject.lastname = value;
+                          updateDocument();
+                        }
+                      }, 500);
                     }}
                   />
                 </div>
@@ -2869,8 +2911,16 @@ Add `@vscode-elements/elements-lite` as a dependency in the _package.json_ and r
                     className="vscode-textfield"
                     value={personObject.firstname}
                     onChange={(event) => {
-                      personObject.firstname = event.target.value;
-                      updateDocument();
+                      const value = event.currentTarget.value;
+                      const target = event.currentTarget;
+                      // wait 500 ms before updating the document
+                      // only update if in the meantime no other input was given
+                      setTimeout(() => {
+                        if (value === target.value) {
+                          personObject.firstname = value;
+                          updateDocument();
+                        }
+                      }, 500);
                     }}
                   />
                 </div>
@@ -2886,8 +2936,16 @@ Add `@vscode-elements/elements-lite` as a dependency in the _package.json_ and r
                     className="vscode-textfield"
                     value={personObject.lastname}
                     onChange={(event) => {
-                      personObject.lastname = event.target.value;
-                      updateDocument();
+                      const value = event.currentTarget.value;
+                      const target = event.currentTarget;
+                      // wait 500 ms before updating the document
+                      // only update if in the meantime no other input was given
+                      setTimeout(() => {
+                        if (value === target.value) {
+                          personObject.lastname = value;
+                          updateDocument();
+                        }
+                      }, 500);
                     }}
                   />
                 </div>
@@ -2983,8 +3041,16 @@ This can be done via a TypeScript definition.
                     id="firstname"
                     value={personObject.firstname}
                     onInput={(event) => {
-                      personObject.firstname = event.currentTarget.value;
-                      updateDocument();
+                      const value = event.currentTarget.value;
+                      const target = event.currentTarget;
+                      // wait 500 ms before updating the document
+                      // only update if in the meantime no other input was given
+                      setTimeout(() => {
+                        if (value === target.value) {
+                          personObject.firstname = value;
+                          updateDocument();
+                        }
+                      }, 500);
                     }}
                   />
                 </div>
@@ -2996,8 +3062,16 @@ This can be done via a TypeScript definition.
                     id="lastname"
                     value={personObject.lastname}
                     onInput={(event) => {
-                      personObject.lastname = event.currentTarget.value;
-                      updateDocument();
+                      const value = event.currentTarget.value;
+                      const target = event.currentTarget;
+                      // wait 500 ms before updating the document
+                      // only update if in the meantime no other input was given
+                      setTimeout(() => {
+                        if (value === target.value) {
+                          personObject.lastname = value;
+                          updateDocument();
+                        }
+                      }, 500);
                     }}
                   />
                 </div>

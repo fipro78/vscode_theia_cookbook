@@ -59,14 +59,26 @@ export class AppComponent {
    * Update the document in the extension.
    */
   updateDocument() {
-    this.personObject = {
-      firstname: this.firstname.value,
-      lastname: this.lastname.value,
-    };
+    let firstname = this.firstname.value;
+    let lastname = this.lastname.value;
 
-    vscode.postMessage({
-      type: 'updateDocument',
-      text: JSON.stringify(this.personObject, null, 2),
-    });
+    // wait 500 ms before updating the document
+    // only update if in the meantime no other input was given
+    setTimeout(() => {
+      if (
+        this.firstname.value === firstname &&
+        this.lastname.value === lastname
+      ) {
+        this.personObject = {
+          firstname: this.firstname.value,
+          lastname: this.lastname.value,
+        };
+
+        vscode.postMessage({
+          type: 'updateDocument',
+          text: JSON.stringify(this.personObject, null, 2),
+        });
+      }
+    }, 500);
   }
 }
