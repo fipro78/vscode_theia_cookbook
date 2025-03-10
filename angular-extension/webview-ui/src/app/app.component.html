@@ -3,22 +3,20 @@
   <div class="content">
     <div class="person">
       <div class="row">
-        <label for="firstname" class="vscode-label">Firstname:</label>
+        <vscode-label for="firstname">Firstname:</vscode-label>
         <div class="value">
-          <input
+          <vscode-textfield
             type="text"
-            class="vscode-textfield"
             [formControl]="firstname"
             (input)="updateDocument()"
           />
         </div>
       </div>
       <div class="row">
-        <label for="lastname" class="vscode-label">Lastname:</label>
+        <vscode-label for="lastname">Lastname:</vscode-label>
         <div class="value">
-          <input
+          <vscode-textfield
             type="text"
-            class="vscode-textfield"
             [formControl]="lastname"
             (input)="updateDocument()"
           />
