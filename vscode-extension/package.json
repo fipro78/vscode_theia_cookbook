@@ -23,6 +23,16 @@
           }
         ],
         "priority": "default"
+      },
+      {
+        "viewType": "vscode-extension.petEditor",
+        "displayName": "Visual Studio Code Pet Editor",
+        "selector": [
+          {
+            "filenamePattern": "*.pet"
+          }
+        ],
+        "priority": "default"
       }
     ]
   },

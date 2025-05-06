@@ -1,4 +1,9 @@
-import { VscodeLabel, VscodeTextfield } from "@vscode-elements/elements";
+import {
+  VscodeLabel,
+  VscodeTextfield,
+  VscodeSingleSelect,
+  VscodeOption,
+} from "@vscode-elements/elements";
 
 type ElementProps<I> = Partial<Omit<I, keyof HTMLElement>>;
 type CustomEventHandler<E> = (e: E) => void;
@@ -14,6 +19,8 @@ declare module "react" {
     interface IntrinsicElements {
       "vscode-label": WebComponentProps<VscodeLabel>;
       "vscode-textfield": WebComponentProps<VscodeTextfield>;
+      "vscode-single-select": WebComponentProps<VscodeSingleSelect>;
+      "vscode-option": WebComponentProps<VscodeOption>;
     }
   }
 }

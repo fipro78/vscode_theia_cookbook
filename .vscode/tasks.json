@@ -16,6 +16,16 @@
       ]
     },
     {
+      "label": "Terminate Tasks",
+      "command": "echo ${input:terminate}",
+      "type": "shell",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "never",
+        "close": true
+      }
+    },
+    {
       "label": "VS Code Extension Watch",
       "type": "shell",
       "command": "npm run watch",
@@ -147,6 +157,14 @@
       "options": {
         "cwd": "${workspaceFolder}/react-extension/webview-ui"
       }
+    }
+  ],
+  "inputs": [
+    {
+      "id": "terminate",
+      "type": "command",
+      "command": "workbench.action.tasks.terminate",
+      "args": "terminateAll"
     }
   ]
 }

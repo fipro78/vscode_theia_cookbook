@@ -21,7 +21,18 @@
           {
             "filenamePattern": "*.person"
           }
-        ]
+        ],
+        "priority": "option"
+      },
+      {
+        "viewType": "react-extension.petEditor",
+        "displayName": "React Pet Editor",
+        "selector": [
+          {
+            "filenamePattern": "*.pet"
+          }
+        ],
+        "priority": "option"
       }
     ]
   },

@@ -19,7 +19,8 @@
         "${workspaceFolder}/angular-extension/dist/**/*.js",
         "${workspaceFolder}/react-extension/dist/**/*.js"
       ],
-      "preLaunchTask": "${defaultBuildTask}"
+      "preLaunchTask": "${defaultBuildTask}",
+      "postDebugTask": "Terminate Tasks"
     },
     {
       "name": "ng serve",

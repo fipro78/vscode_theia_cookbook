@@ -8,6 +8,9 @@
   const personContainer = /** @type {HTMLElement} */ (
     document.querySelector(".person")
   );
+  const petContainer = /** @type {HTMLElement} */ (
+    document.querySelector(".pet")
+  );
 
   const errorContainer = document.createElement("div");
   document.body.appendChild(errorContainer);
@@ -25,53 +28,107 @@
       }
       json = JSON.parse(text);
     } catch {
-      personContainer.style.display = "none";
+      if (personContainer) {
+        personContainer.style.display = "none";
+      }
+      if (petContainer) {
+        petContainer.style.display = "none";
+      }
       errorContainer.innerText = "Error: Document is not valid json";
       errorContainer.style.display = "";
       return;
     }
-    personContainer.style.display = "";
+    if (personContainer) {
+      personContainer.style.display = "";
+    }
+    if (petContainer) {
+      petContainer.style.display = "";
+    }
     errorContainer.style.display = "none";
 
     const firstname = document.getElementById("firstname");
     const lastname = document.getElementById("lastname");
 
-    if (json.firstname) {
-      firstname.value = json.firstname;
-    }
-    if (json.lastname) {
-      lastname.value = json.lastname;
+    const name = document.getElementById("name");
+    const species = document.getElementById("species");
+
+    if (firstname && lastname) {
+      if (json.firstname) {
+        firstname.value = json.firstname;
+      }
+      if (json.lastname) {
+        lastname.value = json.lastname;
+      }
+
+      firstname.oninput = () => {
+        let value = firstname.value;
+        // wait 500 ms before updating the document
+        // only update if in the meantime no other input was given
+        setTimeout(() => {
+          if (value === firstname.value) {
+            json.firstname = firstname.value;
+            vscode.postMessage({
+              type: "updateDocument",
+              text: JSON.stringify(json, null, 2),
+            });
+          }
+        }, 500);
+      };
+
+      lastname.oninput = () => {
+        let value = lastname.value;
+        // wait 500 ms before updating the document
+        // only update if in the meantime no other input was given
+        setTimeout(() => {
+          if (value === lastname.value) {
+            json.lastname = lastname.value;
+            vscode.postMessage({
+              type: "updateDocument",
+              text: JSON.stringify(json, null, 2),
+            });
+          }
+        }, 500);
+      };
     }
 
-    firstname.oninput = () => {
-      let value = firstname.value;
-      // wait 500 ms before updating the document
-      // only update if in the meantime no other input was given
-      setTimeout(() => {
-        if (value === firstname.value) {
-          json.firstname = firstname.value;
-          vscode.postMessage({
-            type: "updateDocument",
-            text: JSON.stringify(json, null, 2),
-          });
-        }
-      }, 500);
-    };
+    if (name && species) {
+      if (json.name) {
+        name.value = json.name;
+      }
+      if (json.species) {
+        species.value = json.species;
+      }
 
-    lastname.oninput = () => {
-      let value = lastname.value;
-      // wait 500 ms before updating the document
-      // only update if in the meantime no other input was given
-      setTimeout(() => {
-        if (value === lastname.value) {
-          json.lastname = lastname.value;
-          vscode.postMessage({
-            type: "updateDocument",
-            text: JSON.stringify(json, null, 2),
-          });
-        }
-      }, 500);
-    };
+      name.oninput = () => {
+        let value = name.value;
+        // wait 500 ms before updating the document
+        // only update if in the meantime no other input was given
+        setTimeout(() => {
+          if (value === name.value) {
+            json.name = name.value;
+            vscode.postMessage({
+              type: "updateDocument",
+              text: JSON.stringify(json, null, 2),
+            });
+          }
+        }, 500);
+      };
+
+      species.oninput = () => {
+        let value = species.value;
+        // wait 500 ms before updating the document
+        // only update if in the meantime no other input was given
+        setTimeout(() => {
+          if (value === species.value) {
+            json.species = species.value;
+            vscode.postMessage({
+              type: "updateDocument",
+              text: JSON.stringify(json, null, 2),
+            });
+          }
+        }, 500);
+      };
+    }
   }
 
   // Handle messages sent from the extension to the webview

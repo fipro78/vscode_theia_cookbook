@@ -3,9 +3,11 @@ import { vscode } from "./utilities/vscode";
 import "./App.css";
 import "@vscode-elements/elements/dist/vscode-label";
 import "@vscode-elements/elements/dist/vscode-textfield";
+import "@vscode-elements/elements/dist/vscode-single-select";
+import "@vscode-elements/elements/dist/vscode-option";
 
-function App() {
-  const [personObject, setPersonObject] = useState(loadState);
+function Pet() {
+  const [petObject, setPetObject] = useState(loadState);
 
   /**
    * Load the initial state via vscode API or return an empty object as initial state.
@@ -18,8 +20,8 @@ function App() {
     }
 
     return {
-      firstname: "",
-      lastname: "",
+      name: "",
+      species: "",
     };
   }
 
@@ -48,9 +50,9 @@ function App() {
   function updateContent(text: string) {
     if (text !== "") {
       const parsed = JSON.parse(text);
-      setPersonObject({
-        firstname: parsed.firstname,
-        lastname: parsed.lastname,
+      setPetObject({
+        name: parsed.name,
+        species: parsed.species,
       });
     }
   }
@@ -61,26 +63,26 @@ function App() {
   function updateDocument() {
     vscode.postMessage({
       type: "updateDocument",
-      text: JSON.stringify(personObject, null, 2),
+      text: JSON.stringify(petObject, null, 2),
     });
   }
 
   return (
     <>
       <main className="main">
-        <h1>React Person Editor</h1>
+        <h1>React Pet Editor</h1>
         <div className="content">
-          <div className="person">
+          <div className="pet">
             <div className="row">
-              <vscode-label htmlFor="firstname" className="vscode-label">
-                Firstname:
+              <vscode-label htmlFor="name" className="vscode-label">
+                Name:
               </vscode-label>
               <div className="value">
                 <vscode-textfield
                   type="text"
-                  id="firstname"
+                  id="name"
                   className="vscode-textfield"
-                  value={personObject.firstname}
+                  value={petObject.name}
                   onInput={(event) => {
                     const value = event.currentTarget.value;
                     const target = event.currentTarget;
@@ -88,7 +90,7 @@ function App() {
                     // only update if in the meantime no other input was given
                     setTimeout(() => {
                       if (value === target.value) {
-                        personObject.firstname = value;
+                        petObject.name = value;
                         updateDocument();
                       }
                     }, 500);
@@ -97,15 +99,13 @@ function App() {
               </div>
             </div>
             <div className="row">
-              <vscode-label htmlFor="lastname" className="vscode-label">
-                Lastname:
+              <vscode-label htmlFor="species" className="vscode-label">
+                Species:
               </vscode-label>
               <div className="value">
-                <vscode-textfield
-                  type="text"
-                  id="lastname"
-                  className="vscode-textfield"
-                  value={personObject.lastname}
+                <vscode-single-select
+                  id="species"
+                  value={petObject.species}
                   onInput={(event) => {
                     const value = event.currentTarget.value;
                     const target = event.currentTarget;
@@ -113,12 +113,17 @@ function App() {
                     // only update if in the meantime no other input was given
                     setTimeout(() => {
                       if (value === target.value) {
-                        personObject.lastname = value;
+                        petObject.species = value;
                         updateDocument();
                       }
                     }, 500);
                   }}
-                />
+                >
+                  <vscode-option>-</vscode-option>
+                  <vscode-option description="bird">Bird</vscode-option>
+                  <vscode-option description="cat">Cat</vscode-option>
+                  <vscode-option description="dog">Dog</vscode-option>
+                </vscode-single-select>
               </div>
             </div>
           </div>
@@ -128,4 +133,4 @@ function App() {
   );
 }
 
-export default App;
+export default Pet;

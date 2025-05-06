@@ -1,0 +1,31 @@
+<main class="main">
+  <h1>Angular Pet Editor</h1>
+  <div class="content">
+    <div class="pet">
+      <div class="row">
+        <vscode-label for="name">Name:</vscode-label>
+        <div class="value">
+          <vscode-textfield
+            type="text"
+            [formControl]="name"
+            (input)="updateDocument()"
+          />
+        </div>
+      </div>
+      <div class="row">
+        <vscode-label for="species">Species:</vscode-label>
+        <div class="value">
+          <vscode-single-select
+            [formControl]="species"
+            (input)="updateDocument()"
+          >
+            <vscode-option>-</vscode-option>
+            <vscode-option description="bird">Bird</vscode-option>
+            <vscode-option description="cat">Cat</vscode-option>
+            <vscode-option description="dog">Dog</vscode-option>
+          </vscode-single-select>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>

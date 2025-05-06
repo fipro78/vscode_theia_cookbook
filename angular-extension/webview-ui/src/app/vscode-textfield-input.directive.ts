@@ -14,7 +14,7 @@ const VSCODE_TEXTFIELD_INPUT_VALUE_ACCESSOR: Provider = {
 };
 
 @Directive({
-  selector: 'vscode-textfield',
+  selector: 'vscode-textfield, vscode-single-select',
   providers: [VSCODE_TEXTFIELD_INPUT_VALUE_ACCESSOR],
 })
 export class VscodeTextfieldInputDirective implements ControlValueAccessor {

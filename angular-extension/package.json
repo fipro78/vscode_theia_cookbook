@@ -21,7 +21,18 @@
           {
             "filenamePattern": "*.person"
           }
-        ]
+        ],
+        "priority": "option"
+      },
+      {
+        "viewType": "angular-extension.petEditor",
+        "displayName": "Angular Pet Editor",
+        "selector": [
+          {
+            "filenamePattern": "*.pet"
+          }
+        ],
+        "priority": "option"
       }
     ]
   },
