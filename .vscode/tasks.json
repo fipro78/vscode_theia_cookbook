@@ -157,6 +157,100 @@
       "options": {
         "cwd": "${workspaceFolder}/react-extension/webview-ui"
       }
+    },
+    {
+      "label": "Build Theia Browser",
+      "type": "npm",
+      "script": "build:browser",
+      "isBackground": true,
+      "group": "build",
+      "options": {
+        "cwd": "${workspaceFolder}/theia"
+      }
+    },
+    {
+      "label": "Start Theia Browser",
+      "type": "npm",
+      "script": "start:browser",
+      "isBackground": true,
+      "options": {
+        "cwd": "${workspaceFolder}/theia"
+      }
+    },
+    {
+      "label": "Watch Theia Browser",
+      "type": "npm",
+      "script": "watch:browser",
+      "isBackground": true,
+      "problemMatcher": {
+        "owner": "typescript",
+        "pattern": "$tsc",
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": {
+            "regexp": "(.*?)"
+          },
+          "endsPattern": {
+            "regexp": "browser-app: webpack (.*?) compiled successfully"
+          }
+        }
+      },
+      "options": {
+        "cwd": "${workspaceFolder}/theia"
+      }
+    },
+    {
+      "label": "Watch and Start Theia Browser",
+      "dependsOrder": "sequence",
+      "dependsOn": ["Watch Theia Browser", "Start Theia Browser"],
+      "problemMatcher": []
+    },
+    {
+      "label": "Build Theia Electron",
+      "type": "npm",
+      "script": "build:electron",
+      "isBackground": true,
+      "group": "build",
+      "options": {
+        "cwd": "${workspaceFolder}/theia"
+      }
+    },
+    {
+      "label": "Start Theia Electron",
+      "type": "npm",
+      "script": "start:electron",
+      "isBackground": true,
+      "options": {
+        "cwd": "${workspaceFolder}/theia"
+      }
+    },
+    {
+      "label": "Watch Theia Electron",
+      "type": "npm",
+      "script": "watch:electron",
+      "isBackground": true,
+      "problemMatcher": {
+        "owner": "typescript",
+        "pattern": "$tsc",
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": {
+            "regexp": "(.*?)"
+          },
+          "endsPattern": {
+            "regexp": "electron-app: webpack (.*?) compiled successfully"
+          }
+        }
+      },
+      "options": {
+        "cwd": "${workspaceFolder}/theia"
+      }
+    },
+    {
+      "label": "Watch and Start Theia Electron",
+      "dependsOrder": "sequence",
+      "dependsOn": ["Watch Theia Electron", "Start Theia Electron"],
+      "problemMatcher": []
     }
   ],
   "inputs": [

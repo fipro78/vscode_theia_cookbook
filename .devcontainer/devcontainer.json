@@ -4,6 +4,10 @@
   "name": "Node.js & TypeScript",
   // Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
   "image": "mcr.microsoft.com/devcontainers/typescript-node:1-20-bookworm",
+  "containerEnv": {
+    "NODE_OPTIONS": "--max-old-space-size=8192",
+    "THEIA_WEBVIEW_EXTERNAL_ENDPOINT": "{{hostname}}"
+  },
   "customizations": {
     "vscode": {
       // Set *default* container specific settings.json values on container create.
@@ -30,7 +34,10 @@
     }
   },
   // Features to add to the dev container. More info: https://containers.dev/features.
-  // "features": {},
+  "features": {
+    // https://github.com/devcontainers/features/tree/main/src/docker-in-docker
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {}
+  },
   // Use 'forwardPorts' to make a list of ports inside the container available locally.
   // "forwardPorts": [],
   // Enable to connect the dev container to the host network, needed in case of WSL with networkingMode=mirrored

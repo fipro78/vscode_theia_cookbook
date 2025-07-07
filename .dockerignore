@@ -1,0 +1,12 @@
+**/dist/
+**/build/
+**/node_modules/
+theia/**/lib
+theia/plugins
+theia/**/src-gen/
+theia/electron-app
+**/target/
+yarn.lock
+package-lock.json
+gen-webpack*.*
+**/*.vsix

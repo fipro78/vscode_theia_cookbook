@@ -45,6 +45,59 @@
       "preLaunchTask": "npm: dev",
       "url": "http://localhost:5173/",
       "webRoot": "${workspaceFolder}/react-extension/webview-ui"
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Start Browser Backend",
+      "program": "${workspaceRoot}/theia/browser-app/lib/backend/main.js",
+      "args": [
+        "--loglevel=debug",
+        "--port=3000",
+        "--no-cluster",
+        "--plugins=local-dir:${workspaceRoot}/theia/plugins"
+      ],
+      "env": {
+        "NODE_ENV": "development"
+      },
+      "sourceMaps": true,
+      "outFiles": [
+        "${workspaceRoot}/theia/node_modules/@theia/*/lib/**/*.js",
+        "${workspaceRoot}/theia/*/lib/**/*.js",
+        "${workspaceRoot}/theia/browser-app/lib/**/*.js"
+      ],
+      "smartStep": true,
+      "internalConsoleOptions": "openOnSessionStart",
+      "outputCapture": "std"
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Start Electron Backend",
+      "runtimeExecutable": "${workspaceRoot}/theia/node_modules/.bin/electron",
+      "windows": {
+        "runtimeExecutable": "${workspaceRoot}/theia/node_modules/.bin/electron.cmd"
+      },
+      "program": "${workspaceRoot}/theia/electron-app/lib/backend/electron-main.js",
+      "args": [
+        "--loglevel=debug",
+        "--hostname=localhost",
+        "--no-cluster",
+        "--plugins=local-dir:${workspaceRoot}/theia/plugins"
+      ],
+      "env": {
+        "NODE_ENV": "development"
+      },
+      "sourceMaps": true,
+      "outFiles": [
+        "${workspaceRoot}/theia/electron-app/lib/backend/electron-main.js",
+        "${workspaceRoot}/theia/electron-app/lib/backend/main.js",
+        "${workspaceRoot}/theia/*/lib/**/*.js",
+        "${workspaceRoot}/theia/node_modules/@theia/*/lib/**/*.js"
+      ],
+      "smartStep": true,
+      "internalConsoleOptions": "openOnSessionStart",
+      "outputCapture": "std"
     }
   ]
 }

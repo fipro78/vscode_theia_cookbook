@@ -1,0 +1,33 @@
+:root {
+  --brand-color1: rgb(53, 52, 52);
+  --brand-color2: rgb(218, 122, 8);
+}
+
+#theia-app-shell {
+  top: 2.8rem;
+}
+
+#example-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2.8rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: linear-gradient(
+    to right,
+    var(--brand-color1),
+    var(--brand-color2)
+  );
+  color: white;
+  padding: 0 1rem;
+  -webkit-app-region: drag;
+}
+
+#example-app-title {
+  margin: 0;
+  font-size: 1.33rem;
+  font-weight: 400;
+}

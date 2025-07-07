@@ -37,12 +37,22 @@
     ]
   },
   "scripts": {
+    "prepare": "npm run clean && npm run vscode:prepublish && npm run symlink",
+    "clean": "rimraf ../theia/plugins/vscode-extension",
+    "symlink": "symlink-dir . ../theia/plugins/vscode-extension",
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
     "pretest": "npm run compile && npm run lint",
     "lint": "eslint src",
-    "test": "vscode-test"
+    "test": "vscode-test",
+    "package": "vsce package --allow-missing-repository",
+    "theia:prepare-app": "npm run package && npm run theia:extract-vsix",
+    "theia:extract-vsix": "npm run clean && npm run theia:prepare && npm run unzip",
+    "theia:prepare": "mkdirp ../theia/plugins/vscode-extension",
+    "unzip": "run-script-os",
+    "unzip:windows": "tar -xf vscode-extension-0.0.1.vsix -C ../theia/plugins/vscode-extension",
+    "unzip:nix": "unzip vscode-extension-0.0.1.vsix -d ../theia/plugins/vscode-extension"
   },
   "devDependencies": {
     "@types/mocha": "^10.0.10",
@@ -53,6 +63,10 @@
     "@vscode/test-cli": "^0.0.10",
     "@vscode/test-electron": "^2.4.1",
     "eslint": "^9.21.0",
+    "mkdirp": "^3.0.1",
+    "rimraf": "^6.0.1",
+    "run-script-os": "^1.1.6",
+    "symlink-dir": "^6.0.5",
     "typescript": "^5.7.3"
   },
   "dependencies": {

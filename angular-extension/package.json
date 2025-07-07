@@ -37,7 +37,10 @@
     ]
   },
   "scripts": {
-    "install:all": "npm install && cd webview-ui && npm install",
+    "prepare": "npm run clean && npm run vscode:prepublish && npm run symlink",
+    "clean": "rimraf ../theia/plugins/angular-extension",
+    "symlink": "symlink-dir . ../theia/plugins/angular-extension",
+    "install:all": "npm install --ignore-scripts && cd webview-ui && npm install",
     "vscode:prepublish": "npm run build:webview && npm run compile",
     "compile": "tsc -p ./",
     "watch": "concurrently --kill-others \"npm run watch:webview\" \"tsc -watch -p ./\"",
@@ -46,7 +49,14 @@
     "test": "vscode-test",
     "start:webview": "npm --prefix webview-ui run start",
     "build:webview": "npm --prefix webview-ui run build",
-    "watch:webview": "npm --prefix webview-ui run watch"
+    "watch:webview": "npm --prefix webview-ui run watch",
+    "package": "vsce package --allow-missing-repository",
+    "theia:prepare-app": "npm run package && npm run theia:extract-vsix",
+    "theia:extract-vsix": "npm run clean && npm run theia:prepare && npm run unzip",
+    "theia:prepare": "mkdirp ../theia/plugins/angular-extension",
+    "unzip": "run-script-os",
+    "unzip:windows": "tar -xf angular-extension-0.0.1.vsix -C ../theia/plugins/angular-extension",
+    "unzip:nix": "unzip angular-extension-0.0.1.vsix -d ../theia/plugins/angular-extension"
   },
   "devDependencies": {
     "@types/mocha": "^10.0.10",
@@ -59,6 +69,10 @@
     "@vscode/test-electron": "^2.4.1",
     "concurrently": "^9.1.2",
     "eslint": "^9.21.0",
+    "mkdirp": "^3.0.1",
+    "rimraf": "^6.0.1",
+    "run-script-os": "^1.1.6",
+    "symlink-dir": "^6.0.5",
     "typescript": "^5.7.3"
   }
 }

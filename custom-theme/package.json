@@ -1,0 +1,39 @@
+{
+  "name": "custom-theme",
+  "displayName": "custom-theme",
+  "description": "",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.101.0"
+  },
+  "categories": [
+    "Themes"
+  ],
+  "contributes": {
+    "themes": [
+      {
+        "label": "Custom Theme (Light)",
+        "uiTheme": "vs",
+        "path": "./themes/Custom Theme (Light)-color-theme.json"
+      }
+    ]
+  },
+  "scripts": {
+    "prepare": "npm run clean && npm run symlink",
+    "clean": "rimraf ../theia/plugins/custom-theme",
+    "symlink": "symlink-dir . ../theia/plugins/custom-theme",
+    "package": "vsce package --allow-missing-repository",
+    "theia:prepare-app": "npm run package && npm run theia:extract-vsix",
+    "theia:extract-vsix": "npm run clean && npm run theia:prepare && npm run unzip",
+    "theia:prepare": "mkdirp ../theia/plugins/custom-theme",
+    "unzip": "run-script-os",
+    "unzip:windows": "tar -xf custom-theme-0.0.1.vsix -C ../theia/plugins/custom-theme",
+    "unzip:nix": "unzip custom-theme-0.0.1.vsix -d ../theia/plugins/custom-theme"
+  },
+  "devDependencies": {
+    "mkdirp": "^3.0.1",
+    "rimraf": "^6.0.1",
+    "run-script-os": "^1.1.6",
+    "symlink-dir": "^6.0.5"
+  }
+}

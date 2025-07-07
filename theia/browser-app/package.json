@@ -1,0 +1,54 @@
+{
+  "private": true,
+  "name": "browser-app",
+  "version": "0.0.0",
+  "dependencies": {
+    "@theia/core": "1.63.1",
+    "@theia/editor": "1.63.1",
+    "@theia/filesystem": "1.63.1",
+    "@theia/markers": "1.63.1",
+    "@theia/messages": "1.63.1",
+    "@theia/monaco": "1.63.1",
+    "@theia/navigator": "1.63.1",
+    "@theia/plugin-ext": "^1.63.1",
+    "@theia/plugin-ext-vscode": "^1.63.1",
+    "@theia/preferences": "1.63.1",
+    "@theia/process": "1.63.1",
+    "@theia/terminal": "1.63.1",
+    "@theia/vsx-registry": "^1.63.1",
+    "@theia/workspace": "1.63.1",
+    "theia-customization": "0.0.0"
+  },
+  "devDependencies": {
+    "@theia/cli": "1.63.1"
+  },
+  "scripts": {
+    "prepare": "npm run clean && npm run build && npm run download:plugins",
+    "clean": "theia clean",
+    "build": "theia build --mode development",
+    "download:plugins": "theia download:plugins",
+    "bundle": "npm run rebuild && theia build --mode development",
+    "rebuild": "theia rebuild:browser --cacheRoot ..",
+    "start": "theia start --plugins=local-dir:../plugins",
+    "watch": "npm run rebuild && theia build --watch --mode development"
+  },
+  "theiaPluginsDir": "../plugins",
+  "theiaPlugins": {
+    "eclipse-keybindings": "https://open-vsx.org/api/alphabotsec/vscode-eclipse-keybindings/0.16.1/file/alphabotsec.vscode-eclipse-keybindings-0.16.1.vsix",
+    "vscode-typescript": "https://open-vsx.org/api/vscode/typescript/1.95.3/file/vscode.typescript-1.95.3.vsix",
+    "vscode-typescript-language-features": "https://open-vsx.org/api/vscode/typescript-language-features/1.95.3/file/vscode.typescript-language-features-1.95.3.vsix"
+  },
+  "theia": {
+    "target": "browser",
+    "frontend": {
+      "config": {
+        "applicationName": "My Custom Theia Application",
+        "warnOnPotentiallyInsecureHostPattern": false,
+        "preferences": {
+          "workbench.colorTheme": "Custom Theme (Light)",
+          "workbench.iconTheme": "vs-minimal"
+        }
+      }
+    }
+  }
+}

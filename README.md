@@ -17,3 +17,12 @@ It shows how to implement this by using different Javascript frameworks.
 
 The corresponding tutorial is located in this repository:  
 [Multiple webviews in a single Visual Studio Code Extension](/tutorials/multiple_webviews.md)
+
+## Recipe #3 - Getting Started with Eclipse Theia
+
+This recipe describes how to get started with Eclipse Theia.
+It shows how to create a Theia Application, how to extend it with Visual Studio Code Extensions and how to customize it by replacing and removing Theia implementations from the application.
+Additionally it shows how to containerize a Theia Application.
+
+The corresponding tutorial is located in this repository:  
+[Getting Started with Eclipse Theia](/tutorials/theia_getting_started.md)
