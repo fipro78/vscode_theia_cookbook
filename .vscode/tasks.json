@@ -12,7 +12,8 @@
       "dependsOn": [
         "VS Code Extension Watch",
         "Angular Extension Watch",
-        "React Extension Watch"
+        "React Extension Watch",
+        "Copilot Extension Watch"
       ]
     },
     {
@@ -39,6 +40,22 @@
       },
       "options": {
         "cwd": "${workspaceFolder}/vscode-extension"
+      }
+    },
+    {
+      "label": "Copilot Extension Watch",
+      "type": "shell",
+      "command": "npm run watch",
+      "problemMatcher": "$tsc-watch",
+      "isBackground": true,
+      "presentation": {
+        "reveal": "never"
+      },
+      "group": {
+        "kind": "build"
+      },
+      "options": {
+        "cwd": "${workspaceFolder}/copilot-extension"
       }
     },
     {

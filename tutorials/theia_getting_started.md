@@ -360,7 +360,7 @@ If you want to work with the Terminal and execute the `npm` scripts manually
 - Run `npm run start:browser` to start the Theia browser application
 
 _**Note:**_  
-You can also use the _Launch Configuration_ from the _.vscode/launch.json_ via _Run and Debug_. This will start the application and enable debugging. But you first need to build the application via commandline or Task. The debugging topic will be covered at a later time in this blog post.
+You can also use the _Launch Configuration_ from the _.vscode/launch.json_ via _Run and Debug_. This will start the application and enable debugging. But you first need to build the application via commandline or Task.
 
 Once started, you can open a browser on http://localhost:3000 and see the started Theia application.
 

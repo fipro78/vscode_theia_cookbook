@@ -1,0 +1,83 @@
+{
+  "name": "copilot-extension",
+  "displayName": "copilot-extension",
+  "description": "",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.102.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "languageModelTools": [
+      {
+        "name": "chat-tools-joke",
+        "displayName": "Joke File Creator",
+        "toolReferenceName": "jokeFileCreator",
+        "canBeReferencedInPrompt": true,
+        "icon": "$(files)",
+        "userDescription": "Create a file that contains a joke.",
+        "modelDescription": "Create a file at the given path that contains a joke.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string",
+              "description": "The name of the folder in the workspace where the joke file should be created."
+            },
+            "filename": {
+              "type": "string",
+              "description": "The name of the jokefile that should be created."
+            },
+            "joke": {
+              "type": "string",
+              "description": "The joke content to be written in the joke file."
+            }
+          }
+        }
+      }
+    ],
+    "mcpServerDefinitionProviders": [
+      {
+        "id": "custom-mcp",
+        "label": "Custom MCP Server Provider"
+      }
+    ],
+    "chatParticipants": [
+      {
+        "id": "joker-sample.joker-participant",
+        "name": "joker",
+        "fullName": "The Joker",
+        "description": "Let me tell you a joke!",
+        "isSticky": true
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src",
+    "test": "vscode-test"
+  },
+  "devDependencies": {
+    "@types/mocha": "^10.0.10",
+    "@types/node": "20.x",
+    "@types/vscode": "^1.102.0",
+    "@typescript-eslint/eslint-plugin": "^8.31.1",
+    "@typescript-eslint/parser": "^8.31.1",
+    "@vscode/test-cli": "^0.0.11",
+    "@vscode/test-electron": "^2.5.2",
+    "eslint": "^9.25.1",
+    "typescript": "^5.8.3"
+  },
+  "dependencies": {
+    "@vscode/chat-extension-utils": "^0.0.0-alpha.5"
+  }
+}

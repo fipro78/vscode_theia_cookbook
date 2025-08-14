@@ -12,14 +12,27 @@
       "args": [
         "--extensionDevelopmentPath=${workspaceFolder}/vscode-extension",
         "--extensionDevelopmentPath=${workspaceFolder}/angular-extension",
-        "--extensionDevelopmentPath=${workspaceFolder}/react-extension"
+        "--extensionDevelopmentPath=${workspaceFolder}/react-extension",
+        "--extensionDevelopmentPath=${workspaceFolder}/copilot-extension"
       ],
       "outFiles": [
         "${workspaceFolder}/vscode-extension/out/**/*.js",
         "${workspaceFolder}/angular-extension/dist/**/*.js",
-        "${workspaceFolder}/react-extension/dist/**/*.js"
+        "${workspaceFolder}/react-extension/dist/**/*.js",
+        "${workspaceFolder}/copilot-extension/dist/**/*.js"
       ],
       "preLaunchTask": "${defaultBuildTask}",
+      "postDebugTask": "Terminate Tasks"
+    },
+    {
+      "name": "Run Copilot Extension",
+      "type": "extensionHost",
+      "request": "launch",
+      "args": [
+        "--extensionDevelopmentPath=${workspaceFolder}/copilot-extension"
+      ],
+      "outFiles": ["${workspaceFolder}/copilot-extension/out/**/*.js"],
+      "preLaunchTask": "Copilot Extension Watch",
       "postDebugTask": "Terminate Tasks"
     },
     {

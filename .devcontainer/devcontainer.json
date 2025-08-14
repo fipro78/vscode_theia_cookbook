@@ -8,6 +8,9 @@
     "NODE_OPTIONS": "--max-old-space-size=8192",
     "THEIA_WEBVIEW_EXTERNAL_ENDPOINT": "{{hostname}}"
   },
+  "remoteEnv": {
+    "GITHUB_TOKEN": "${localEnv:GITHUB_TOKEN}"
+  },
   "customizations": {
     "vscode": {
       // Set *default* container specific settings.json values on container create.
@@ -26,7 +29,7 @@
         "amodio.tsl-problem-matcher",
         "ms-vscode.extension-test-runner",
         "ms-azuretools.vscode-containers",
-        "spmeesseman.vscode-taskexplorer",
+        "axelrindle.task-explorer",
         "yzhang.markdown-all-in-one",
         "esbenp.prettier-vscode",
         "angular.ng-template"

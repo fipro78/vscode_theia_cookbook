@@ -26,3 +26,10 @@ Additionally it shows how to containerize a Theia Application.
 
 The corresponding tutorial is located in this repository:  
 [Getting Started with Eclipse Theia](/tutorials/theia_getting_started.md)
+
+## Recipe #4 - Extending Copilot in Visual Studio Code
+
+This recipe describes hot to extend Copilot in Visual Studio Code by adding _Language Model Tools_, _MCP Servers_ and _Chat Participants_.
+
+The corresponding tutorial is located in this repository:  
+[Extending Copilot in Visual Studio Code](/tutorials/vscode_copilot_extension.md)

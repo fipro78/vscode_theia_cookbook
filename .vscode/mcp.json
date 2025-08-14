@@ -1,0 +1,21 @@
+{
+  "servers": {
+    "filesystem": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem"]
+    },
+    "fetch": {
+      "url": "https://remote.mcpservers.org/fetch/mcp",
+      "type": "http"
+    },
+    "github": {
+      "url": "https://api.githubcopilot.com/mcp/",
+      "type": "http",
+      "headers": {
+        "X-MCP-Toolsets": "gists"
+      }
+    }
+  },
+  "inputs": []
+}
