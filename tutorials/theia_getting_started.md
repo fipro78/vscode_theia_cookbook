@@ -24,7 +24,6 @@ To be able to build a Theia application, several tools and libraries need to be 
 As I created a Dev Container for the development of Visual Studio Code Extensions in my previous blog post, let's follow this path further and extend the existing Dev Container.
 
 - Open the file _.devcontainer/postCreateCommand.sh_
-
   - Add the Theia code generator `generator-theia-extension` to the initial global `npm install` instruction
   - Install the necessary Theia dependencies
 
@@ -145,7 +144,6 @@ Additionally there are some project files
 - _theia/README.md_  
   The generated README file that contains some basic information about building and running the Theia application.
 - _theia/.vscode/launch.json_ that contains some launch scripts. They need to be moved to the main _.vscode/launch.json_ and modified to work correctly.
-
   - Copy the two configurations to _.vscode/launch.json_
   - Replace `${workspaceRoot}` with `${workspaceRoot}/theia` to have the correct file links in the configurations
   - Delete the folder _theia/.vscode_
@@ -405,9 +403,7 @@ This means it is possible to build a custom tool based on Eclipse Theia that int
 In this section we will extend the Theia Application that we just created with the Visual Studio Code Extensions created in the previous blog post.
 
 - Add support for Visual Studio Code Extensions to the Theia application.
-
   - Update the _package.json_ of the _browser-app_ and the _electron-app_
-
     - Open a **Terminal**
     - Switch to the Theia Application directory (_theia/browser-app_ and _theia/electron-app_)
 
@@ -427,14 +423,12 @@ In this section we will extend the Theia Application that we just created with t
       ```
 
     - Open the _package.json_ of the application project
-
       - Specify the location of the plugins that should be loaded on initialization via the `--plugins` option of the `start` script. We add them on the same level as the application projects, to have a single location for our workspace.
 
       - Add a script `download:plugins` to download the plugins
       - Add scripts to perform a clean build in a `prepare` script and additionally download the plugins
 
       - Configure the options to pre-install Visual Studio Code Extensions
-
         - `theiaPluginsDir` - the folder in which the pre-installed extensions are located
         - `theiaPlugins`- list of published vs code extension urls, can be empty here, because we will pre-install our extension manually
 
@@ -454,7 +448,6 @@ In this section we will extend the Theia Application that we just created with t
       ```
 
     - Build the Theia applications to take up the updated dependencies
-
       - Open a **Terminal**
       - Switch to the _theia_ directory
       - Execute the following commands to trigger the application builds.
@@ -475,14 +468,11 @@ In this section we will extend the Theia Application that we just created with t
 
 - Pre-install the Visual Studio Code extensions  
   You have basically two options:
-
   - Option 1: Symbolic Links  
     Use [`symlink-dir`](https://www.npmjs.com/package/symlink-dir) to link the extension to the _plugin_ folder location of the Theia application as described in [Developing VS Code Extensions in a Theia Project](https://theia-ide.org/docs/authoring_vscode_extensions/#developing-vs-code-extensions-in-a-theia-project)
-
     - Open a **Terminal**
     - Switch to the _vscode-extension_ directory
     - Add the following packages as `devDependencies`
-
       - [`rimraf`](https://www.npmjs.com/package/rimraf) to delete the directory
 
         ```
@@ -493,6 +483,14 @@ In this section we will extend the Theia Application that we just created with t
 
         ```
         npm i -D symlink-dir
+        ```
+
+        _**Note:**_  
+        With a `symlink-dir` version > 7.1.0 you might face [Endless self reference to target parent folder](https://github.com/pnpm/symlink-dir/issues/68).
+        In that case force an earlier version via
+
+        ```
+        npm i -D symlink-dir@7.1.0
         ```
 
     - Open the file _vscode-extension/package.json_ and add the following `scripts`
@@ -517,7 +515,6 @@ In this section we will extend the Theia Application that we just created with t
 
     _**Note:**_  
     The `prepare` script is a life cycle script that is automatically executed at various points which is described in [Life Cycle Scripts](https://docs.npmjs.com/cli/v11/using-npm/scripts#life-cycle-scripts). By adding the `prepare` script, the `install:all` scripts in _angular-extension_ and _react-extension_ will fail because of the execution order. There are two solutions for this issue:
-
     1. Change the order in the `install:all` scripts to first call `npm install` in the _webview-ui_ folder
 
        ```json
@@ -538,10 +535,8 @@ In this section we will extend the Theia Application that we just created with t
 
   - Option 2: VSIX  
     This means to create the _.vsix_ extension package file and extract it to the _plugins_ folder manually. This has the advantage that the result is the same as if you install a Visual Studio Code extension from a marketplace. So it is a real integration test and makes it easier to create a container image as I will show later.
-
     - Switch to the _vscode-extension_ folder in a Terminal
     - Add the following packages as `devDependencies`
-
       - [`mkdirp`](https://www.npmjs.com/package/mkdirp) to create the directory
 
         ```
@@ -595,7 +590,6 @@ In this section we will extend the Theia Application that we just created with t
     - Repeat the above steps for _angular-extension_ and _react-extension_. Remember to update the folder references according to the extension.
 
 - Verify the installation of the extensions
-
   - Option 1: Via task _Start Theia Browser_
   - Option 2: Via Terminal
     - Run the Theia browser application
@@ -640,7 +634,7 @@ var filePath = fileUri.fsPath;
 if (fileUri.fsPath.startsWith("\\webview\\theia-resource\\file\\\\\\")) {
   filePath = fileUri.fsPath.replace(
     "\\webview\\theia-resource\\file\\\\\\",
-    ""
+    "",
   );
 }
 ```
@@ -700,7 +694,6 @@ Also note that there are also some Extensions that are only allowed to be instal
 e.g. [Pylance](https://marketplace.visualstudio.com/items?itemName=ms-python.vscode-pylance) the language server for Python from Microsoft can not be installed in a Theia application.
 
 - Open the file _theia/browser-app/package.json_
-
   - Add the following entry in the `theiaPlugins` section
 
     ```json
@@ -713,7 +706,6 @@ e.g. [Pylance](https://marketplace.visualstudio.com/items?itemName=ms-python.vsc
     You find the link to the _.vsix_ file on the extension page with the **Download** button.
 
 - Open the file _theia/electron-app/package.json_
-
   - Add the following entry in the `theiaPlugins` section
 
     ```json
@@ -738,7 +730,6 @@ To enable this feature you need to add `@theia/vsx-registry` as a dependency.
 
 - Open a Terminal
 - Switch to the folder _theia/browser-app_
-
   - Add the dependency to `@theia/vsx-registry` via
 
     ```
@@ -746,7 +737,6 @@ To enable this feature you need to add `@theia/vsx-registry` as a dependency.
     ```
 
 - Switch to the folder _theia/electron-app_
-
   - Add the dependency to `@theia/vsx-registry` via
 
     ```
@@ -780,7 +770,6 @@ For example, to extend the Theia application for Typescript support, the followi
 - [TypeScript and JavaScript Language Features (built-in)](https://open-vsx.org/extension/vscode/typescript-language-features)
 
 - Open the file _theia/browser-app/package.json_
-
   - Add the following entries in the `theiaPlugins` section
 
     ```json
@@ -792,7 +781,6 @@ For example, to extend the Theia application for Typescript support, the followi
     ```
 
 - Open the file _theia/electron-app/package.json_
-
   - Add the following entries in the `theiaPlugins` section
 
     ```json
@@ -888,7 +876,6 @@ _**Note:**_
 If you have already committed the previous work, you could also let the generator overwrite those files and merge the changes manually of course.
 
 - Make the necessary modifications manually
-
   - Update the _theia/package.json_ and add the new _theia-customization_ module to the `workspaces` section
 
     ```json
@@ -962,7 +949,6 @@ In the following section we will replace the Theia `ApplicationShell` with a cus
 
 - Open the file _theia/theia-customization/src/theia-customization-contribution.ts_
 - Replace the content of the file with the following content:
-
   - Import the _index.css_ file
   - Extend `ApplicationShell`
   - Add a banner on top of the Theia Application Shell:
@@ -994,7 +980,6 @@ In the following section we will replace the Theia `ApplicationShell` with a cus
   ```
 
 - Open the file _theia/theia-customization/src/theia-customization-frontend-module.ts_
-
   - **Bind** the `TheiaCustomizationContribution` in the `ContainerModule` instance
   - **Rebind** the `ApplicationShell` with the `TheiaCustomizationContribution`  
     in the `ContainerModule` instance
@@ -1054,7 +1039,6 @@ The most obvious way to remove a default Theia functionality is of course to rem
 Let's try to remove the Terminal view from the application, which comes in as a transitive dependency of `@theia/plugin-ext` for example.
 
 - Create a new file _theia/theia-customization/src/browser/theia-customization-filter-contribution.ts_
-
   - Create a new class `TheiaCustomizationFilterContribution` that extends `FilterContribution`
   - Implement the method `registerContributionFilters(registry: ContributionFilterRegistry)` and register a filter that filters out the `TerminalFrontendContribution`
 
@@ -1067,9 +1051,7 @@ Let's try to remove the Terminal view from the application, which comes in as a 
   import { injectable } from "@theia/core/shared/inversify";
 
   @injectable()
-  export class TheiaCustomizationFilterContribution
-    implements FilterContribution
-  {
+  export class TheiaCustomizationFilterContribution implements FilterContribution {
     registerContributionFilters(registry: ContributionFilterRegistry): void {
       registry.addFilters("*", [
         // Filter out the main outline contribution at:
@@ -1088,7 +1070,6 @@ Let's try to remove the Terminal view from the application, which comes in as a 
   ```
 
 - Create a new file _theia/theia-customization/src/browser/theia-customization-cleanup-contribution.ts_
-
   - Create a new class `CleanupFrontendContribution` that implements `FrontendApplicationContribution`
   - Implement the lifecycle method `onDidInitializeLayout(app: FrontendApplication)` and dispose any terminal widget  
     This is a way to ensure that a widget that is opened by default somehow is closed before the user sees anything.
@@ -1103,9 +1084,7 @@ Let's try to remove the Terminal view from the application, which comes in as a 
   import { Widget } from "@theia/core/lib/browser/widgets";
 
   @injectable()
-  export class CleanupFrontendContribution
-    implements FrontendApplicationContribution
-  {
+  export class CleanupFrontendContribution implements FrontendApplicationContribution {
     /**
      * Called after the application shell has been attached in case there is no previous workbench layout state.
      * Should return a promise if it runs asynchronously.
@@ -1122,7 +1101,6 @@ Let's try to remove the Terminal view from the application, which comes in as a 
   ```
 
 - Open the file _theia/theia-customization/src/theia-customization-frontend-module.ts_
-
   - **Bind** the `TheiaCustomizationFilterContribution` and the `CleanupFrontendContribution` in the `ContainerModule` instance
 
   ```typescript
@@ -1149,7 +1127,7 @@ Let's try to remove the Terminal view from the application, which comes in as a 
 
     bind(CleanupFrontendContribution).toSelf().inSingletonScope();
     bind(FrontendApplicationContribution).toService(
-      CleanupFrontendContribution
+      CleanupFrontendContribution,
     );
   });
   ```
@@ -1190,7 +1168,6 @@ Create a new color theme:
     This opens a new editor with the content of the generated color theme.
 - Generate a new Visual Studio Code Theme Extension  
   As the Theme Extension could generally be used by multiple Theia applications, and even in Visual Studio Code, we create it on the same folder level as the _theia_ folder.
-
   - Open a **Terminal**
   - Ensure that you are on the top level of the repository.
   - Create a new project using `generator-code`
@@ -1223,11 +1200,9 @@ Create a new color theme:
       }
       ```
   - Pre-install the theme extension to the Theia application
-
     - Open a **Terminal**
     - Switch to the _custom-theme_ directory
     - Add the following packages as `devDependencies`
-
       - [`rimraf`](https://www.npmjs.com/package/rimraf) to delete the directory
 
         ```
@@ -1330,7 +1305,6 @@ This keeps the final image as small as possible.
 For this task we need to ensure that the Visual Studio Code Extensions are added to the _plugins_ folder in the extracted _.vsix_ way, as the symbolic links would not work in the Theia Application container if you don't copy the extension projects folders also to the final container image.
 
 - Open the _package.json_ in the repository root
-
   - Extend the `install:all` script to run `npm install` on the _custom-theme_ project
   - Add a new script `build:all:browser` that calls `theia:prepare-app` for each Visual Studio Code Extension and then builds the Theia Browser Application.
 
@@ -1458,7 +1432,6 @@ For this task we need to ensure that the Visual Studio Code Extensions are added
   ```
 
 - Ensure that you have Docker or Podman installed. In case you are using the Dev Container
-
   - Open the file _.devcontainer/devcontainer.json_
   - Add the _docker-in-docker_ feature
 
@@ -1472,7 +1445,6 @@ For this task we need to ensure that the Visual Studio Code Extensions are added
   - Rebuild the Dev Container to get the _docker-in-docker_ feature installed
 
 - Build the container image
-
   - Open a **Terminal**
   - Execute the following command in the repository root folder
 
