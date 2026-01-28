@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Install a new version of npm, the VS Code Extension code generator and the extension manager
-npm install -g npm yo generator-code @vscode/vsce @angular/cli generator-theia-extension
+npm install -g npm yo generator-code @vscode/vsce @angular/cli generator-theia-extension npm-check-updates
 
 # Install Theia dependencies
 sudo apt-get update && export DEBIAN_FRONTEND=noninteractive \

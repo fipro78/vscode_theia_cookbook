@@ -16,7 +16,7 @@ In first place this tutorial is about extending GitHub Copilot in Visual Studio 
 
 To follow this tutorial you need the following tools and services:
 
-- [Visual Studio Code](https://code.visualstudio.com/) >= 1.105.0
+- [Visual Studio Code](https://code.visualstudio.com/) >= 1.108.0
 - [Copilot Extension](https://marketplace.visualstudio.com/items?itemName=GitHub.copilot)
 - Copilot Account (e.g. [GitHub Copilot Free](https://github.com/settings/copilot))
 
@@ -67,7 +67,6 @@ A new subfolder _copilot-extension_ will be created that contains the sources of
 The cookbook repository is setup as a mono-repo, therefore the Visual Studio Code Extension is kept in a subfolder. The following modifications are needed to include the newly created extension project to the setup:
 
 - Edit the _.vscode/tasks.json_
-
   - Add a task for watching the new copilot extension
 
   ```json
@@ -173,7 +172,6 @@ _**Note:**_
 Actually Visual Studio Code already contains built-in language model tools that are able to interact with the workspace. So the following implementation is not necessary to achieve the result. It is intended as an example how the implementation of a **Language Model Tool** could look like.
 
 - Open the file _copilot-extension/package.json_
-
   - Replace the `contributes` section with the following snippet:
 
     ```json
@@ -210,7 +208,6 @@ Actually Visual Studio Code already contains built-in language model tools that 
     ```
 
 - Create a new file _copilot-extension/src/joke-file-creator.ts_
-
   - Import the VS Code API
 
     ```typescript
@@ -230,8 +227,7 @@ Actually Visual Studio Code already contains built-in language model tools that 
   - Create a class that implements `vscode.LanguageModelTool`
 
     ```typescript
-    export class JokeFileCreatorTool
-      implements vscode.LanguageModelTool<IJokeFileParameters> {}
+    export class JokeFileCreatorTool implements vscode.LanguageModelTool<IJokeFileParameters> {}
     ```
 
     - Add the following `prepareInvocation()` method to provide tool configuration messages.
@@ -259,7 +255,6 @@ Actually Visual Studio Code already contains built-in language model tools that 
 
     _**Note:**_  
      If you return `undefined`, the generic confirmation message will be shown.
-
     - Add the following `invoke()` method which is called when the language model tool is invoked while processing a chat prompt.
 
     ```typescript
@@ -319,7 +314,6 @@ Actually Visual Studio Code already contains built-in language model tools that 
     ```
 
   - Change _copilot-extension/src/extension.ts_
-
     - Replace the existing example code with the following snippet
 
     ```typescript
@@ -333,13 +327,13 @@ Actually Visual Studio Code already contains built-in language model tools that 
     export function activate(context: vscode.ExtensionContext) {
       // This line of code will only be executed once when your extension is activated
       console.log(
-        'Congratulations, your extension "copilot-extension" is now active!'
+        'Congratulations, your extension "copilot-extension" is now active!',
       );
 
       // Register our custom joke creator language model tool
       // Use the name property of the tool configured in the package.json
       context.subscriptions.push(
-        vscode.lm.registerTool("chat-tools-joke", new JokeFileCreatorTool())
+        vscode.lm.registerTool("chat-tools-joke", new JokeFileCreatorTool()),
       );
     }
 
@@ -347,9 +341,9 @@ Actually Visual Studio Code already contains built-in language model tools that 
     export function deactivate() {}
     ```
 
-If everything is correctly in place, you can verify the _Language Model Tool_ like this:
+If everything is correctly in place, you can verify the **Language Model Tool** like this:
 
-- You need an open workspace to make the _Language Model Tool_ work. To be able to open a workspace in the Extension Host create a folder _example_ in the home directory of the _node_ user in the Dev Container
+- You need an open workspace to make the **Language Model Tool** work. To be able to open a workspace in the Extension Host create a folder _example_ in the home directory of the _node_ user in the Dev Container
   ```
   mkdir ~/example
   ```
@@ -430,7 +424,6 @@ The [Filesystem MCP Server](https://github.com/modelcontextprotocol/servers/tree
   <img src="mcp_codelens.png" width="75%"/>  
   This will start the server and discover the capabilities and tools provided by the server. These tools can then be used in the Copilot Chat in agent mode.
 - Test if the configuration works
-
   - Ensure to have the **Agent** mode enabled.
   - Enter the following to the Copilot Chat
 
@@ -454,7 +447,6 @@ The [Filesystem MCP Server](https://github.com/modelcontextprotocol/servers/tree
 
   _**Note:**_  
   Visual Studio Code already provides `fetch` as a built-in tool. So this is actually not needed for usage, but an example to show a simple remote MCP server configuration. For testing that the added remote `fetch` MCP server works
-
   - Click on _Configure Tools..._  
     <img src="copilot_tools_configuration.png" width="50%"/>
   - Disable the built-in `fetch` tool
@@ -618,7 +610,6 @@ from the ignore list by adding the following line to the _.gitignore_ in the pro
 You can also register MCP server programmatically via a Visual Studio Code extension. This way you can for example bundle AI extensions like chat participants or the direct usage of the Language Model API with the registration of MCP servers that are needed for the provided functionality.
 
 - Open the file _copilot-extension/package.json_
-
   - Extend the `contributes` section with the following `mcpServerDefinitionProviders`
 
     ```json
@@ -642,7 +633,6 @@ You can also register MCP server programmatically via a Visual Studio Code exten
     ```
 
 - Open the file _copilot-extension/src/extension.ts_
-
   - Register the `McpServerDefinitionProvider` in the `activate()` method.
 
     ```typescript
@@ -658,7 +648,7 @@ You can also register MCP server programmatically via a Visual Studio Code exten
 
           return servers;
         },
-      })
+      }),
     );
     ```
 
@@ -670,7 +660,7 @@ You can also register MCP server programmatically via a Visual Studio Code exten
         "-y",
         "@modelcontextprotocol/server-filesystem",
         "/home/node/example",
-      ])
+      ]),
     );
     ```
 
@@ -680,23 +670,20 @@ You can also register MCP server programmatically via a Visual Studio Code exten
     servers.push(
       new vscode.McpHttpServerDefinition(
         "fetch",
-        vscode.Uri.parse("https://remote.mcpservers.org/fetch/mcp")
-      )
+        vscode.Uri.parse("https://remote.mcpservers.org/fetch/mcp"),
+      ),
     );
     ```
 
   There are some flaws related to programmatically registered MCP servers:
-
   - There is no programmatical way to autostart a MCP server.
   - They do not show up in the _MCP Servers_ section of the _Extensions_ view.
   - They don't get [roots](https://modelcontextprotocol.info/docs/concepts/roots/) set.
 
   The resources and tools provided by a MCP server are loaded and cached on the first start. But because of the above reasons, a programmatically registered MCP servers will not be started automatically and needs a user interaction for the first start. The only way to manage programmatically registered MCP servers manually is to use the command **MCP: List Servers** command from the Command Palette (F1) to view the list of configured MCP servers.
-
   - _Command Palette (F1) -> **MCP: List Servers** -> select the server to start -> **Start Server**_
 
   There is also a configuration **Chat > MCP: Autostart** available that lets a user define an autostart behavior for MCP servers.
-
   - _Command Palette (F1) -> **Preferences: Open User Settings** -> search for autostart -> **Chat > MCP: Autostart**_ - set the value to `newAndOutdated` (`"chat.mcp.autostart": "newAndOutdated"` in the settings JSON).
 
   With this setting even programmatically registered MCP servers can be autostarted. But as for example the _roots_ are not set by Visual Studio Code to programmatically registered MCP servers, the `filesystem` MCP server can be configured to access an directory outside the workspace via the _allowed directories_ parameter, in the above configuration _/home/node/example_.
@@ -718,8 +705,8 @@ servers.push(
     vscode.Uri.parse("https://api.githubcopilot.com/mcp/"),
     {
       Authorization: `Bearer ${token}`,
-    }
-  )
+    },
+  ),
 );
 ```
 
@@ -741,27 +728,27 @@ export function activate(context: vscode.ExtensionContext) {
             "-y",
             "@modelcontextprotocol/server-filesystem",
             "/home/node/example",
-          ])
+          ]),
         );
 
         servers.push(
           new vscode.McpHttpServerDefinition(
             "fetch",
-            vscode.Uri.parse("https://remote.mcpservers.org/fetch/mcp")
-          )
+            vscode.Uri.parse("https://remote.mcpservers.org/fetch/mcp"),
+          ),
         );
 
         servers.push(
           new vscode.McpHttpServerDefinition(
             "github",
-            vscode.Uri.parse("https://api.githubcopilot.com/mcp/")
-          )
+            vscode.Uri.parse("https://api.githubcopilot.com/mcp/"),
+          ),
         );
 
         return servers;
       },
       resolveMcpServerDefinition: async (
-        server: vscode.McpServerDefinition
+        server: vscode.McpServerDefinition,
       ) => {
         if (server.label === "github") {
           // First check if token is available in environment variable
@@ -782,13 +769,13 @@ export function activate(context: vscode.ExtensionContext) {
             }
           } else {
             console.log(
-              `Using GITHUB_TOKEN from environment for ${server.label}`
+              `Using GITHUB_TOKEN from environment for ${server.label}`,
             );
           }
 
           if (!token) {
             vscode.window.showErrorMessage(
-              `Authorization token is required for ${server.label}`
+              `Authorization token is required for ${server.label}`,
             );
             return undefined; // Don't start the server without a token
           }
@@ -807,7 +794,7 @@ export function activate(context: vscode.ExtensionContext) {
         // to the language model.
         return server;
       },
-    })
+    }),
   );
 }
 ```
@@ -844,7 +831,6 @@ We use the [`chat-extension-utils`](https://github.com/microsoft/vscode-chat-ext
 Check the [tool calling by using prompt-tsx example](https://github.com/microsoft/vscode-extension-samples/blob/main/chat-sample/src/toolParticipant.ts) for an example on how to implement the tool calling yourself.
 
 - Install `@vscode/chat-extension-utils` to use tools in the chat participant
-
   - Open a **Terminal**
   - Switch to the folder _copilot-extension_
   - Execute the following command
@@ -853,7 +839,6 @@ Check the [tool calling by using prompt-tsx example](https://github.com/microsof
     ```
 
 - Open the file _copilot-extension/package.json_
-
   - Extend the `contributes` section with the following `chatParticipants`
 
     ```typescript
@@ -871,7 +856,6 @@ Check the [tool calling by using prompt-tsx example](https://github.com/microsof
     ```
 
 - Open the file _copilot-extension/src/extension.ts_
-
   - Define the prompt to use
 
     ```typescript
@@ -888,7 +872,6 @@ Check the [tool calling by using prompt-tsx example](https://github.com/microsof
     ```
 
 - Extend the `activate()` method
-
   - Define the `vscode.ChatRequestHandler` request handler
 
     ```typescript
@@ -896,12 +879,12 @@ Check the [tool calling by using prompt-tsx example](https://github.com/microsof
       request: vscode.ChatRequest,
       context: vscode.ChatContext,
       stream: vscode.ChatResponseStream,
-      token: vscode.CancellationToken
+      token: vscode.CancellationToken,
     ) => {
       // Chat request handler implementation goes here
       try {
         const tools = vscode.lm.tools.filter(
-          (tool) => tool.name === "chat-tools-joke"
+          (tool) => tool.name === "chat-tools-joke",
         );
 
         const libResult = chatUtils.sendChatParticipantRequest(
@@ -916,7 +899,7 @@ Check the [tool calling by using prompt-tsx example](https://github.com/microsof
             },
             tools,
           },
-          token
+          token,
         );
 
         return await libResult.result;
@@ -931,13 +914,12 @@ Check the [tool calling by using prompt-tsx example](https://github.com/microsof
     ```typescript
     const chatLibParticipant = vscode.chat.createChatParticipant(
       "joker-sample.joker-participant",
-      handler
+      handler,
     );
     context.subscriptions.push(chatLibParticipant);
     ```
 
   - Test the implementation by starting the extension host via F5.
-
     - Open the Copilot Chat and ask the joker chat participant for a joke by selecting him via _@joker_
 
       ```
@@ -955,53 +937,210 @@ Further information about chat participants can be found here
 
 ## Further Customizations
 
-Users can further customize the Copilot experience by configuring _Instructions_, _Prompt Templates_ and _Chat Modes_.
+Users can further customize the Copilot experience by configuring _Instructions_, _Prompt Templates_ and _Custom Agents_.
+This is actually a topic from a Copilot user perspective, not a development topic. But I find that information very interesting, and you might want to share such customizations with your users or colleagues e.g. via workspace files in your code repository.
 
 - Instructions  
-  [Custom Instructions](https://code.visualstudio.com/docs/copilot/copilot-customization#_custom-instructions) are used to define common guidelines for specific tasks and can be installed in the user profile or in the workspace _.github/instructions_
+  [Custom Instructions](https://code.visualstudio.com/docs/copilot/customization/custom-instructions) are used to define common guidelines for specific tasks and can be installed in the user profile or in the workspace _.github/instructions_
 - Prompts  
-  [Prompt files](https://code.visualstudio.com/docs/copilot/copilot-customization#_prompt-files-experimental) are used to define reusable prompts and can be installed in the user profile or in the _.github/prompts_ folder
-- Chat Modes  
-  [Chat Modes](https://code.visualstudio.com/docs/copilot/chat/chat-modes) are used to create a specialist assistant for specific tasks can be installed in the user profile or in the workspace in the _.github/chatmodes_ folder
+  [Prompt Files](https://code.visualstudio.com/docs/copilot/customization/prompt-files) are used to define reusable prompts to execute reusable development tasks and can be installed in the user profile or in the _.github/prompts_ folder
+- Custom Agents  
+  [Custom Agents](https://code.visualstudio.com/docs/copilot/customization/custom-agents) are used to create a specialist assistant for specific tasks that can be used in the chat for planning or research or to define specialized workflows. They can be installed in the user profile or in the workspace in the _.github/agents_ folder
 - Tool Sets  
-  [Tool Sets](https://code.visualstudio.com/docs/copilot/chat/chat-agent-mode#_agent-mode-tools) can be defined in a
+  [Tool Sets](https://code.visualstudio.com/docs/copilot/chat/chat-tools#_group-tools-with-tool-sets) can be defined in a
   _.jsonc_ file that is located in the user profile e.g. _C:\Users\\<username\>\AppData\Roaming\Code\User\prompts_
 
-By having the instructions, prompts and chat-modes in the workspace, it is possible to have dedicated instructions, prompts and chat-modes per project that are checked in the repository.
+By having the instructions, prompts and custom agents in the **workspace**, it is possible to have dedicated instructions, prompts and custom agents per project that are checked in the repository.
 
 Further information can be found in [Customize chat to your workflow](https://code.visualstudio.com/docs/copilot/copilot-customization).
 
-I will not go into details of every possible customization. But as an example and comparison to the previous programmatically registered _Chat Participant_, we will create a prompt that is able to achieve the same.
+I will not go into details of every possible customization. But as an example and comparison to the previous programmatically registered _Chat Participant_, we will create a prompt and a custom agent, each able to achieve the same result.
+
+### Prompt Files
+
+[Prompt Files](https://code.visualstudio.com/docs/copilot/customization/prompt-files) are used to define reusable prompts to execute reusable development tasks and can be installed in the user profile or in the _.github/prompts_ folder.
+
+_Prompt Files_ can be used by typing `/` followed by the prompt name in the chat input field. You can provide additional information as input variables via `<name>=<value>`.
 
 - Start the Extension Host by pressing F5  
   This is necessary because the `jokeFileCreator` language model tool is contributed by the developed Visual Studio Code Extension. If that tool is not needed or used, you can even try this in the Visual Studio Code instance in which you are developing.
 
-- Create a new prompt  
+- Create a new _Prompt File_  
   In the Copilot chat window, click the gear icon in the upper right corner (_Configure Chat..._) and select  
-  _Prompt Files_ -> _New Prompt File_ -> _.github/prompts_ -> name: joker
+  _Prompt Files_ -> _New prompt file_ -> _.github/prompts_ -> name: harley
 
   <img src="copilot_configure_prompt.png" width="50%"/>
 
-- Add the following content to the file
+  This creates the file _.github/prompts/harley.prompt.md_
+  - Add the following content to the file
 
+    ```
+    ---
+    agent: agent
+    tools: ['undefined_publisher.copilot-extension/jokeFileCreator']
+    ---
+
+    You are Harley Quinn, the girlfriend of the Joker, who is the arch enemy of Batman.
+    To attack Batman, you tell a joke that is so funny, it distracts him from his mission.
+
+    To keep the distraction going on, write the joke to a file.
+    If the user does not provide a path, create a new folder "bat-jokes" in the current workspace folder and store the file in that folder.
+    ```
+
+  - Execute the prompt by pressing the play button in the editor title area.  
+    <img src="copilot_prompt_play.png"/>
+  - Execute the prompt by using it in the chat via slash command and pass additional information, e.g. `/harley joke about robin`
+
+The prompt can be more specific by using input variables and mentioning the tools to be used at the correct position via the `#tool:<toolname>` syntax.
+
+- Update the file _.github/prompts/harley.prompt.md_
+  - Use the variable _target_ to tell a joke about
+  - Use the _jokeFileCreator_ tool explicitly to create the file
+
+    ```
+    ---
+    agent: agent
+    tools: ["undefined_publisher.copilot-extension/jokeFileCreator"]
+    ---
+
+    You are Harley Quinn, the girlfriend of the Joker, who is the arch enemy of Batman.
+    To attack Batman, you tell a joke about ${input:target} that is so funny, it distracts him from his mission.
+
+    To keep the distraction going on, write the joke to a file by using #tool:undefined_publisher.copilot-extension/jokeFileCreator
+    If the user does not provide a path, create a new folder "bat-jokes" in the current workspace folder and store the file in that folder.
+    ```
+
+  - Execute the prompt by using it in the chat via slash command and set the _target_ input variable, e.g. `/harley target=batgirl`
+
+### Custom Agents
+
+- Create a new _Custom Agent_  
+  In the Copilot chat window, click the gear icon in the upper right corner (_Configure Chat..._) and select  
+  _Custom Agents_ -> _Create new custom agent..._ -> _.github/agents_ -> name: joker
+
+  <img src="copilot_configure_custom_agent.png" width="50%"/>
+
+  This creates the file _.github/agents/joker.agent.md_
+  - Add the following content to the file
+
+    ```
+    ---
+    description: "Creates a file with a joke to distract Batman."
+    tools: ["undefined_publisher.copilot-extension/jokeFileCreator"]
+    ---
+
+    You are the Joker, the arch enemy of Batman.
+    To attack Batman, you tell a joke that is so funny, it distracts him from his mission.
+    To keep the distraction going on, write the joke to a file.
+    If the user does not provide a path, create a new folder "bat-jokes" in the current workspace folder and store the file in that folder.
+    ```
+
+  - Use the _Custom Agent_ by selecting it in the agents dropdown in the chat view and enter a prompt, e.g. `joke about alfred`
+
+    <img src="copilot_select_custom_agent.png"/>
+
+As you might notice, the results from the implemented _Chat Participant_ are quite similar to those from the _Prompt File_ or the _Custom Agent_. For this simple example that uses a _Language Model Tool_ for file creation, there is no significant advantage to creating a _Chat Participant_, except for the ability to distribute it via a Visual Studio Code Extension. The real benefits of a _Chat Participant_ become apparent when you need to deeply integrate with Visual Studio Code using the extension APIs or you want to manage the end-to-end user chat prompt and response conversation. With the available built-in tools and features provided via _Prompt Files_ and _Custom Agents_ the reasons for implementing a _Chat Participant_ are getting lesser.
+
+The following table shows a basic comparison of _Prompt Files_, _Custom Agents_ and _Chat Participants_:
+
+|                      | Prompt Files                           | Custom Agents                                                      | Chat Participants                                                                                                                |
+| -------------------- | -------------------------------------- | ------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------- |
+| Format               | _.promp.md_ file                       | _.agent.md_ file                                                   | Implementation of `vscode.ChatRequestHandler`                                                                                    |
+| Usage                | slash command, e.g. _/joker_           | select in agents dropdown                                          | select via `@` in chat, e.g. _@joker_                                                                                            |
+| Usage scenarios      | Reusable development tasks             | Specialized workflows with option to delegate task to other agents | Domain-specific tasks                                                                                                            |
+| Distribution         | File, e.g. in _.github/prompts_ folder | File, e.g. in _.github/agents_ folder                              | VS Code Extension                                                                                                                |
+| Delegation           | Yes via built-in tool `agent`          | Yes via `handoffs`                                                 | No, there is no API<br>You implement a conversation with slash commands and `ChatFollowup` instead of delegating to other agents |
+| Custom Chat Response | No                                     | No                                                                 | Yes via `ChatResponseStream` VS Code API                                                                                         |
+
+### Agent-to-Agent Delegation / Handoffs
+
+_Custom Agents_ can be used to create specialized workflows with multiple agents involved. In this section we will create two new _Custom Agents_ where the first agent is retrieving some information and the second one will write it to a file. This excercise can be done in the development host and does not need to be executed in the debugging instance.
+
+- Ensure to have the GitHub MCP server configured in your workspace with gists tools enabled:
+  - Open the file _.vscode/mcp.json_
+  - Check that the following entry is available
+
+  ```json
+  "github": {
+    "url": "https://api.githubcopilot.com/mcp/",
+    "type": "http",
+    "headers": {
+      "X-MCP-Toolsets": "gists"
+    }
+  }
   ```
-  ---
-  mode: agent
-  tools: ['undefined_publisher.copilot-extension/jokeFileCreator']
-  ---
 
-  You are the Joker, the arch enemy of Batman.
-  To attack Batman, you tell a joke that is so funny, it distracts him from his mission.
-  To keep the distraction going on, write the joke to a file.
-  If the user does not provide a path, create a new folder "bat-jokes" in the current workspace folder and store the file in that folder.
-  ```
+- Create a new _Custom Agent_ that is able to write content to a file in the workspace by using the `edit/createFile` built-in tool of Visual Studio Code.
+  - In the Copilot chat window, click the gear icon in the upper right corner (_Configure Chat..._) and select  
+    _Custom Agents_ -> _Create new custom agent..._ -> _.github/agents_ -> name: filewriter
 
-- Execute the prompt by pressing the play button in the editor title area.  
-  {% include figure image_path="/assets/images/copilot_prompt_play.png" %}
-- Execute the prompt by using it in the chat via slash command and pass additional information, e.g. `/joker joke about robin`
+    This creates the file _.github/agents/filewriter.agent.md_
 
-_**Note:**_  
-As you might notice, the results from the implemented _Chat Participant_ are quite similar to those from the _Prompt File_. For this simple example that uses a _Language Model Tool_ for file creation, there is no significant advantage to creating a _Chat Participant_, except for the ability to distribute it via a Visual Studio Code Extension. The real benefits of a _Chat Participant_ become apparent when you need to deeply integrate with Visual Studio Code using the extension APIs.
+  - Add the following content to the file
+
+    ```
+    ---
+    description: "This is an agent that is able to persist content into a file in the workspace."
+    tools: ["edit/createFile"]
+    ---
+
+    You are an agent that operates in the current workspace of Visual Studio Code. You are able to persist the provided content into a file.
+    ```
+
+- Create a new _Custom Agent_ that is able to retrieve information from a _gist_.
+  - In the Copilot chat window, click the gear icon in the upper right corner (_Configure Chat..._) and select  
+    _Custom Agents_ -> _Create new custom agent..._ -> _.github/agents_ -> name: blog
+
+    This creates the file _.github/agents/blog.agent.md_
+
+  - Use the GitHub MCP tool `github/list_gists` to list the gists (remember to enable the _gists_ toolset)
+  - Use the built-in `web/fetch` tool to fetch the content
+  - Use `handoffs` field in the frontmatter header to configure that the processing should be _hand off_ to the `filewriter` agent we created before
+  - Add the following content to the file
+
+    ```
+    ---
+    description: "This agent provides a list of blog posts related to VS Code and Theia written by Dirk Fauth."
+    tools: ["web/fetch", "github/list_gists"]
+    handoffs:
+      - label: Persist Blog Links
+        agent: filewriter
+        prompt: Persist the given list of links by writing to the links folder in a file named fauth.html
+        send: false
+    ---
+
+    You are an agent that helps the developer by providing links to blog posts about VS Code and Theia written by Dirk Fauth.
+
+    To provide the necessary links execute the following steps:
+
+    1. Fetch the publications of Dirk Fauth in the gists of fipro78. Use #tool:github/list_gists to find the correct gist.
+    2. Use #tool:web/fetch to fetch the content of the gists with a max-length parameter of 15000.
+    3. Filter the found links for information about VS Code or Theia
+    4. Provide a list of links to the blog posts about VS Code or Theia
+    ```
+
+    _**Note:**_  
+    The tools are mentioned explicitly via the `#tool:` syntax to ensure that the correct tools are used without the need to determine which tool to use.
+
+- Use the _Custom Agent_ `blog` by selecting it in the agents dropdown in the chat view and enter the prompt, e.g. `show me the list`
+
+  <img src="copilot_custom_agent_blog.png" width="50%"/><br>
+  - You will be prompted to allow the execution of the `fetch` tool to ensure that there is no malicious code fetched
+
+  <img src="copilot_allow_and_review.png" width="50%"/>
+  - Once the `blog` agent is done, you will be asked if you want to proceed with the next step
+
+  <img src="copilot_handoff_proceed.png"/>
+  - If the next step is approved, the chat will contain the `prompt` defined in the `handoffs` section, and the `filewriter` agent will be selected in the agent dropdown
+
+  <img src="copilot_custom_agent_filewriter.png" width="50%"/>
+  - After sending the pre-filled chat entry, the `filewriter` will execute its task and create the folder _links_ with a file _fauth.html_ in it
+  - You will then be asked whether to _Keep_ or to _Undo_ the file changes. Select _Keep_ and check what the content of the file.
+
+    <img src="copilot_keep_undo.png" width="50%"/>
+
+By setting the `send` field in the `handoffs` section to `true` you can avoid that you need to send the hand-off prompt manually and instead auto-submit the prompt.
+But you still will need to approve the next step.
 
 ## Conclusion
 
@@ -1013,9 +1152,9 @@ In this comprehensive tutorial, we explored the powerful extensibility options a
 
 **Chat Participants** create specialized AI assistants that can leverage both Language Model Tools and MCP servers while providing a customized conversational interface. They excel when deep VS Code integration is required and can be easily distributed through the VS Code marketplace.
 
-We also explored alternative customization approaches like _Instructions_, _Prompt Files_ and _Chat Modes_, which can help to improve the Copilot experience according to your needs.
+We also explored alternative customization approaches like _Instructions_, _Prompt Files_ and _Custom Agents_, which can help to improve the Copilot experience according to your needs.
 
-The key takeaway is that the choice between these approaches depends on your specific requirements: use Language Model Tools for VS Code-specific integrations, MCP servers for external tool access, and Chat Participants when you need a complete custom AI assistant experience that can be distributed as an extension.
+The key takeaway is that the choice between these approaches depends on your specific requirements: use _Language Model Tools_ for VS Code-specific integrations, _MCP servers_ for external tool access, and _Chat Participants_ when you need a complete custom AI assistant experience that can be distributed as an extension.
 
 The complete source code and examples from this tutorial are available in my [GitHub repository](https://github.com/fipro78/vscode_theia_cookbook), providing a practical foundation for building your own AI-powered VS Code extensions.
 

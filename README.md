@@ -29,7 +29,15 @@ The corresponding tutorial is located in this repository:
 
 ## Recipe #4 - Extending Copilot in Visual Studio Code
 
-This recipe describes hot to extend Copilot in Visual Studio Code by adding _Language Model Tools_, _MCP Servers_ and _Chat Participants_.
+This recipe describes how to extend Copilot in Visual Studio Code by adding _Language Model Tools_, _MCP Servers_ and _Chat Participants_.
 
 The corresponding tutorial is located in this repository:  
 [Extending Copilot in Visual Studio Code](/tutorials/vscode_copilot_extension.md)
+
+## Recipe #5 - Getting Started with Theia AI
+
+This recipe describes how to get started with Theia AI.  
+It shows how to add _Tool Functions_, _MCP Servers_ and _Custom Agents_.
+
+The corresponding tutorial is located in this repository:  
+[Getting Started with Theia AI](/tutorials/theia_ai_getting_started.md)
