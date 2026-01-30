@@ -14,8 +14,6 @@ If you do not have a subscription yet, but want to follow this tutorial, you can
 - Google AI (in case you have a Google account)
 - Local LLM via Ollama
 
-Having a Copilot license at work, I tried to connect that. This does not work. Theia has no Copilot support at the time writing this tutorial. There are several reasons for this. One is that even though[vscode-copilot-chat](https://github.com/microsoft/vscode-copilot-chat) is open source now, not everything related to Copilot is accessible and open source. The required [@vscode/copilot-api](https://www.npmjs.com/package/@vscode/copilot-api) module, that would be needed to implement a Copilot support in Theia, is not open source. The license says that it is only allowed to use it in Microsoft products like Visual Studio Code.
-
 [OpenAI offers a free tier](https://chatgpt.com/de-DE/pricing/), but this is only for the usage of [ChatGPT](https://chatgpt.com/). There is no free tier for the usage of the OpenAI API. You actually need to configure the billing setup in order to use it.
 
 - If you have a Google account, you can try out the [Google AI Studio](https://aistudio.google.com/)
@@ -34,6 +32,8 @@ Having a Copilot license at work, I tried to connect that. This does not work. T
     ```
     ollama pull llama3.2
     ```
+
+Since version 1.68.0 Theia also supports a [GitHub Copilot language model integration](https://github.com/eclipse-theia/theia/pull/16841).
 
 Dependent on which LLM you want to use, I will show how it can be configured later.
 
@@ -228,7 +228,7 @@ The code generator is generating basic project stubs. They do not contain the AI
   We add the dependencies to support AI Chat capabilities and MCP support in this tutorial. To also add AI support in the Editor and the Terminal, install the corresponding packages `@theia/ai-editor` and `@theia/ai-terminal`.
 
   _**Note:**_  
-  We add the dependencies to support LLMs that use the Google API, the OpenAI API and Ollama in this tutorial. If you need additional LLM API support, have a look at [LLM Providers Overview](https://theia-ide.org/docs/user_ai/#llm-providers-overview) to see what is available.
+  We add the dependencies to support LLMs that use the Google API, the OpenAI API and Ollama in this tutorial. If you need additional LLM API support, have a look at [LLM Providers Overview](https://theia-ide.org/docs/user_ai/#llm-providers-overview) to see what is available. If you for example have a GitHub Copilot license and want to use that, add the `@theia/ai-copilot` module which was added with Theia 1.68.0.
   - Update the _package.json_ of the _browser-app_ and the _electron-app_
     - Open a **Terminal**
     - Switch to the Theia Application directory (_browser-app_ and _electron-app_)
@@ -344,6 +344,9 @@ The code generator is generating basic project stubs. They do not contain the AI
 
   - Open the _AI Chat_ view if it is not open already via **CTRL** + **ALT** + **I** or _Menu Bar_ -> _View_ -> _AI Chat_
   - Enter something in the chat like _@Universal Tell me a bar joke_ and check if the AI configuration works
+
+_**Note:**_  
+If you want to use the GitHub Copilot language model integration, you need to click on the Copilot indicator in the status bar and follow the instructions in the dialog to authorize the application via the GitHub device authorization page. After the authorization succeeded, you can select one of the available Copilot language models in the _AI Configuration_.
 
 ## Tool Functions
 
