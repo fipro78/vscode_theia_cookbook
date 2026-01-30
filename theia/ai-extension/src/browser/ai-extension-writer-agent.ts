@@ -45,16 +45,16 @@ export class WriterChatAgent extends AbstractStreamParsingChatAgent {
     { id: "writer-system", defaultVariant: writerTemplate, variants: [] },
   ];
   override functions = [CREATE_JOKE_FILE_FUNCTION_ID];
-  override agentSpecificVariables: [
+  override agentSpecificVariables = [
     {
-      name: "folder";
-      description: "The folder in which the file should be created.";
-      usedInPrompt: true;
+      name: "folder",
+      description: "The folder in which the file should be created.",
+      usedInPrompt: true,
     },
     {
-      name: "content";
-      description: "The content to persist into the file.";
-      usedInPrompt: true;
+      name: "content",
+      description: "The content to persist into the file.",
+      usedInPrompt: true,
     },
   ];
 
