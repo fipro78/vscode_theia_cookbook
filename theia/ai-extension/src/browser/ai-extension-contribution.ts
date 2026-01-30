@@ -1,5 +1,8 @@
-import { MutableChatRequestModel } from "@theia/ai-chat";
-import { ToolProvider, ToolRequest } from "@theia/ai-core";
+import {
+  ToolProvider,
+  ToolRequest,
+  ToolInvocationContext,
+} from "@theia/ai-core";
 import { BinaryBuffer } from "@theia/core/lib/common/buffer";
 import { inject, injectable } from "@theia/core/shared/inversify";
 import { FileService } from "@theia/filesystem/lib/browser/file-service";
@@ -55,9 +58,9 @@ export class JokeFileCreationFunction implements ToolProvider {
       },
       handler: async (
         args: string,
-        ctx: MutableChatRequestModel,
+        ctx: ToolInvocationContext,
       ): Promise<string> => {
-        if (ctx?.response?.cancellationToken?.isCancellationRequested) {
+        if (ctx?.cancellationToken?.isCancellationRequested) {
           return JSON.stringify({ error: "Operation cancelled by user" });
         }
 

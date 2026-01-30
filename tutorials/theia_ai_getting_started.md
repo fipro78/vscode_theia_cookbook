@@ -57,7 +57,7 @@ As this tutorial is part of my [Visual Studio Code Extension - Theia - Cookbook]
 Developing applications that are based on web frameworks typically means that you have to handle dependency updates quite often. The reason is the high frequency in which libraries are updated. Sometimes it feels like the tutorials and blog posts that rely on a specific version of a library is outdated at the time it is published. The Eclipse Theia project also publishes new releases quite often, so it is a common task to update your dependencies. As several things happened since the [Getting Started with Eclipse Theia](./theia_getting_started.md) tutorial, I will update the setup in the following section. It should be at least up-to-date at the time the tutorial is published, and describe in general the steps to follow for updating in the future.
 
 _**Note:**_  
-You need at least to use Theia 1.67.0 to make all features work that are described and used in this tutorial.
+You need at least to use Theia 1.68.0 to make all features work that are described and used in this tutorial.
 
 Theia and Visual Studio Code can use Node 22 in the meanwhile. The [Theia Prerequisites](https://github.com/eclipse-theia/theia/blob/master/doc/Developing.md#prerequisites) talk about the requirement _Node.js >= 20 and < 24_ and the [VS Code Dev Container](https://github.com/microsoft/vscode/blob/main/.devcontainer/Dockerfile) is based on `typescript-node:22-bookworm`. Therefore we first update the project setup to use Node 22.
 
@@ -135,7 +135,7 @@ or by executing `npm outdated` to get a list of outdated dependencies and the av
     ncu -u -i
     ```
   - Uncheck the `electron` package to avoid that it gets updated automatically.  
-    This is necessary because the package `@theia/electron@1.67.0` has a peer dependency to `electron@38.4.0` and a newer dependency would break the build.
+    This is necessary because the package `@theia/electron@1.68.0` has a peer dependency to `electron@38.4.0` and a newer dependency would break the build.
   - Answer the question `Run npm install to install new versions?` with `n` as we need to execute `npm install` from the _theia_ parent folder.
   - Open the file _theia/electron-app/package.json_
     - Update the `electron` version
@@ -372,8 +372,11 @@ Theia already contains a tool function with the name `writeFileContent` that can
   - Replace the content with the following and adjust it if you want. This makes it easier to follow the tutorial instead of implementing everything by your own.
 
     ```typescript
-    import { MutableChatRequestModel } from "@theia/ai-chat";
-    import { ToolProvider, ToolRequest } from "@theia/ai-core";
+    import {
+      ToolProvider,
+      ToolRequest,
+      ToolInvocationContext,
+    } from "@theia/ai-core";
     import { CommandRegistry } from "@theia/core";
     import { BinaryBuffer } from "@theia/core/lib/common/buffer";
     import { inject, injectable } from "@theia/core/shared/inversify";
@@ -422,9 +425,9 @@ Theia already contains a tool function with the name `writeFileContent` that can
           },
           handler: async (
             args: string,
-            ctx: MutableChatRequestModel,
+            ctx: ToolInvocationContext,
           ): Promise<string> => {
-            if (ctx?.response?.cancellationToken?.isCancellationRequested) {
+            if (ctx?.cancellationToken?.isCancellationRequested) {
               return JSON.stringify({ error: "Operation cancelled by user" });
             }
 
@@ -577,7 +580,7 @@ The [Filesystem MCP Server](https://github.com/modelcontextprotocol/servers/tree
   - Use the _AI Configuration_ view: _Menu_ -> _View_ -> _AI Configuration_
     - Open the _MCP Servers_ tab
     - Click on the _Play_ button for the **filesystem** MCP server  
-      <img src="theia_mcp_filesystem.png"/>
+      <img src="images/theia_mcp_filesystem.png"/>
 
 Starting the server will discover the capabilities and tools provided by the server. These tools can then be used for example in the Chat.
 
@@ -613,7 +616,7 @@ or a more extended one
   }
   ```
 - Click on the _Connect_ button to connect to the **fetch** remote MCP server  
-  <img src="theia_mcp_fetch.png"/>
+  <img src="images/theia_mcp_fetch.png"/>
 - Test if the configuration works by entering the following to the AI Chat
 
   ```
@@ -998,7 +1001,7 @@ In this section we will implement a _Custom Agent_. In the section after this on
   ```
 - Check in the response if the `jokeFileCreator` function was executed and if a file with a joke was created.
 
-  <img src="theia_ai_chat_joker.png"/>
+  <img src="images/theia_ai_chat_joker.png"/>
 
 Further information about _Custom Agents_ in Theia AI can be found here:
 
@@ -1473,11 +1476,11 @@ We are doing this because the default [QuestionPartRenderer](https://github.com/
   @Joker a joke about scarecrow
   ```
 - Check that additionally to the joke you are asked whether to save the joke to a file and two buttons to select how to proceed  
-  <img src="theia_chat_question.png">
+  <img src="images/theia_chat_question.png">
 - If you select _Yes_ the file should be saved  
-  <img src="theia_chat_question_yes.png">
+  <img src="images/theia_chat_question_yes.png">
 - If you select _No_ you should only get the markdown formatted response  
-  <img src="theia_chat_question_no.png">
+  <img src="images/theia_chat_question_no.png">
 
 ## Further Customizations
 
@@ -1573,7 +1576,7 @@ As a user you can create a _Custom Agent_ in Theia via a configuration file. Dep
 - Open the _AI Configuration_ via _Menu -> View -> AI Configuration_
 - Switch to the _Agents_ tab
 - Click on **Add Custom Agent**  
-  <img src="theia_add_custom_agent.png"/>
+  <img src="images/theia_add_custom_agent.png"/>
 - Select the _.prompts_ folder of the current workspace
 - Verify that a _.prompts_ folder is generated in your workspace that contains a _customAgents.yml_ file
 - Define a custom agent by defining the following information
@@ -1663,7 +1666,7 @@ The tasks that can be performed by AI agents are getting more and more complicat
   @Blog show me the list
   ```
 - Verify that at the end the new `FileWriter` agent is called to persist the result and created the file _links/fauth.html_  
-  <img src="theia_custom_agent_delegate.png"/>
+  <img src="images/theia_custom_agent_delegate.png"/>
 
 The `delegateToAgent` function is a very nice and powerful way to delegate tasks from one agent to another by using a prompt to create multi-agent-workflows.
 
