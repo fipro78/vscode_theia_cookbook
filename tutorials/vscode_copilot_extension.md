@@ -16,7 +16,7 @@ In first place this tutorial is about extending GitHub Copilot in Visual Studio 
 
 To follow this tutorial you need the following tools and services:
 
-- [Visual Studio Code](https://code.visualstudio.com/) >= 1.108.0
+- [Visual Studio Code](https://code.visualstudio.com/) >= 1.109.0
 - [Copilot Extension](https://marketplace.visualstudio.com/items?itemName=GitHub.copilot)
 - Copilot Account (e.g. [GitHub Copilot Free](https://github.com/settings/copilot))
 
@@ -356,15 +356,15 @@ If everything is correctly in place, you can verify the **Language Model Tool** 
   #jokeFileCreator create a file that contains a joke in the folder test
   ```
 
-  <img src="copilot_language_model_tool.png" width="50%"/>
+  <img src="images/copilot_language_model_tool.png" width="50%"/>
 
 - In the chat you will see that a prompt comes up that asks you whether to _Allow_ the execution of the tool or if you want to _Skip_ it. Click on _Allow_ or even select for example _Allow in this Workspace_ from the dropdown so you don't need to allow the execution of the tool in the future.
 
-  <img src="copilot_language_model_tool_allow.png" width="50%"/>
+  <img src="images/copilot_language_model_tool_allow.png" width="50%"/>
 
 - Check the _Input_ and _Output_ of the tool in the chat and ensure that the file was created in the correct place with the desired content.
 
-  <img src="copilot_language_model_tool_done.png" width="50%"/>
+  <img src="images/copilot_language_model_tool_done.png" width="50%"/>
 
 ## MCP Server
 
@@ -421,7 +421,7 @@ _**Note:**_
 The [Filesystem MCP Server](https://github.com/modelcontextprotocol/servers/tree/main/src/filesystem) supports [Roots](https://modelcontextprotocol.info/docs/concepts/roots/) and Visual Studio Code sets the roots to the workspace directory. You can set additional allowed directories via `args`, but they will be replaced by the roots provided by Visual Studio Code. You can therefore skip setting allowed directories as they will be replaced automatically with the workspace folder.
 
 - In the editor you will see actions provided as _CodeLens_ that let you interact with the server. Click on _Start_ to start the filesystem MCP server.  
-  <img src="mcp_codelens.png" width="75%"/>  
+  <img src="images/mcp_codelens.png" width="75%"/>  
   This will start the server and discover the capabilities and tools provided by the server. These tools can then be used in the Copilot Chat in agent mode.
 - Test if the configuration works
   - Ensure to have the **Agent** mode enabled.
@@ -448,11 +448,11 @@ The [Filesystem MCP Server](https://github.com/modelcontextprotocol/servers/tree
   _**Note:**_  
   Visual Studio Code already provides `fetch` as a built-in tool. So this is actually not needed for usage, but an example to show a simple remote MCP server configuration. For testing that the added remote `fetch` MCP server works
   - Click on _Configure Tools..._  
-    <img src="copilot_tools_configuration.png" width="50%"/>
+    <img src="images/copilot_tools_configuration.png" width="50%"/>
   - Disable the built-in `fetch` tool
   - Enable the added MCP server `fetch` in the configuration
   - Click on _OK_ to apply the changes  
-    <img src="copilot_tools_configuration_fetch.png" width="75%"/>
+    <img src="images/copilot_tools_configuration_fetch.png" width="75%"/>
 
 - Start the _fetch_ MCP server via Codelens
 - Test if the configuration works by entering the following to the Copilot Chat
@@ -969,7 +969,7 @@ _Prompt Files_ can be used by typing `/` followed by the prompt name in the chat
   In the Copilot chat window, click the gear icon in the upper right corner (_Configure Chat..._) and select  
   _Prompt Files_ -> _New prompt file_ -> _.github/prompts_ -> name: harley
 
-  <img src="copilot_configure_prompt.png" width="50%"/>
+  <img src="images/copilot_configure_prompt.png" width="50%"/>
 
   This creates the file _.github/prompts/harley.prompt.md_
   - Add the following content to the file
@@ -988,7 +988,7 @@ _Prompt Files_ can be used by typing `/` followed by the prompt name in the chat
     ```
 
   - Execute the prompt by pressing the play button in the editor title area.  
-    <img src="copilot_prompt_play.png"/>
+    <img src="images/copilot_prompt_play.png"/>
   - Execute the prompt by using it in the chat via slash command and pass additional information, e.g. `/harley joke about robin`
 
 The prompt can be more specific by using input variables and mentioning the tools to be used at the correct position via the `#tool:<toolname>` syntax.
@@ -1018,7 +1018,7 @@ The prompt can be more specific by using input variables and mentioning the tool
   In the Copilot chat window, click the gear icon in the upper right corner (_Configure Chat..._) and select  
   _Custom Agents_ -> _Create new custom agent..._ -> _.github/agents_ -> name: joker
 
-  <img src="copilot_configure_custom_agent.png" width="50%"/>
+  <img src="images/copilot_configure_custom_agent.png" width="50%"/>
 
   This creates the file _.github/agents/joker.agent.md_
   - Add the following content to the file
@@ -1037,7 +1037,7 @@ The prompt can be more specific by using input variables and mentioning the tool
 
   - Use the _Custom Agent_ by selecting it in the agents dropdown in the chat view and enter a prompt, e.g. `joke about alfred`
 
-    <img src="copilot_select_custom_agent.png"/>
+    <img src="images/copilot_select_custom_agent.png"/>
 
 As you might notice, the results from the implemented _Chat Participant_ are quite similar to those from the _Prompt File_ or the _Custom Agent_. For this simple example that uses a _Language Model Tool_ for file creation, there is no significant advantage to creating a _Chat Participant_, except for the ability to distribute it via a Visual Studio Code Extension. The real benefits of a _Chat Participant_ become apparent when you need to deeply integrate with Visual Studio Code using the extension APIs or you want to manage the end-to-end user chat prompt and response conversation. With the available built-in tools and features provided via _Prompt Files_ and _Custom Agents_ the reasons for implementing a _Chat Participant_ are getting lesser.
 
@@ -1124,20 +1124,20 @@ _Custom Agents_ can be used to create specialized workflows with multiple agents
 
 - Use the _Custom Agent_ `blog` by selecting it in the agents dropdown in the chat view and enter the prompt, e.g. `show me the list`
 
-  <img src="copilot_custom_agent_blog.png" width="50%"/><br>
+  <img src="images/copilot_custom_agent_blog.png" width="50%"/><br>
   - You will be prompted to allow the execution of the `fetch` tool to ensure that there is no malicious code fetched
 
-  <img src="copilot_allow_and_review.png" width="50%"/>
+  <img src="images/copilot_allow_and_review.png" width="50%"/>
   - Once the `blog` agent is done, you will be asked if you want to proceed with the next step
 
-  <img src="copilot_handoff_proceed.png"/>
+  <img src="images/copilot_handoff_proceed.png"/>
   - If the next step is approved, the chat will contain the `prompt` defined in the `handoffs` section, and the `filewriter` agent will be selected in the agent dropdown
 
-  <img src="copilot_custom_agent_filewriter.png" width="50%"/>
+  <img src="images/copilot_custom_agent_filewriter.png" width="50%"/>
   - After sending the pre-filled chat entry, the `filewriter` will execute its task and create the folder _links_ with a file _fauth.html_ in it
   - You will then be asked whether to _Keep_ or to _Undo_ the file changes. Select _Keep_ and check what the content of the file.
 
-    <img src="copilot_keep_undo.png" width="50%"/>
+    <img src="images/copilot_keep_undo.png" width="50%"/>
 
 By setting the `send` field in the `handoffs` section to `true` you can avoid that you need to send the hand-off prompt manually and instead auto-submit the prompt.
 But you still will need to approve the next step.
