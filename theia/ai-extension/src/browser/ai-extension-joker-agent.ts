@@ -1,6 +1,6 @@
 import {
-  AbstractStreamParsingChatAgent,
   ChatAgentService,
+  ChatMode,
   MarkdownChatResponseContentImpl,
   MutableChatRequestModel,
   QuestionResponseContentImpl,
@@ -11,6 +11,7 @@ import {
   LanguageModelRequirement,
   LanguageModelResponse,
 } from "@theia/ai-core";
+import { AbstractModeAwareChatAgent } from "@theia/ai-ide/lib/browser/mode-aware-chat-agent";
 import { CREATE_JOKE_FILE_FUNCTION_ID } from "./ai-extension-contribution";
 import { inject, injectable } from "@theia/core/shared/inversify";
 
@@ -37,8 +38,19 @@ export const jokerTemplateSimple: BasePromptFragment = {
   `,
 };
 
+export const jokerTemplateSwear: BasePromptFragment = {
+  id: "joker-system-swear",
+  template: `
+  # Instructions
+
+  You are the Joker, the arch enemy of Batman.
+  To attack Batman, you tell a joke that is so funny, it distracts him from his mission.
+  You swear a lot and use a lot of emojis in your jokes to make them even more distracting for Batman.
+  `,
+};
+
 @injectable()
-export class JokerChatAgent extends AbstractStreamParsingChatAgent {
+export class JokerChatAgent extends AbstractModeAwareChatAgent {
   id: string = "Joker";
   name: string = "Joker";
   languageModelRequirements: LanguageModelRequirement[] = [
@@ -56,9 +68,16 @@ export class JokerChatAgent extends AbstractStreamParsingChatAgent {
     {
       id: "joker-system",
       defaultVariant: jokerTemplate,
-      variants: [jokerTemplate, jokerTemplateSimple],
+      variants: [jokerTemplate, jokerTemplateSimple, jokerTemplateSwear],
     },
   ];
+
+  protected readonly modeDefinitions: Omit<ChatMode, "isDefault">[] = [
+    { id: jokerTemplate.id, name: "Default Mode" },
+    { id: jokerTemplateSimple.id, name: "Simple Mode" },
+    { id: jokerTemplateSwear.id, name: "Swear Mode" },
+  ];
+
   override functions = [CREATE_JOKE_FILE_FUNCTION_ID];
 
   @inject(ChatAgentService)
@@ -70,11 +89,11 @@ export class JokerChatAgent extends AbstractStreamParsingChatAgent {
   ): Promise<void> {
     await super.addContentsToResponse(response, request);
 
-    const selectedVariantId = this.promptService.getSelectedVariantId(
-      this.systemPromptId,
-    );
+    const selectedVariantId = request.request.modeId
+      ? request.request.modeId
+      : this.promptService.getEffectiveVariantId(this.systemPromptId);
 
-    if (selectedVariantId === "joker-system-simple") {
+    if (selectedVariantId === jokerTemplateSimple.id) {
       // if the simple variant is selected, ask if the user wants to delegate to the Writer agent
       request.response.response.addContent(
         new QuestionResponseContentImpl(

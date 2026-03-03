@@ -4,33 +4,33 @@
   "version": "0.0.0",
   "main": "lib/backend/electron-main.js",
   "dependencies": {
-    "@theia/ai-core-ui": "^1.68.0",
-    "@theia/ai-google": "^1.68.0",
-    "@theia/ai-history": "^1.68.0",
-    "@theia/ai-ide": "^1.68.0",
-    "@theia/ai-mcp-ui": "^1.68.0",
-    "@theia/ai-ollama": "^1.68.0",
-    "@theia/ai-openai": "^1.68.0",
-    "@theia/core": "1.68.0",
-    "@theia/editor": "1.68.0",
-    "@theia/electron": "1.68.0",
-    "@theia/filesystem": "1.68.0",
-    "@theia/markers": "1.68.0",
-    "@theia/messages": "1.68.0",
-    "@theia/monaco": "1.68.0",
-    "@theia/navigator": "1.68.0",
-    "@theia/plugin-ext": "^1.68.0",
-    "@theia/plugin-ext-vscode": "^1.68.0",
-    "@theia/preferences": "1.68.0",
-    "@theia/process": "1.68.0",
-    "@theia/terminal": "1.68.0",
-    "@theia/vsx-registry": "^1.68.0",
-    "@theia/workspace": "1.68.0",
+    "@theia/ai-core-ui": "^1.69.0",
+    "@theia/ai-google": "^1.69.0",
+    "@theia/ai-history": "^1.69.0",
+    "@theia/ai-ide": "^1.69.0",
+    "@theia/ai-mcp-ui": "^1.69.0",
+    "@theia/ai-ollama": "^1.69.0",
+    "@theia/ai-openai": "^1.69.0",
+    "@theia/core": "1.69.0",
+    "@theia/editor": "1.69.0",
+    "@theia/electron": "1.69.0",
+    "@theia/filesystem": "1.69.0",
+    "@theia/markers": "1.69.0",
+    "@theia/messages": "1.69.0",
+    "@theia/monaco": "1.69.0",
+    "@theia/navigator": "1.69.0",
+    "@theia/plugin-ext": "^1.69.0",
+    "@theia/plugin-ext-vscode": "^1.69.0",
+    "@theia/preferences": "1.69.0",
+    "@theia/process": "1.69.0",
+    "@theia/terminal": "1.69.0",
+    "@theia/vsx-registry": "^1.69.0",
+    "@theia/workspace": "1.69.0",
     "ai-extension": "0.0.0",
     "theia-customization": "0.0.0"
   },
   "devDependencies": {
-    "@theia/cli": "1.68.0",
+    "@theia/cli": "1.69.0",
     "electron": "^38.4.0"
   },
   "scripts": {
@@ -46,9 +46,16 @@
   "theiaPluginsDir": "../plugins",
   "theiaPlugins": {
     "eclipse-keybindings": "https://open-vsx.org/api/alphabotsec/vscode-eclipse-keybindings/0.16.1/file/alphabotsec.vscode-eclipse-keybindings-0.16.1.vsix",
-    "vscode-typescript": "https://open-vsx.org/api/vscode/typescript/1.95.3/file/vscode.typescript-1.95.3.vsix",
-    "vscode-typescript-language-features": "https://open-vsx.org/api/vscode/typescript-language-features/1.95.3/file/vscode.typescript-language-features-1.95.3.vsix"
+    "vscode-builtin-extensions": "https://github.com/eclipse-theia/vscode-builtin-extensions/releases/download/1.104.0/vscode-builtin-extensions-1.104.0.tar.gz"
   },
+  "theiaPluginsExcludeIds": [
+    "ms-vscode.js-debug-companion",
+    "VisualStudioExptTeam.vscodeintellicode",
+    "vscode.extension-editing",
+    "vscode.github",
+    "vscode.github-authentication",
+    "vscode.microsoft-authentication"
+  ],
   "theia": {
     "target": "electron"
   }

@@ -57,7 +57,7 @@ As this tutorial is part of my [Visual Studio Code Extension - Theia - Cookbook]
 Developing applications that are based on web frameworks typically means that you have to handle dependency updates quite often. The reason is the high frequency in which libraries are updated. Sometimes it feels like the tutorials and blog posts that rely on a specific version of a library is outdated at the time it is published. The Eclipse Theia project also publishes new releases quite often, so it is a common task to update your dependencies. As several things happened since the [Getting Started with Eclipse Theia](./theia_getting_started.md) tutorial, I will update the setup in the following section. It should be at least up-to-date at the time the tutorial is published, and describe in general the steps to follow for updating in the future.
 
 _**Note:**_  
-You need at least to use Theia 1.68.0 to make all features work that are described and used in this tutorial.
+You need at least to use Theia 1.69.0 to make all features work that are described and used in this tutorial.
 
 Theia and Visual Studio Code can use Node 22 in the meanwhile. The [Theia Prerequisites](https://github.com/eclipse-theia/theia/blob/master/doc/Developing.md#prerequisites) talk about the requirement _Node.js >= 20 and < 24_ and the [VS Code Dev Container](https://github.com/microsoft/vscode/blob/main/.devcontainer/Dockerfile) is based on `typescript-node:22-bookworm`. Therefore we first update the project setup to use Node 22.
 
@@ -135,7 +135,7 @@ or by executing `npm outdated` to get a list of outdated dependencies and the av
     ncu -u -i
     ```
   - Uncheck the `electron` package to avoid that it gets updated automatically.  
-    This is necessary because the package `@theia/electron@1.68.0` has a peer dependency to `electron@38.4.0` and a newer dependency would break the build.
+    This is necessary because the package `@theia/electron@1.69.0` has a peer dependency to `electron@38.4.0` and a newer dependency would break the build.
   - Answer the question `Run npm install to install new versions?` with `n` as we need to execute `npm install` from the _theia_ parent folder.
   - Open the file _theia/electron-app/package.json_
     - Update the `electron` version
@@ -350,7 +350,7 @@ If you want to use the GitHub Copilot language model integration, you need to cl
 
 ## Tool Functions
 
-The first component you can contribute in Visual Studio Code to Copilot is a [Language Model Tool](https://code.visualstudio.com/api/extension-guides/ai/ai-extensibility-overview#language-model-tool).
+The first component you can contribute in Visual Studio Code to Copilot is a [Language Model Tool](https://code.visualstudio.com/api/extension-guides/ai/ai-extensibility-overview#language-model-tool). In Theia they are called [_Tool Functions_](https://theia-ide.org/docs/theia_ai/#tool-functions).
 Such tools are used to extend the chat with domain-specific capabilities that can use the VSCode API to perform actions in Visual Studio Code.
 
 In Visual Studio Code you configure the Language Model Tool in the `contributes` section of the _package.json_, implement the `vscode.LanguageModelTool` and register it via `vscode.lm.registerTool()` on activation of the extension. See [Extending Copilot in Visual Studio Code - Language Model Tool](./vscode_copilot_extension.md#language-model-tool) for further details.
@@ -576,7 +576,7 @@ In the following section we will add MCP servers via _settings.json_ file. For t
   ```
 
 _**Note:**_  
-The [Filesystem MCP Server](https://github.com/modelcontextprotocol/servers/tree/main/src/filesystem) supports [Roots](https://modelcontextprotocol.info/docs/concepts/roots/). Visual Studio Code as a MCP client supports roots and sets the workspace as such. At the time writing this tutorial, Theia as a MCP client does not support roots. There is a [ticket](https://github.com/eclipse-theia/theia/issues/14689) that requests that feature also, so there is a good chance that Theia will support roots also in the future. Until then we need to configure the allowed directories via commandline parameter. In the above example this is the _/home/node/example_ folder in the Dev Container we created in the previous section. If you did not create that folder, or you want to use another folder that should be accessible by the filesystem server, adjust the parameter on your needs.
+The [Filesystem MCP Server](https://github.com/modelcontextprotocol/servers/tree/main/src/filesystem) supports [Roots](https://modelcontextprotocol.info/docs/concepts/roots/). Visual Studio Code as a MCP client supports roots and sets the workspace as such. Since version 1.69.0 Theia also supports roots which was added via this [pull request](https://github.com/eclipse-theia/theia/pull/16911). In Theia it is possible to configure whether the workspace should be used as _Root_ or not via the preference `ai-features.mcp.useWorkspaceAsRoot`.
 
 - To start the filesystem MCP server you can either
   - Use the command palette: _F1 -> MCP: Start MCP Server -> filesystem_
@@ -1068,6 +1068,156 @@ By using _Prompt Variants_ you are able to provide users different ways how an a
 _**Note:**_  
 A user is even able to adjust prompt templates via the _AI Configuration_. By clicking the _Edit_ button next to the selected _Prompt Template_, the _Prompt Template_ can be modified, which will create a _.prompttemplate_ file in the _.theia/prompt-templates_ folder in the user home.
 
+#### Agent Modes
+
+It is possible to define multiple operational modes for a _Chat Agent_ that allow users to control how the agent responds. This way agents can adjust their behavior based on user preferences.
+The [Coder](https://github.com/eclipse-theia/theia/blob/master/packages/ai-ide/src/browser/coder-agent.ts) agent and the [Architect](https://github.com/eclipse-theia/theia/blob/master/packages/ai-ide/src/browser/architect-agent.ts) agent in Theia support _Agent Modes_. They extend the [`AbstractModeAwareChatAgent`](https://github.com/eclipse-theia/theia/blob/master/packages/ai-ide/src/browser/mode-aware-chat-agent.ts), which is defined in the `@theia/ai-ide` package. This implementation maps _Prompt Variants_ to _Agent Modes_, so a user can directly change the behavior of the agent by selecting a mode and does not need to switch to the settings every time. The mode can also control other behavior, for example how a response is rendered or whether the agent should _explain_ or _fix_ something.
+
+As mentioned, there is an [`AbstractModeAwareChatAgent`](https://github.com/eclipse-theia/theia/blob/master/packages/ai-ide/src/browser/mode-aware-chat-agent.ts) implementation that can be extended to achieve mode-to-prompt-fragment mapping. But first, we will implement similar behavior in a simpler way in the `Joker` agent to better understand _Agent Mode_ support details.
+
+- Open the file _ai-extension/src/browser/ai-extension-joker-agent.ts_
+  - Define a new `BasePromptFragment` with a simplified prompt that swears and uses emojis and does not save the joke to a file.
+
+    ```typescript
+    export const jokerTemplateSwear: BasePromptFragment = {
+      id: "joker-system-swear",
+      template: `
+      # Instructions
+    
+      You are the Joker, the arch enemy of Batman.
+      To attack Batman, you tell a joke that is so funny, it distracts him from his mission.
+      You swear a lot and use a lot of emojis in your jokes to make them even more distracting for Batman.
+      `,
+    };
+    ```
+
+  - Extend the `prompts` field to specify the prompt variants
+
+    ```typescript
+    override prompts = [
+      {
+        id: "joker-system",
+        defaultVariant: jokerTemplate,
+        variants: [jokerTemplate, jokerTemplateSimple, jokerTemplateSwear],
+      },
+    ];
+    ```
+
+  - Define the `modes` the agent supports.  
+    Use the IDs of the templates and a corresponding user-facing name.
+
+    ```typescript
+    modes = [
+      { id: jokerTemplate.id, name: "Default Mode" },
+      { id: jokerTemplateSimple.id, name: "Simple Mode" },
+      { id: jokerTemplateSwear.id, name: "Swear Mode" },
+    ];
+    ```
+
+  - Override the method `getSystemMessageDescription()` to get the prompt fragment to use from the selected mode in the request context.
+
+    ```typescript
+    protected override async getSystemMessageDescription(
+      context: AIVariableContext,
+    ): Promise<SystemMessageDescription | undefined> {
+      if (this.systemPromptId === undefined) {
+        return undefined;
+      }
+
+      // Check for mode-based override from request
+      let modeId = ChatSessionContext.is(context)
+        ? context.request?.request.modeId
+        : undefined;
+      if (!modeId) {
+        modeId = jokerTemplate.id; // fallback to default mode if no mode is specified in the request
+      }
+
+      const isCustomized =
+        this.promptService.getPromptVariantInfo(modeId)?.isCustomized ?? false;
+      const resolvedPrompt = await this.promptService.getResolvedPromptFragment(
+        modeId,
+        undefined,
+        context,
+      );
+      return resolvedPrompt
+        ? SystemMessageDescription.fromResolvedPromptFragment(
+            resolvedPrompt,
+            modeId,
+            isCustomized,
+          )
+        : undefined;
+    }
+    ```
+
+- Build the Theia browser application
+- Run the Theia browser application
+- Open the Theia browser application on http://localhost:3000
+- In the _AI Chat_ enter a prompt that uses the `@Joker` agent. Do not send the chat request yet.
+  ```
+  @Joker tell me a joke about batman
+  ```
+- After selecting the `Joker` agent, a combobox appears to allow the user to select an _Agent Mode_
+- Select the _Swear Mode_  
+  <img src="images/theia_chat_agent_mode.png">
+- Send the chat request
+- Check that there is now only a joke in the response and no file is generated. The response should also contain multiple emojis. :smile:
+
+At this point, we use the _Agent Mode_ to let a user easily switch between available _Prompt Variants_. The implementation shown above is a simplified version of the existing [`AbstractModeAwareChatAgent`](https://github.com/eclipse-theia/theia/blob/master/packages/ai-ide/src/browser/mode-aware-chat-agent.ts), and it helps explain _Agent Mode_ support in general. For this use case, we now change the implementation to extend `AbstractModeAwareChatAgent`.
+
+- Open a **Terminal**
+  - Switch to the _theia/ai-extension_ directory
+  - Add `@theia/ai-ide` as a dependency
+
+    ```
+    npm install @theia/ai-ide
+    ```
+
+- Open the file _ai-extension/src/browser/ai-extension-joker-agent.ts_
+  - Update the imports and add the `AbstractModeAwareChatAgent` from the `@theia/ai-ide` package and the `ChatMode` from the `@theia/ai-chat` package
+    ```typescript
+    import { ChatAgentService, ChatMode } from "@theia/ai-chat";
+    import {
+      BasePromptFragment,
+      LanguageModelRequirement,
+    } from "@theia/ai-core";
+    import { AbstractModeAwareChatAgent } from "@theia/ai-ide/lib/browser/mode-aware-chat-agent";
+    import { CREATE_JOKE_FILE_FUNCTION_ID } from "./ai-extension-contribution";
+    import { inject, injectable } from "@theia/core/shared/inversify";
+    ```
+  - Change the `JokerChatAgent` to extend `AbstractModeAwareChatAgent` instead of `AbstractStreamParsingChatAgent`
+    ```typescript
+    @injectable()
+    export class JokerChatAgent extends AbstractModeAwareChatAgent {
+    ```
+  - Change the `modes` field to `modeDefinitions` in the following format
+    ```typescript
+    protected readonly modeDefinitions: Omit<ChatMode, "isDefault">[] = [
+      { id: jokerTemplate.id, name: "Default Mode" },
+      { id: jokerTemplateSimple.id, name: "Simple Mode" },
+      { id: jokerTemplateSwear.id, name: "Swear Mode" },
+    ];
+    ```
+  - Remove the method `getSystemMessageDescription()` as it is implemented in `AbstractModeAwareChatAgent`
+
+- Build the Theia browser application
+- Run the Theia browser application
+- Open the Theia browser application on http://localhost:3000
+- In the _AI Chat_ enter a prompt that uses the `@Joker` agent. Do not send the chat request yet.
+  ```
+  @Joker tell me a joke about batman
+  ```
+- After selecting the `Joker` agent, a combobox appears to allow the user to select an _Agent Mode_
+- Select the _Swear Mode_  
+  <img src="images/theia_chat_agent_mode.png">
+- Send the chat request
+- Check that there is now only a joke in the response and no file is generated. The response should also contain multiple emojis. :smile:
+
+Further information about _Agent Modes_ can be found here:
+
+- [Agent Modes](https://theia-ide.org/docs/theia_ai/#agent-modes)
+- [Eclipse Theia 1.68 Release: News and Noteworthy](https://eclipsesource.com/blogs/2026/02/12/eclipse-theia-1-68-release-news-and-noteworthy/)
+- [eclipse-theia/theia#16860](https://github.com/eclipse-theia/theia/pull/16860)
+
 #### Agent-specific Variables
 
 Additionally to _Tool Functions_ that can be used in prompts, you can define _Variables_ that can be resolved at runtime. There are [_Global Variables_](https://theia-ide.org/docs/theia_ai/#global-variables) and [_Agent-specific Variables_](https://theia-ide.org/docs/theia_ai/#agent-specific-variables). _Global Variables_ are available to all agents. Theia provides some _Global Variables_ like for example **#selectedText** for the currently selected text or **#currentFileContent** for the whole content of the currently opened file.
@@ -1221,6 +1371,10 @@ Further information about variables in Theia AI can be found here:
 You can delegate the processing from one agent to another by using the `delegateToAgent` _Tool Function_. This is described in [Agent-to-Agent Delegation](https://theia-ide.org/docs/user_ai/#agent-to-agent-delegation) in the Theia documentation, and I describe this also later in [Agent-to-Agent Delegation (function)](#agent-to-agent-delegation-function). As in some cases it might be interesting to delegate to another agent programmatically, I will describe this approach in the following section. Delegating to another agent can be done by using the `ChatAgentService` Theia API.
 
 In the following section we will extend the `JokerChatAgent` to programmatically forward to the `WriterChatAgent` if the _joker-system-simple_ prompt template was selected.
+There are different ways to find out which _Prompt Template_ was selected, dependent on whether _Agent Modes_ are used that map to _Prompt Templates_ or if the selection can only be done in the settings.
+
+- To retrieve the selected _Prompt Template_ from the settings, use `PromptService#getSelectedVariantId(promptVariantSetId)` or `PromptService#getEffectiveVariantId(promptVariantSetId)`
+- To retrieve the selected _Agent Mode_ inspect the chat request object via `request.request.modeId`.
 
 - Open the file _ai-extension/src/browser/ai-extension-joker-agent.ts_
   - Get the `ChatAgentService` injected
@@ -1241,11 +1395,11 @@ In the following section we will extend the `JokerChatAgent` to programmatically
     ): Promise<void> {
       await super.addContentsToResponse(response, request);
 
-      const selectedVariantId = this.promptService.getSelectedVariantId(
-        this.systemPromptId
-      );
+      const selectedVariantId = request.request.modeId
+        ? request.request.modeId
+        : this.promptService.getEffectiveVariantId(this.systemPromptId);
 
-      if (selectedVariantId === "joker-system-simple") {
+      if (selectedVariantId === jokerTemplateSimple.id) {
         // extract information from the result and add it to the request
         const responseText = await getTextOfResponse(response);
         request.addData("content", responseText);
@@ -1285,11 +1439,13 @@ In the following section we will extend the `JokerChatAgent` to programmatically
 - Open the _AI Configuration_ via _Menu -> View -> AI Configuration_
   - Switch to the _Agents_ tab
   - Select the `Joker` agent
-  - Ensure that the _joker-system-simple_ entry is selected in the _Prompt Templates_ combobox
+  - Ensure that the _joker-system-simple_ entry is selected in the _Prompt Templates_ combobox  
+    (note that this will preselect the _Simple Mode_ agent mode)
 - In the _AI Chat_ enter a prompt that uses the `@Joker` agent.
   ```
   @Joker a joke about scarecrow
   ```
+- Verify that the _Simple Mode_ is selected in the _Agent Mode_ combobox
 - Check that now there is a joke in the response and a file is generated.
 
 The above implementation is of course a pretty simple one with the intention to show how it basically works. A more advanced example on how to programmatically forward from one agent to another can be seen in the [`@Orchestrator` chat agent implementation](https://github.com/eclipse-theia/theia/blob/master/packages/ai-ide/src/common/orchestrator-chat-agent.ts) provided by Theia itself.
@@ -1355,11 +1511,11 @@ We are doing this because the default [QuestionPartRenderer](https://github.com/
     ): Promise<void> {
       await super.addContentsToResponse(response, request);
 
-      const selectedVariantId = this.promptService.getSelectedVariantId(
-        this.systemPromptId,
-      );
+      const selectedVariantId = request.request.modeId
+        ? request.request.modeId
+        : this.promptService.getEffectiveVariantId(this.systemPromptId);
 
-      if (selectedVariantId === "joker-system-simple") {
+      if (selectedVariantId === jokerTemplateSimple.id) {
         // if the simple variant is selected, ask if the user wants to delegate to the Writer agent
         request.response.response.addContent(
           new QuestionResponseContentImpl(
@@ -1588,6 +1744,7 @@ As a user you can create a _Custom Agent_ in Theia via a configuration file. Dep
   - _description_: A brief explanation of what the agent does.
   - _prompt_: The default prompt that the agent will use for processing requests.
   - _defaultLLM_: The language model used by default.
+  - _showInChat_: Whether the agent should be shown in the chat ui. This one is optional and defaults to `true`.
 - Replace the content of the _customAgents.yml_ with the following snippet
 
   ```yaml
@@ -1605,6 +1762,7 @@ As a user you can create a _Custom Agent_ in Theia via a configuration file. Dep
       4. Provide a list of links to the blog posts about VS Code or Theia
 
     defaultLLM: default/universal
+    showInChat: true
   ```
 
 - Test the new _Custom Agent_
@@ -1642,6 +1800,7 @@ The tasks that can be performed by AI agents are getting more and more complicat
       You are able to persist the provided content into a file by using ~{writeFileContent}.
 
     defaultLLM: default/universal
+    showInChat: true
   ```
 
 - Add a new step to the `Blog` agent that delegates to the new `FileWriter` agent to persist the result by using the `delegateToAgent` _Tool Function_
@@ -1662,6 +1821,7 @@ The tasks that can be performed by AI agents are getting more and more complicat
       5. Persist the result by delegating to `FileWriter` via ~{delegateToAgent} and write to the links folder in a file named fauth.html
 
     defaultLLM: default/universal
+    showInChat: true
   ```
 
 - Open the _AI Chat_ and enter the following prompt

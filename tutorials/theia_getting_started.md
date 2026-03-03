@@ -762,7 +762,15 @@ Visual Studio Code contains multiple pre-integrated extensions that make up seve
 
 Those extensions are part of the [vscode repository](https://github.com/microsoft/vscode/tree/main/extensions).
 To make them usable in Theia, there is the [vscode-builtin-extensions repository](https://github.com/eclipse-theia/vscode-builtin-extensions).
-It packages those _builtins_ as _.vsix_ and publishes them to OpenVSX.
+It packages those _builtins_ as _.vsix_ and publishes them. In the past the publishing was done via Open VSX. But Open VSX changed its ownership behavior, which lead to the current temporary decision by the Theia team to publish the _builtin_ extensions via [GitHub releases](https://github.com/eclipse-theia/vscode-builtin-extensions/releases).
+
+You can find further information about the temporary decision via:
+
+- [eclipse-theia/theia#16774](https://github.com/eclipse-theia/theia/pull/16774)
+- [eclipse-theia/vscode-builtin-extensions#139](https://github.com/eclipse-theia/vscode-builtin-extensions/issues/139)
+
+_**Note:**_  
+For the built-in extensions 1.104.0 only the archive of the built-in extensionpack is available. The latest version of single built-in extensions is currently 1.95.3. I keep the following section to show how to install single build-in extensions via Open VSX and update it once the single extensions are also available via GitHub releases.
 
 For example, to extend the Theia application for Typescript support, the following two builtin extensions need to be added:
 
@@ -804,11 +812,11 @@ This can be done for example by opening the workspace folder you are currently w
 To create a Theia application that provides the same functionality as vanilla Visual Studio Code, you can also install all builtin extensions by using the [builtin-extension-pack](https://open-vsx.org/extension/eclipse-theia/builtin-extension-pack).
 In this case you should exclude the extensions that are not working in Theia via the `theiaPluginsExcludeIds` setting the the _package.json_.
 
-The following snippet is quite the same as in the [_package.json_ of the Theia IDE](https://github.com/eclipse-theia/theia-ide/blob/ee401cffdff879de2a3ba02e332282e0d1eb8b4c/package.json#L63-L75) (without the Java Visual Studio Code Extensions):
+The following snippet is quite the same as in the [_package.json_ of the Theia IDE](https://github.com/eclipse-theia/theia-ide/blob/941edd0e03bc6459a7d526d802bb0aac9d38e349/package.json#L66-L78) (without the Java Visual Studio Code Extensions):
 
 ```json
   "theiaPlugins": {
-    "eclipse-theia.builtin-extension-pack": "https://open-vsx.org/api/eclipse-theia/builtin-extension-pack/1.95.3/file/eclipse-theia.builtin-extension-pack-1.95.3.vsix",
+    "vscode-builtin-extensions": "https://github.com/eclipse-theia/vscode-builtin-extensions/releases/download/1.104.0/vscode-builtin-extensions-1.104.0.tar.gz"
   },
   "theiaPluginsExcludeIds": [
     "ms-vscode.js-debug-companion",

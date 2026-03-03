@@ -9,11 +9,12 @@
     "src"
   ],
   "dependencies": {
-    "@theia/ai-core": "^1.68.0",
-    "@theia/core": "1.68.0"
+    "@theia/ai-core": "^1.69.0",
+    "@theia/ai-ide": "^1.69.0",
+    "@theia/core": "1.69.0"
   },
   "devDependencies": {
-    "rimraf": "^6.1.2",
+    "rimraf": "^6.1.3",
     "typescript": "~5.9.3"
   },
   "scripts": {
