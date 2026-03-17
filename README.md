@@ -41,3 +41,11 @@ It shows how to add _Tool Functions_, _MCP Servers_ and _Custom Agents_.
 
 The corresponding tutorial is located in this repository:  
 [Getting Started with Theia AI](/tutorials/theia_ai_getting_started.md)
+
+## Recipe #6 - AI Agent Orchestration
+
+This recipe describes patterns about AI Agent Orchestration in Visual Studio Code and Eclipse Theia.  
+It describes these patterns in short and how they can be implemented with _Custom Agents_.
+
+The corresponding tutorial is located in this repository:  
+[AI Agent Orchestration](/tutorials/ai_agent_orchestration.md)
