@@ -770,7 +770,7 @@ You can find further information about the temporary decision via:
 - [eclipse-theia/vscode-builtin-extensions#139](https://github.com/eclipse-theia/vscode-builtin-extensions/issues/139)
 
 _**Note:**_  
-For the built-in extensions 1.104.0 only the archive of the built-in extensionpack is available. The latest version of single built-in extensions is currently 1.95.3. I keep the following section to show how to install single build-in extensions via Open VSX and update it once the single extensions are also available via GitHub releases.
+For the built-in extensions 1.104.0 only the archive of the built-in extension pack is available. The latest version of single built-in extensions is currently 1.95.3. I keep the following section to show how to install single built-in extensions via Open VSX and update it once the single extensions are also available via GitHub releases.
 
 For example, to extend the Theia application for Typescript support, the following two builtin extensions need to be added:
 

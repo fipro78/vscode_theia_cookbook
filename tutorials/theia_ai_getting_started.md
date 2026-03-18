@@ -1744,7 +1744,7 @@ As a user you can create a _Custom Agent_ in Theia via a configuration file. Dep
   - _description_: A brief explanation of what the agent does.
   - _prompt_: The default prompt that the agent will use for processing requests.
   - _defaultLLM_: The language model used by default.
-  - _showInChat_: Whether the agent should be shown in the chat ui. This one is optional and defaults to `true`.
+  - _showInChat_: Whether the agent should be shown in the chat UI. This one is optional and defaults to `true`.
 - Replace the content of the _customAgents.yml_ with the following snippet
 
   ```yaml
