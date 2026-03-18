@@ -444,7 +444,7 @@ Theia does not yet support context window monitoring like Visual Studio Code, so
 <img src="images/theia_token_single.png"/>
 
 _**Note:**_  
-The tokens reported for the Gemini models are clearly incorrect. I double-checked the token usage in **Google AI Studio**, where I was able to verify a similar token usage compared to the GPT models (~30k tokens). I created the ticket [Token usage shows incorrect values for Gemini models](https://github.com/eclipse-theia/theia/issues/17165), so this issue will hopefully be fixed soon.
+The token counts reported for Gemini models are incorrect in Theia 1.69.0. I created the ticket [Token usage shows incorrect values for Gemini models](https://github.com/eclipse-theia/theia/issues/17165) and submitted a pull request that fixes this issue. The screenshot above shows token usage with the fix applied for a fair comparison.
 
 Token usage is not persisted and is reset when restarting the application. To get a better comparison, I restart after each example.
 
@@ -519,7 +519,7 @@ Theia does not yet support context window monitoring like Visual Studio Code, so
 <img src="images/theia_token_delegate.png"/>
 
 _**Note:**_  
-The tokens reported for the Gemini models are clearly incorrect. I double-checked the token usage in **Google AI Studio**, where I was able to verify a similar token usage compared to the GPT models (~30k tokens). I created the ticket [Token usage shows incorrect values for Gemini models](https://github.com/eclipse-theia/theia/issues/17165), so this issue will hopefully be fixed soon.
+The token counts reported for Gemini models are incorrect in Theia 1.69.0. I created the ticket [Token usage shows incorrect values for Gemini models](https://github.com/eclipse-theia/theia/issues/17165) and submitted a pull request that fixes this issue. The screenshot above shows token usage with the fix applied for a fair comparison.
 
 Interestingly, token usage for the _Delegate Pattern_ in Theia is slightly higher compared to the single-agent solution.
 It is also interesting that the _Delegate Pattern_ is not exactly the same as in Visual Studio Code via _Handoffs_. It seems that _Agent-to-Agent Delegation_ is similar to _Subagents_ in Visual Studio Code, at least based on the chat output.
@@ -609,7 +609,7 @@ Theia does not yet support context window monitoring like Visual Studio Code, so
 <img src="images/theia_token_coordinate.png"/>
 
 _**Note:**_  
-The tokens reported for the Gemini models are clearly incorrect. I double-checked the token usage in **Google AI Studio**, where I was able to verify a similar token usage compared to the GPT models (~30k tokens). I created the ticket [Token usage shows incorrect values for Gemini models](https://github.com/eclipse-theia/theia/issues/17165), so this issue will hopefully be fixed soon.
+The token counts reported for Gemini models are incorrect in Theia 1.69.0. I created the ticket [Token usage shows incorrect values for Gemini models](https://github.com/eclipse-theia/theia/issues/17165) and submitted a pull request that fixes this issue. The screenshot above shows token usage with the fix applied for a fair comparison.
 
 Interestingly, token usage for the _Coordinator and Worker Pattern_ in Theia uses fewer tokens than the _Delegate Pattern_ but still slightly more than the single-agent solution.
 
