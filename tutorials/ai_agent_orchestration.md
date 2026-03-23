@@ -510,7 +510,7 @@ In Eclipse Theia, multiple [Custom Agents](https://theia-ide.org/docs/user_ai/#c
 - Use the _Custom Agent_ `Gists` by selecting it in the chat prompt via `@` syntax and add the prompt to execute, for example `@Gists show links about theia`.  
   <img src="images/theia_select_custom_agent_gists.png"/>
 
-You can see in the chat response that the `Gists` agent stays the active agent, and _Link_Extractor_ is called as part of it. So it is not actually a _Handoff_ like in Visual Studio Code, where the active agent really switches.
+You can see in the chat response that the `Gists` agent stays the active agent, and `Link_Extractor` is called as part of it. So it is not actually a _Handoff_ like in Visual Studio Code, where the active agent really switches.
 
 <img src="images/theia_delegate_response.png"/>
 
@@ -523,6 +523,42 @@ The token counts reported for Gemini models are incorrect in Theia 1.69.0. I cre
 
 Interestingly, token usage for the _Delegate Pattern_ in Theia is slightly higher compared to the single-agent solution.
 It is also interesting that the _Delegate Pattern_ is not exactly the same as in Visual Studio Code via _Handoffs_. It seems that _Agent-to-Agent Delegation_ is similar to _Subagents_ in Visual Studio Code, at least based on the chat output.
+
+At the time of writing this blog post, Theia does not support an automatic _Handoff_ similar to Visual Studio Code. But you can try to simulate this manually.
+
+- Update the `Gists` agent
+  - Remove the last step that passes the processing to the `Link_Extractor` agent
+  - The following snippet shows how such an agent could look like
+
+  ```yaml
+  - id: Gists
+    name: Gists
+    description: This agent provides a list of links to blog posts from a GitHub Gist.
+    prompt: >-
+      You are an agent that helps the developer by providing links to blog posts.
+
+      To provide the necessary links execute the following steps:
+
+      1. Fetch the publications of Dirk Fauth in the gists of the user fipro78. Use ~{mcp_github_list_gists} to find the correct gist.
+      2. Use ~{mcp_fetch_fetch} to fetch the content of the gist with a max-length parameter of 15000.
+      3. Filter the fetched content for links about the requested information.
+      4. Provide a list of links to the relevant blog posts.
+
+    defaultLLM: default/universal
+    showInChat: true
+  ```
+
+- Use the _Custom Agent_ `Gists` by selecting it in the chat prompt via `@` syntax and add the prompt to execute, for example `@Gists show links about theia`.  
+  <img src="images/theia_select_custom_agent_gists.png"/>
+
+- Once the `Gists` agent is done, use the `Link_Extractor` agent by selecting it in the chat prompt via `@` syntax and add the prompt to execute, for example `@Link_Extractor fetch the previously found blog posts and extract further links`.  
+  <img src="images/theia_select_custom_agent_link_extractor.png"/>
+
+As a result of manually changing the active agent, `Link_Extractor` is now the active agent.
+
+<img src="images/theia_token_delegate_manually.png"/>
+
+The token usage increased as the whole conversation is passed to the next agent as context, and the token usage is accumulated over the whole session. Therefore the _Input Tokens_ and the _Output Tokens_ are higher than compared to using the _Agent-to-Agent Delegation_ with an isolated context or the _Single Agent_, where only a single request is processed.
 
 ### Coordinator and Worker Pattern
 
