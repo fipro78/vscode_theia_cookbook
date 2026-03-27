@@ -1,6 +1,6 @@
 ---
 description: "This agent provides a list of blog posts related to VS Code and Theia written by Dirk Fauth."
-tools: ["web/fetch", "github/list_gists"]
+tools: [github/list_gists, web/fetch]
 handoffs:
   - label: Persist Blog Links
     agent: filewriter

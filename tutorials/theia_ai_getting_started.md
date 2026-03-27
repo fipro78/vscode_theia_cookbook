@@ -57,15 +57,15 @@ As this tutorial is part of my [Visual Studio Code Extension - Theia - Cookbook]
 Developing applications that are based on web frameworks typically means that you have to handle dependency updates quite often. The reason is the high frequency in which libraries are updated. Sometimes it feels like the tutorials and blog posts that rely on a specific version of a library is outdated at the time it is published. The Eclipse Theia project also publishes new releases quite often, so it is a common task to update your dependencies. As several things happened since the [Getting Started with Eclipse Theia](./theia_getting_started.md) tutorial, I will update the setup in the following section. It should be at least up-to-date at the time the tutorial is published, and describe in general the steps to follow for updating in the future.
 
 _**Note:**_  
-You need at least to use Theia 1.69.0 to make all features work that are described and used in this tutorial.
+You need at least to use Theia 1.70.0 to make all features work that are described and used in this tutorial.
 
-Theia and Visual Studio Code can use Node 22 in the meanwhile. The [Theia Prerequisites](https://github.com/eclipse-theia/theia/blob/master/doc/Developing.md#prerequisites) talk about the requirement _Node.js >= 20 and < 24_ and the [VS Code Dev Container](https://github.com/microsoft/vscode/blob/main/.devcontainer/Dockerfile) is based on `typescript-node:22-bookworm`. Therefore we first update the project setup to use Node 22.
+Theia and Visual Studio Code can use Node 22 in the meanwhile. The [Theia Prerequisites](https://github.com/eclipse-theia/theia/blob/master/doc/Developing.md#prerequisites) talk about the requirement _Node.js >= 22 and <= 24_ and the [VS Code Dev Container](https://github.com/microsoft/vscode/blob/main/.devcontainer/Dockerfile) is based on `typescript-node:22-bookworm`. Therefore we first update the project setup to use Node 22.
 
 - Open the file _theia/package.json_
   - Update the `enginges` section
     ```json
     "engines": {
-      "node": ">=20",
+      "node": ">=22 <=24",
       "npm": ">=10"
     },
     ```
@@ -126,22 +126,30 @@ or by executing `npm outdated` to get a list of outdated dependencies and the av
     ```
   - Switch to the folder _theia/theia-customization_
   - Execute the following command to update the dependencies
-    ```
-    ncu -u
-    ```
-  - Switch to the folder _theia/electron-app_
-  - Execute the following command to update the dependencies in interactive mode
+
     ```
     ncu -u -i
     ```
-  - Uncheck the `electron` package to avoid that it gets updated automatically.  
-    This is necessary because the package `@theia/electron@1.69.0` has a peer dependency to `electron@38.4.0` and a newer dependency would break the build.
-  - Answer the question `Run npm install to install new versions?` with `n` as we need to execute `npm install` from the _theia_ parent folder.
+
+    - Uncheck the `typescript` package to avoid that it gets updated automatically to version 6.x.
+    - Answer the question `Run npm install to install new versions?` with `n` as we need to execute `npm install` from the _theia_ parent folder.
+
+  - Switch to the folder _theia/electron-app_
+  - Execute the following command to update the dependencies in interactive mode
+
+    ```
+    ncu -u -i
+    ```
+
+    - Uncheck the `electron` package to avoid that it gets updated automatically.  
+      This is necessary because the package `@theia/electron@1.70.0` has a peer dependency to `electron@39.7.0` and a newer dependency would break the build.
+    - Answer the question `Run npm install to install new versions?` with `n` as we need to execute `npm install` from the _theia_ parent folder.
+
   - Open the file _theia/electron-app/package.json_
     - Update the `electron` version
       ```json
       "devDependencies": {
-        "electron": "^38.4.0"
+        "electron": "^39.7.0"
       },
       ```
   - Switch back to **Terminal** to the _theia_ folder
@@ -577,6 +585,8 @@ In the following section we will add MCP servers via _settings.json_ file. For t
 
 _**Note:**_  
 The [Filesystem MCP Server](https://github.com/modelcontextprotocol/servers/tree/main/src/filesystem) supports [Roots](https://modelcontextprotocol.info/docs/concepts/roots/). Visual Studio Code as a MCP client supports roots and sets the workspace as such. Since version 1.69.0 Theia also supports roots which was added via this [pull request](https://github.com/eclipse-theia/theia/pull/16911). In Theia it is possible to configure whether the workspace should be used as _Root_ or not via the preference `ai-features.mcp.useWorkspaceAsRoot`.
+
+The above configuration sets the `autostart` flag by default to `true` if the current open workspace is trusted and the workspace trust setting is enabled. If `autostart` is disabled or the server does not start automatically, you can start the server manually.
 
 - To start the filesystem MCP server you can either
   - Use the command palette: _F1 -> MCP: Start MCP Server -> filesystem_
@@ -1561,7 +1571,11 @@ We are doing this because the default [QuestionPartRenderer](https://github.com/
   - Change the definition of `isDisabled` to only check the `question.selectedOption` to ensure the buttons are shown disabled once the user selected an option. The other statements would show the buttons always disabled in our case, as we do not put the processing in a waiting state.
 
     ```typescript
-    import { ChatResponseContent, QuestionResponseContent } from "@theia/ai-chat";
+    import {
+      ChatResponseContent,
+      QuestionResponseContent,
+      QuestionResponseHandler,
+    } from "@theia/ai-chat";
     import { injectable } from "@theia/core/shared/inversify";
     import * as React from "@theia/core/shared/react";
     import { ReactNode } from "@theia/core/shared/react";
@@ -1594,7 +1608,7 @@ We are doing this because the default [QuestionPartRenderer](https://github.com/
                   onClick={() => {
                     if (!question.isReadOnly && question.handler) {
                       question.selectedOption = option;
-                      question.handler(option);
+                      (question.handler as QuestionResponseHandler)(option);
                     }
                   }}
                   disabled={isDisabled}
@@ -1643,7 +1657,7 @@ We are doing this because the default [QuestionPartRenderer](https://github.com/
 
 ## Further Customizations
 
-Users can further customize the Theia AI experience by configuring _Task Contexts_, _Prompt Fragments_, _Slash Commands_ and _Custom Agents_.
+Users can further customize the Theia AI experience by configuring _Task Contexts_, _Prompt Fragments_, _Slash Commands_, _Custom Agents_ and _Agent Skills_.
 
 - Task Context  
   [Task Context](https://theia-ide.org/docs/user_ai/#task-context) is a concept to externalize your intent into dedicated files that serve as persistent, editable records of what you want the AI to accomplish. _Task Context_ files are stored in _.prompts/task-context/_ with the default settings. Additional information is available in [Structured AI Coding with Task Context: A Better Way to Work with AI Agents](https://eclipsesource.com/blogs/2025/07/01/structure-ai-coding-with-task-context/).
@@ -1655,12 +1669,14 @@ Users can further customize the Theia AI experience by configuring _Task Context
 - Custom Agents  
   [Custom Agents](https://theia-ide.org/docs/user_ai/#custom-agents) are used to create a specialist assistant for specific tasks that can be used in the chat for planning or research or to define specialized workflows. _Custom Agents_ are stored in a _.prompts/customAgents.yml_ file with the default settings.  
   They are similar to Visual Studio Code Copilot [Custom Agents](https://code.visualstudio.com/docs/copilot/customization/custom-agents).
+- Agent Skills  
+  [Agent Skills](https://theia-ide.org/docs/user_ai/#agent-skills-alpha) are used to create reusable capabilities that work across different AI tools. They can include scripts, examples, or other resources alongside instructions. You can define specialized workflows like testing, debugging, or deployment processes by using _Agent Skills_. Project skills can be stored in the folder _.prompts/skills/_. Personal skills can be stored in the user home in the folder _~/.theia/skills/_.
 
-By having the task contexts, prompt fragments and custom agents in the workspace, it is possible to have a dedicated set of AI enhancements per project that are checked in the repository.
+By having the task contexts, prompt fragments, custom agents and agent skills in the workspace, it is possible to have a dedicated set of AI enhancements per project that are checked in the repository.
 
 Further information can be found in [Using the AI Features in the Theia IDE as an End User](https://theia-ide.org/docs/user_ai/).
 
-I will not go into details of every possible customization. But as an example and comparison to the previous programmatically registered _Custom Agent_, we will create a prompt and a custom agent, each able to achieve the same result.
+I will not go into details of every possible customization. But as an example and comparison to the previous programmatically registered _Custom Agent_, we will create a prompt, a custom agent and an agent skill, each able to achieve the same result.
 
 ### Prompt Fragments
 
@@ -1675,7 +1691,12 @@ _Prompt Fragments_ can be used by using the special variable `#prompt:promptFrag
 - Create a new file _harley.prompttemplate_ in that folder
 - Add the following content
 
-  ```
+  ```markdown
+  ---
+  name: Harley Quinn
+  description: Tell a joke as the girlfriend of the Joker
+  ---
+
   You are Harley Quinn, the girlfriend of the Joker, who is the arch enemy of Batman.
   To attack Batman, you tell a joke that is so funny, it distracts him from his mission.
 
@@ -1696,18 +1717,21 @@ _Prompt Fragments_ can be used by using the special variable `#prompt:promptFrag
 By configuring a _Prompt Fragment_ as a _Slash Command_ you can call the prompt via `/commandname` and don't need to use the `#prompt:promptFragmentID` variable. Additionally you can pass arguments to a _Slash Command_ that can be used in the prompt via placeholders (`$ARGUMENTS` for all arguments in a single string, `$1`,`$2`,`$3` for the individual argument by position). Note that the `commandAgents` header is used to limit the usage of the _Slash Command_ to specific agents, while in Visual Studio Code Prompt Files the `agent` header is used to specify the agent that is used to execute the prompt.
 
 - Open the file _.prompts/harley.prompttemplate_ in your workspace
-- Change the content by adding a _Frontmatter_ block with the necessary metadata
+- Change the content by adding the necessary metadata to the _Frontmatter_ block
 - Modify the prompt to tell a joke about the person passed as first argument
 
-  ```
+  ```markdown
   ---
+  name: Harley Quinn
+  description: Tell a joke as the girlfriend of the Joker
   isCommand: true
   commandName: harley
-  commandDescription: Tell a joke and wrote it to a file
+  commandDescription: Tell a joke and write it to a file
   commandArgumentHint: The person to tell a joke about
   commandAgents:
     - Universal
   ---
+
   You are Harley Quinn, the girlfriend of the Joker, who is the arch enemy of Batman.
   To attack Batman, you tell a joke about $1 that is so funny, it distracts him from his mission.
 
@@ -1832,6 +1856,126 @@ The tasks that can be performed by AI agents are getting more and more complicat
   <img src="images/theia_custom_agent_delegate.png"/>
 
 The `delegateToAgent` function is a very nice and powerful way to delegate tasks from one agent to another by using a prompt to create multi-agent-workflows.
+
+### Agent Skills
+
+[Agent Skills](https://theia-ide.org/docs/user_ai/#agent-skills-alpha) are used to create reusable capabilities that work across different AI tools. They can include scripts, examples, or other resources alongside instructions. You can define specialized workflows like testing, debugging, or deployment processes by using _Agent Skills_. Project skills can be stored in the folder _.prompts/skills/_. Personal skills can be stored in the user home in the folder _~/.theia/skills/_.
+
+_Agent Skills_ can be used directly as a _Slash Command_ in the chat, where the `name` of the skill is used as command.
+
+_**Note:**_  
+The support for _Agent Skills_ was [introduced with Theia 1.68.0](https://eclipsesource.com/blogs/2026/02/12/eclipse-theia-1-68-release-news-and-noteworthy/). It is still in alpha, which means it is target to changes and does not yet work reliably as you can see for example via [this ticket](https://github.com/eclipse-theia/theia/issues/17217).
+
+- Start the Theia browser application
+- Open the Theia browser application on http://localhost:3000
+- Ensure that you have a workspace open otherwise open a folder somewhere (e.g. _/home/node/example_)
+- Create a new folder _skills_ in the folder _.prompts_ in your workspace
+- Create a new folder _blog-link-extraction_ in the previously created _.prompts/skills_ folder
+- Create the _SKILL.md_ file in that folder
+  - Add the following content to the _SKILL.md_ file
+
+    ```markdown
+    ---
+    name: blog-link-extraction
+    description: This skill provides a collection of links about VSCode or Theia from blog posts written by Dirk Fauth. Use this when asked for resources about VSCode or Theia, or when asked to find blog posts by Dirk Fauth.
+    ---
+
+    # Blog Link Extraction Skill
+
+    This skill is designed to extract links from blog posts written by Dirk Fauth about VSCode or Theia. It first collects relevant blog posts from Dirk Fauth's gists and then extracts and filters the links contained within those blog posts to provide a structured list of resources related to VSCode or Theia.
+
+    ## Process Overview
+
+    1. **Define the Extraction Goal**: Identify the specific information to be extracted (e.g., links to blog posts about VSCode or Theia).
+    2. **Blog Collection**: Fetch a list of relevant blog posts from a specified data source (e.g., GitHub gists).
+    3. **Link Extraction**: For each blog post, extract outbound links and filter them based on relevance to the topic. Perform this step without user interaction to provide a complete result set.
+    4. **Output**: Provide a structured list grouped by source blog post, with deterministic ordering.
+
+    ## Execution Rules
+
+    1. Run this workflow end-to-end without asking the user for intermediate confirmations.
+    2. Preferred tools are ~{mcp_github_list_gists} and ~{mcp_fetch_fetch}. If those exact names are unavailable, use equivalent tools that provide the same capability.
+    3. On fetch failures, retry once. If the second attempt fails, continue with remaining items and report the skipped URL in the final output.
+    4. If fetched content appears truncated, fetch additional chunks (for example via start index or pagination) until no additional content is returned.
+
+    ## Blog Collection
+
+    1. List gists for user `fipro78`.
+    2. Select gist files whose filename contains `publications` (case-insensitive).
+    3. If multiple matches exist, choose files from the most recently updated gist first.
+    4. Fetch the selected gist content with max length `25000`; if needed, fetch additional chunks until complete.
+    5. Extract candidate blog post URLs.
+    6. Keep only blog posts relevant to the requested topic (default topic: VSCode or Theia).
+    7. De-duplicate URLs and produce the final blog post list.
+
+    ## Link Extraction
+
+    1. Fetch each blog post with max length `25000`; if needed, continue fetching additional chunks until complete.
+    2. Extract outbound links from the blog post.
+    3. Exclude non-http(s) links and non-content protocols (`mailto:`, `javascript:`, `tel:`).
+    4. Filter links for relevance using topic keywords from surrounding context. For VSCode/Theia, use keywords such as: `vscode`, `visual studio code`, `theia`, `eclipse theia`, `extension`, `webview`, `copilot`.
+    5. De-duplicate links per blog post.
+    6. Determine display name for each link:
+
+    - Use anchor text when available.
+    - Otherwise use the URL.
+
+    7. Sort links alphabetically by display name within each blog post.
+
+    ## Example Workflow
+
+    1. A user asks for resources about VSCode or Theia.
+    2. The blog collection process fetches the relevant blog posts from Dirk Fauth's gists.
+    3. For each relevant blog post, the link extraction process reads the post, extracts outbound links, filters for relevance, and removes duplicates without user interaction.
+    4. The final output is grouped by blog post, with links presented using anchor text when available, and sorted alphabetically by link name within each blog post.
+
+    ## Result
+
+    The final output is an aggregated collection grouped by blog post. Blog posts are ordered alphabetically by title (or URL if no title is available). Links inside each blog post are ordered alphabetically by link display name.
+
+    ### Example Result
+
+    - [Blog Post 1](http://example.com/blog1):
+      - [Link 1](http://example.com/link1) - Anchor Text 1
+      - [Link 2](http://example.com/link2) - Anchor Text 2
+    - [Blog Post 2](http://example.com/blog2):
+      - [Link 3](http://example.com/link3) - Anchor Text 3
+      - [Link 4](http://example.com/link4) - Anchor Text 4
+
+    ## Guidelines
+
+    - Ensure that the links are relevant to the topic of VSCode or Theia.
+    - Avoid including duplicate links or links that are not relevant to the topic.
+    - Provide clear and concise output that is easy to understand and navigate.
+    - Use the anchor text as the name of the link when available, and use the URL as the name of the link when anchor text is not available.
+    - Order links alphabetically by name within each blog post section.
+    - Ensure that the output is structured in a way that clearly indicates which links are associated with which blog posts.
+    - Include a short `Skipped URLs` section when any blog post could not be fetched after retry.
+    ```
+
+  - Use the _Agent Skill_ by using it as a slash command to call it directly
+    - Enter a prompt similar to the following to the chat: `@Universal /blog-link-extraction links about theia`  
+      You will notice that it loads the skill, but it does not execute it directly.
+    - Enter something like `process` or `execute` to the chat to start the skill processing  
+      You will get a message that the required tools are not available. This is because there is currently an issue in the loading and processing of _Agent Skills_.
+    - Open the _Generic Capabilities_ panel
+      - Select the necessary MCP tools (`fetch/fetch` and `github/list_gists`)
+      - Click on _Save_
+
+      _**Note:**_  
+      This will configure the _Generic Capabilities_ for the `@Universal` agent. This affects the usage of the agent in general. So you probably want to reset this later, to have the agent work as expected again. For this open the _settings.json_ and remove the configuration for `ai-features.agentSettings/Universal`.
+
+    - Enter something like `process` or `execute` again to the chat to start the skill processing. After that the processing starts as described in the skill.
+
+_**Note:**_  
+In Theia 1.70.0 the automatic discovery of skills is not working. Also the automatic execution and the tool calls are not working. As the _Agent Skill_ support is currently in alpha state, this will hopefully fixed soon.
+
+Further information about _Agent Skills_:
+
+- [agentskills.io](https://agentskills.io/home)
+- [Use Agent Skills in VS Code](https://code.visualstudio.com/docs/copilot/customization/agent-skills)
+- [Using the AI Features in the Theia IDE as an End User - Agent Skills](https://theia-ide.org/docs/user_ai/#agent-skills-alpha)
+- [awesome-agent-skills](https://github.com/heilcheng/awesome-agent-skills)
 
 ## Use Visual Studio Code Copilot Extension in Theia
 

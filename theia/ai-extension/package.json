@@ -9,9 +9,9 @@
     "src"
   ],
   "dependencies": {
-    "@theia/ai-core": "^1.69.0",
-    "@theia/ai-ide": "^1.69.0",
-    "@theia/core": "1.69.0"
+    "@theia/ai-core": "^1.70.0",
+    "@theia/ai-ide": "^1.70.0",
+    "@theia/core": "1.70.0"
   },
   "devDependencies": {
     "rimraf": "^6.1.3",

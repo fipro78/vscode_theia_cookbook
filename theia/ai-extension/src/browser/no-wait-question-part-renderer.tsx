@@ -1,4 +1,8 @@
-import { ChatResponseContent, QuestionResponseContent } from "@theia/ai-chat";
+import {
+  ChatResponseContent,
+  QuestionResponseContent,
+  QuestionResponseHandler,
+} from "@theia/ai-chat";
 import { injectable } from "@theia/core/shared/inversify";
 import * as React from "@theia/core/shared/react";
 import { ReactNode } from "@theia/core/shared/react";
@@ -31,7 +35,7 @@ export class NoWaitQuestionPartRenderer implements ChatResponsePartRenderer<Ques
               onClick={() => {
                 if (!question.isReadOnly && question.handler) {
                   question.selectedOption = option;
-                  question.handler(option);
+                  (question.handler as QuestionResponseHandler)(option);
                 }
               }}
               disabled={isDisabled}

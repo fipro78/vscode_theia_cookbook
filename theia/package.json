@@ -1,7 +1,7 @@
 {
   "private": true,
   "engines": {
-    "node": ">=20",
+    "node": ">=22 <=24",
     "npm": ">=10"
   },
   "scripts": {
@@ -17,7 +17,7 @@
     "watch:electron": "lerna run --parallel watch --ignore browser-app"
   },
   "devDependencies": {
-    "lerna": "9.0.5"
+    "lerna": "9.0.7"
   },
   "workspaces": [
     "ai-extension",

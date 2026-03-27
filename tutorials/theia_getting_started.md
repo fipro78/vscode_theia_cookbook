@@ -770,9 +770,9 @@ You can find further information about the temporary decision via:
 - [eclipse-theia/vscode-builtin-extensions#139](https://github.com/eclipse-theia/vscode-builtin-extensions/issues/139)
 
 _**Note:**_  
-For the built-in extensions 1.104.0 only the archive of the built-in extension pack is available. The latest version of single built-in extensions is currently 1.95.3. I keep the following section to show how to install single built-in extensions via Open VSX and update it once the single extensions are also available via GitHub releases.
+Since the built-in extensions in version 1.108.2, the release contains the single built-in extensions as _.vsix_ files and the archive of the built-in extension pack. The latest version of single built-in extensions in Open VSX is currently 1.95.3.
 
-For example, to extend the Theia application for Typescript support, the following two builtin extensions need to be added:
+For example, to extend the Theia application for Typescript support, the following two built-in extensions need to be added:
 
 - [TypeScript Language Basics (built-in)](https://open-vsx.org/extension/vscode/typescript)
 - [TypeScript and JavaScript Language Features (built-in)](https://open-vsx.org/extension/vscode/typescript-language-features)
@@ -783,8 +783,8 @@ For example, to extend the Theia application for Typescript support, the followi
     ```json
     "theiaPlugins": {
       "eclipse-keybindings": "https://open-vsx.org/api/alphabotsec/vscode-eclipse-keybindings/0.16.1/file/alphabotsec.vscode-eclipse-keybindings-0.16.1.vsix",
-      "vscode-typescript": "https://open-vsx.org/api/vscode/typescript/1.95.3/file/vscode.typescript-1.95.3.vsix",
-      "vscode-typescript-language-features": "https://open-vsx.org/api/vscode/typescript-language-features/1.95.3/file/vscode.typescript-language-features-1.95.3.vsix"
+      "vscode-typescript": "https://github.com/eclipse-theia/vscode-builtin-extensions/releases/download/1.108.2/vscode.typescript.vsix",
+      "vscode-typescript-language-features": "https://github.com/eclipse-theia/vscode-builtin-extensions/releases/download/1.108.2/vscode.typescript-language-features.vsix"
     },
     ```
 
@@ -794,8 +794,8 @@ For example, to extend the Theia application for Typescript support, the followi
     ```json
     "theiaPlugins": {
       "eclipse-keybindings": "https://open-vsx.org/api/alphabotsec/vscode-eclipse-keybindings/0.16.1/file/alphabotsec.vscode-eclipse-keybindings-0.16.1.vsix",
-      "vscode-typescript": "https://open-vsx.org/api/vscode/typescript/1.95.3/file/vscode.typescript-1.95.3.vsix",
-      "vscode-typescript-language-features": "https://open-vsx.org/api/vscode/typescript-language-features/1.95.3/file/vscode.typescript-language-features-1.95.3.vsix"
+      "vscode-typescript": "https://github.com/eclipse-theia/vscode-builtin-extensions/releases/download/1.108.2/vscode.typescript.vsix",
+      "vscode-typescript-language-features": "https://github.com/eclipse-theia/vscode-builtin-extensions/releases/download/1.108.2/vscode.typescript-language-features.vsix"
     },
     ```
 
@@ -807,16 +807,16 @@ For example, to extend the Theia application for Typescript support, the followi
 Start the Theia application and verify that syntax highlighting and code completion works for typescript files.
 This can be done for example by opening the workspace folder you are currently working on in the Theia Application.
 
-#### Builtin-Extension-Pack
+#### Built-in Extension-Pack
 
-To create a Theia application that provides the same functionality as vanilla Visual Studio Code, you can also install all builtin extensions by using the [builtin-extension-pack](https://open-vsx.org/extension/eclipse-theia/builtin-extension-pack).
+To create a Theia application that provides the same functionality as vanilla Visual Studio Code, you can also install all built-in extensions by using the [builtin-extension-pack](https://open-vsx.org/extension/eclipse-theia/builtin-extension-pack).
 In this case you should exclude the extensions that are not working in Theia via the `theiaPluginsExcludeIds` setting the the _package.json_.
 
 The following snippet is quite the same as in the [_package.json_ of the Theia IDE](https://github.com/eclipse-theia/theia-ide/blob/941edd0e03bc6459a7d526d802bb0aac9d38e349/package.json#L66-L78) (without the Java Visual Studio Code Extensions):
 
 ```json
   "theiaPlugins": {
-    "vscode-builtin-extensions": "https://github.com/eclipse-theia/vscode-builtin-extensions/releases/download/1.104.0/vscode-builtin-extensions-1.104.0.tar.gz"
+    "vscode-builtin-extensions": "https://github.com/eclipse-theia/vscode-builtin-extensions/releases/download/1.108.2/vscode-builtin-extensions-1.108.2.tar.gz"
   },
   "theiaPluginsExcludeIds": [
     "ms-vscode.js-debug-companion",

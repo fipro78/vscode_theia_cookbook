@@ -937,7 +937,7 @@ Further information about chat participants can be found here
 
 ## Further Customizations
 
-Users can further customize the Copilot experience by configuring _Instructions_, _Prompt Templates_ and _Custom Agents_.
+Users can further customize the Copilot experience by configuring _Instructions_, _Prompt Templates_, _Custom Agents_ and _Agent Skills_.
 This is actually a topic from a Copilot user perspective, not a development topic. But I find that information very interesting, and you might want to share such customizations with your users or colleagues e.g. via workspace files in your code repository.
 
 - Instructions  
@@ -946,13 +946,15 @@ This is actually a topic from a Copilot user perspective, not a development topi
   [Prompt Files](https://code.visualstudio.com/docs/copilot/customization/prompt-files) are used to define reusable prompts to execute reusable development tasks and can be installed in the user profile or in the _.github/prompts_ folder
 - Custom Agents  
   [Custom Agents](https://code.visualstudio.com/docs/copilot/customization/custom-agents) are used to create a specialist assistant for specific tasks that can be used in the chat for planning or research or to define specialized workflows. They can be installed in the user profile or in the workspace in the _.github/agents_ folder
+- Agent Skills  
+  [Agent Skills](https://code.visualstudio.com/docs/copilot/customization/agent-skills) are used to create reusable capabilities that work across different AI tools. They can include scripts, examples, or other resources alongside instructions. You can define specialized workflows like testing, debugging, or deployment processes by using _Agent Skills_. Project skills can be stored in the folders _.github/skills/_, _.claude/skills/_ or _.agents/skills/_. Personal skills can be stored in the user home in the folders _~/.copilot/skills/_, _~/.claude/skills/_ or _~/.agents/skills/_.
 - Tool Sets  
   [Tool Sets](https://code.visualstudio.com/docs/copilot/chat/chat-tools#_group-tools-with-tool-sets) can be defined in a
   _.jsonc_ file that is located in the user profile e.g. _C:\Users\\<username\>\AppData\Roaming\Code\User\prompts_
 
-By having the instructions, prompts and custom agents in the **workspace**, it is possible to have dedicated instructions, prompts and custom agents per project that are checked in the repository.
+By having the instructions, prompts, custom agents and agent skills in the **workspace**, it is possible to have dedicated instructions, prompts, custom agents and agent skills per project that are checked in the repository.
 
-Further information can be found in [Customize chat to your workflow](https://code.visualstudio.com/docs/copilot/copilot-customization).
+Further information can be found in [Customize AI in Visual Studio Code](https://code.visualstudio.com/docs/copilot/customization/overview).
 
 I will not go into details of every possible customization. But as an example and comparison to the previous programmatically registered _Chat Participant_, we will create a prompt and a custom agent, each able to achieve the same result.
 
@@ -974,10 +976,10 @@ _Prompt Files_ can be used by typing `/` followed by the prompt name in the chat
   This creates the file _.github/prompts/harley.prompt.md_
   - Add the following content to the file
 
-    ```
+    ```markdown
     ---
     agent: agent
-    tools: ['undefined_publisher.copilot-extension/jokeFileCreator']
+    tools: [undefined_publisher.copilot-extension/jokeFileCreator]
     ---
 
     You are Harley Quinn, the girlfriend of the Joker, who is the arch enemy of Batman.
@@ -997,10 +999,10 @@ The prompt can be more specific by using input variables and mentioning the tool
   - Use the variable _target_ to tell a joke about
   - Use the _jokeFileCreator_ tool explicitly to create the file
 
-    ```
+    ```markdown
     ---
     agent: agent
-    tools: ["undefined_publisher.copilot-extension/jokeFileCreator"]
+    tools: [undefined_publisher.copilot-extension/jokeFileCreator]
     ---
 
     You are Harley Quinn, the girlfriend of the Joker, who is the arch enemy of Batman.
@@ -1023,10 +1025,10 @@ The prompt can be more specific by using input variables and mentioning the tool
   This creates the file _.github/agents/joker.agent.md_
   - Add the following content to the file
 
-    ```
+    ```markdown
     ---
     description: "Creates a file with a joke to distract Batman."
-    tools: ["undefined_publisher.copilot-extension/jokeFileCreator"]
+    tools: [undefined_publisher.copilot-extension/jokeFileCreator]
     ---
 
     You are the Joker, the arch enemy of Batman.
@@ -1078,10 +1080,10 @@ _Custom Agents_ can be used to create specialized workflows with multiple agents
 
   - Add the following content to the file
 
-    ```
+    ```markdown
     ---
     description: "This is an agent that is able to persist content into a file in the workspace."
-    tools: ["edit/createFile"]
+    tools: [edit/createFile]
     ---
 
     You are an agent that operates in the current workspace of Visual Studio Code. You are able to persist the provided content into a file.
@@ -1098,10 +1100,10 @@ _Custom Agents_ can be used to create specialized workflows with multiple agents
   - Use `handoffs` field in the frontmatter header to configure that the processing should be _hand off_ to the `filewriter` agent we created before
   - Add the following content to the file
 
-    ```
+    ```markdown
     ---
     description: "This agent provides a list of blog posts related to VS Code and Theia written by Dirk Fauth."
-    tools: ["web/fetch", "github/list_gists"]
+    tools: [web/fetch, github/list_gists]
     handoffs:
       - label: Persist Blog Links
         agent: filewriter
@@ -1144,6 +1146,109 @@ _Custom Agents_ can be used to create specialized workflows with multiple agents
 
 By setting the `send` field in the `handoffs` section to `true` you can avoid that you need to send the hand-off prompt manually and instead auto-submit the prompt.
 But you still will need to approve the next step.
+
+### Agent Skills
+
+- Create a new _Agent Skill_  
+  In the Copilot chat window, click the gear icon in the upper right corner (_Configure Chat_) and select  
+  _Skills_ -> _New skill..._ -> _.github/skills_ -> name: blog-link-extraction
+
+  <img src="images/copilot_configure_skill.png"/>
+
+  This creates the folder _.github/skills/blog-link-extraction_ that contains a _SKILL.md_ file
+  - Add the following content to the _SKILL.md_ file
+
+    ```markdown
+    ---
+    name: blog-link-extraction
+    description: This skill provides a collection of links about VSCode or Theia from blog posts written by Dirk Fauth. Use this when asked for resources about VSCode or Theia, or when asked to find blog posts by Dirk Fauth.
+    ---
+
+    # Blog Link Extraction Skill
+
+    This skill is designed to extract links from blog posts written by Dirk Fauth about VSCode or Theia. It first collects relevant blog posts from Dirk Fauth's gists and then extracts and filters the links contained within those blog posts to provide a structured list of resources related to VSCode or Theia.
+
+    ## Process Overview
+
+    1. **Define the Extraction Goal**: Identify the specific information to be extracted (e.g., links to blog posts about VSCode or Theia).
+    2. **Blog Collection**: Fetch a list of relevant blog posts from a specified data source (e.g., GitHub gists).
+    3. **Link Extraction**: For each blog post, extract outbound links and filter them based on relevance to the topic. Perform this step without user interaction to provide a complete result set.
+    4. **Output**: Provide a structured list grouped by source blog post, with deterministic ordering.
+
+    ## Execution Rules
+
+    1. Run this workflow end-to-end without asking the user for intermediate confirmations.
+    2. Preferred tools are `github/list_gists` and `web/fetch`. If those exact names are unavailable, use equivalent tools that provide the same capability.
+    3. On fetch failures, retry once. If the second attempt fails, continue with remaining items and report the skipped URL in the final output.
+    4. If fetched content appears truncated, fetch additional chunks (for example via start index or pagination) until no additional content is returned.
+
+    ## Blog Collection
+
+    1. List gists for user `fipro78`.
+    2. Select gist files whose filename contains `publications` (case-insensitive).
+    3. If multiple matches exist, choose files from the most recently updated gist first.
+    4. Fetch the selected gist content with max length `25000`; if needed, fetch additional chunks until complete.
+    5. Extract candidate blog post URLs.
+    6. Keep only blog posts relevant to the requested topic (default topic: VSCode or Theia).
+    7. De-duplicate URLs and produce the final blog post list.
+
+    ## Link Extraction
+
+    1. Fetch each blog post with max length `25000`; if needed, continue fetching additional chunks until complete.
+    2. Extract outbound links from the blog post.
+    3. Exclude non-http(s) links and non-content protocols (`mailto:`, `javascript:`, `tel:`).
+    4. Filter links for relevance using topic keywords from surrounding context. For VSCode/Theia, use keywords such as: `vscode`, `visual studio code`, `theia`, `eclipse theia`, `extension`, `webview`, `copilot`.
+    5. De-duplicate links per blog post.
+    6. Determine display name for each link:
+
+    - Use anchor text when available.
+    - Otherwise use the URL.
+
+    7. Sort links alphabetically by display name within each blog post.
+
+    ## Example Workflow
+
+    1. A user asks for resources about VSCode or Theia.
+    2. The blog collection process fetches the relevant blog posts from Dirk Fauth's gists.
+    3. For each relevant blog post, the link extraction process reads the post, extracts outbound links, filters for relevance, and removes duplicates without user interaction.
+    4. The final output is grouped by blog post, with links presented using anchor text when available, and sorted alphabetically by link name within each blog post.
+
+    ## Result
+
+    The final output is an aggregated collection grouped by blog post. Blog posts are ordered alphabetically by title (or URL if no title is available). Links inside each blog post are ordered alphabetically by link display name.
+
+    ### Example Result
+
+    - [Blog Post 1](http://example.com/blog1):
+      - [Link 1](http://example.com/link1) - Anchor Text 1
+      - [Link 2](http://example.com/link2) - Anchor Text 2
+    - [Blog Post 2](http://example.com/blog2):
+      - [Link 3](http://example.com/link3) - Anchor Text 3
+      - [Link 4](http://example.com/link4) - Anchor Text 4
+
+    ## Guidelines
+
+    - Ensure that the links are relevant to the topic of VSCode or Theia.
+    - Avoid including duplicate links or links that are not relevant to the topic.
+    - Provide clear and concise output that is easy to understand and navigate.
+    - Use the anchor text as the name of the link when available, and use the URL as the name of the link when anchor text is not available.
+    - Order links alphabetically by name within each blog post section.
+    - Ensure that the output is structured in a way that clearly indicates which links are associated with which blog posts.
+    - Include a short `Skipped URLs` section when any blog post could not be fetched after retry.
+    ```
+
+  - Use the _Agent Skill_ by selecting the `Agent` mode in the agents dropdown in the chat view and either
+    - enter a prompt, e.g. `find links about vscode`, which let Copilot discover and load the instructions by matching the user prompt with the `name` and the `description` of the skill
+    - use the slash command to call it directly, e.g. `/blog-link-extraction links about vscode`
+  - Following the execution you will notice that the first step in processing is to read the _blog-link-extraction_ skill file. After that it starts processing as described in the skill.
+
+    <img src="images/copilot_read_skill.png"/>
+
+Further information about _Agent Skills_:
+
+- [agentskills.io](https://agentskills.io/home)
+- [Use Agent Skills in VS Code](https://code.visualstudio.com/docs/copilot/customization/agent-skills)
+- [awesome-agent-skills](https://github.com/heilcheng/awesome-agent-skills)
 
 ## Conclusion
 
