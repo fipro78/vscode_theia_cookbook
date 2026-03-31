@@ -16,7 +16,7 @@ In first place this tutorial is about extending GitHub Copilot in Visual Studio 
 
 To follow this tutorial you need the following tools and services:
 
-- [Visual Studio Code](https://code.visualstudio.com/) >= 1.109.0
+- [Visual Studio Code](https://code.visualstudio.com/) >= 1.113.0
 - [Copilot Extension](https://marketplace.visualstudio.com/items?itemName=GitHub.copilot)
 - Copilot Account (e.g. [GitHub Copilot Free](https://github.com/settings/copilot))
 
@@ -967,13 +967,15 @@ _Prompt Files_ can be used by typing `/` followed by the prompt name in the chat
 - Start the Extension Host by pressing F5  
   This is necessary because the `jokeFileCreator` language model tool is contributed by the developed Visual Studio Code Extension. If that tool is not needed or used, you can even try this in the Visual Studio Code instance in which you are developing.
 
-- Create a new _Prompt File_  
-  In the Copilot chat window, click the gear icon in the upper right corner (_Configure Chat_) and select  
-  _Prompt Files_ -> _New prompt file_ -> _.github/prompts_ -> name: harley
+- Create a new _Prompt File_
+  - In the Copilot chat window, click the gear icon in the upper right corner (_Open Customizations_)  
+    <img src="images/copilot_chat_menu.png"/>
+  - Select _Prompts_ in the _Chat Customizations_ dialog side menu
+  - Open the dropdown for generating a new prompt and select _New Prompt (Workspace)_  
+    <img src="images/copilot_customizations_prompts.png"/>
+  - Enter the name _harley_
 
-  <img src="images/copilot_configure_prompt.png"/>
-
-  This creates the file _.github/prompts/harley.prompt.md_
+  This creates the file _.github/prompts/harley.prompt.md_, which is directly opened in the _Chat Customizations_ dialog.
   - Add the following content to the file
 
     ```markdown
@@ -1016,13 +1018,16 @@ The prompt can be more specific by using input variables and mentioning the tool
 
 ### Custom Agents
 
-- Create a new _Custom Agent_  
-  In the Copilot chat window, click the gear icon in the upper right corner (_Configure Chat_) and select  
-  _Custom Agents_ -> _Create new custom agent..._ -> _.github/agents_ -> name: joker
+- Create a new _Custom Agent_
+  - In the Copilot chat window, click the gear icon in the upper right corner (_Open Customizations_)  
+    <img src="images/copilot_chat_menu.png"/>
+  - Select _Agents_ in the _Chat Customizations_ dialog side menu
+  - Open the dropdown for generating a new agent and select _New Agent (Workspace)_  
+    <img src="images/copilot_customizations_agents.png"/>
+  - Select _.github_ as location for the new agent
+  - Enter the name _joker_
 
-  <img src="images/copilot_configure_custom_agent.png"/>
-
-  This creates the file _.github/agents/joker.agent.md_
+  This creates the file _.github/agents/joker.agent.md_, which is directly opened in the _Chat Customizations_ dialog.
   - Add the following content to the file
 
     ```markdown
@@ -1073,11 +1078,15 @@ _Custom Agents_ can be used to create specialized workflows with multiple agents
   ```
 
 - Create a new _Custom Agent_ that is able to write content to a file in the workspace by using the `edit/createFile` built-in tool of Visual Studio Code.
-  - In the Copilot chat window, click the gear icon in the upper right corner (_Configure Chat_) and select  
-    _Custom Agents_ -> _Create new custom agent..._ -> _.github/agents_ -> name: filewriter
+  - In the Copilot chat window, click the gear icon in the upper right corner (_Open Customizations_)  
+    <img src="images/copilot_chat_menu.png"/>
+  - Select _Agents_ in the _Chat Customizations_ dialog side menu
+  - Open the dropdown for generating a new agent and select _New Agent (Workspace)_  
+    <img src="images/copilot_customizations_agents.png"/>
+  - Select _.github_ as location for the new agent
+  - Enter the name _filewriter_
 
-    This creates the file _.github/agents/filewriter.agent.md_
-
+  This creates the file _.github/agents/filewriter.agent.md_, which is directly opened in the _Chat Customizations_ dialog.
   - Add the following content to the file
 
     ```markdown
@@ -1090,11 +1099,13 @@ _Custom Agents_ can be used to create specialized workflows with multiple agents
     ```
 
 - Create a new _Custom Agent_ that is able to retrieve information from a _gist_.
-  - In the Copilot chat window, click the gear icon in the upper right corner (_Configure Chat_) and select  
-    _Custom Agents_ -> _Create new custom agent..._ -> _.github/agents_ -> name: blog
+  - Switch back to the _Agents_ overview page in the _Chat Customizations_ dialog (e.g. by using the back arrow if the previous agent editor is still open or selecting the _Agents_ entry in the side menu again)
+  - Open the dropdown for generating a new agent and select _New Agent (Workspace)_  
+    <img src="images/copilot_customizations_agents.png"/>
+  - Select _.github_ as location for the new agent
+  - Enter the name _blog_
 
-    This creates the file _.github/agents/blog.agent.md_
-
+  This creates the file _.github/agents/blog.agent.md_, which is directly opened in the _Chat Customizations_ dialog.
   - Use the GitHub MCP tool `github/list_gists` to list the gists (remember to enable the _gists_ toolset)
   - Use the built-in `web/fetch` tool to fetch the content
   - Use `handoffs` field in the frontmatter header to configure that the processing should be _hand off_ to the `filewriter` agent we created before
@@ -1126,7 +1137,7 @@ _Custom Agents_ can be used to create specialized workflows with multiple agents
 
 - Use the _Custom Agent_ `blog` by selecting it in the agents dropdown in the chat view and enter the prompt, e.g. `show me the list`
 
-  <img src="images/copilot_custom_agent_blog.png" width="50%"/><br>
+  <img src="images/copilot_custom_agent_blog.png"/><br>
   - You will be prompted to allow the execution of the `fetch` tool to ensure that there is no malicious code fetched
 
     <img src="images/copilot_allow_and_review.png" width="50%"/><br>
@@ -1137,25 +1148,28 @@ _Custom Agents_ can be used to create specialized workflows with multiple agents
 
   - If the next step is approved, the chat will contain the `prompt` defined in the `handoffs` section, and the `filewriter` agent will be selected in the agent dropdown
 
-    <img src="images/copilot_custom_agent_filewriter.png" width="50%"/><br>
+    <img src="images/copilot_custom_agent_filewriter.png"/><br>
 
   - After sending the pre-filled chat entry, the `filewriter` will execute its task and create the folder _links_ with a file _fauth.html_ in it
   - You will then be asked whether to _Keep_ or to _Undo_ the file changes. Select _Keep_ and check what the content of the file.
 
-    <img src="images/copilot_keep_undo.png" width="50%"/>
+    <img src="images/copilot_keep_undo.png"/>
 
 By setting the `send` field in the `handoffs` section to `true` you can avoid that you need to send the hand-off prompt manually and instead auto-submit the prompt.
 But you still will need to approve the next step.
 
 ### Agent Skills
 
-- Create a new _Agent Skill_  
-  In the Copilot chat window, click the gear icon in the upper right corner (_Configure Chat_) and select  
-  _Skills_ -> _New skill..._ -> _.github/skills_ -> name: blog-link-extraction
+- Create a new _Agent Skill_
+  - In the Copilot chat window, click the gear icon in the upper right corner (_Open Customizations_)  
+    <img src="images/copilot_chat_menu.png"/>
+  - Select _Skills_ in the _Chat Customizations_ dialog side menu
+  - Open the dropdown for generating a new skill and select _New Skill (Workspace)_  
+    <img src="images/copilot_customizations_skills.png"/>
+  - Select _.github_ as location for the new skill
+  - Enter the name _blog-link-extraction_
 
-  <img src="images/copilot_configure_skill.png"/>
-
-  This creates the folder _.github/skills/blog-link-extraction_ that contains a _SKILL.md_ file
+  This creates the folder _.github/skills/blog-link-extraction_ that contains a _SKILL.md_ file, which is directly opened in the _Chat Customizations_ dialog.
   - Add the following content to the _SKILL.md_ file
 
     ```markdown

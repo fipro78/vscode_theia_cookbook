@@ -7,7 +7,7 @@ If you have not read my previous blog posts and want more details, have a look a
 - [Getting Started with Theia AI](./theia_ai_getting_started.md)
 
 _**Note:**_  
-This blog post is based on Visual Studio Code 1.112.0 and Eclipse Theia 1.70.0. There may be differences if you read it when newer versions have been released.
+This blog post is based on Visual Studio Code 1.113.0 and Eclipse Theia 1.70.0. There may be differences if you read it when newer versions have been released.
 
 ## Strategic Comparison
 
@@ -514,8 +514,10 @@ _Agent Skills_ are a fairly new format, and both Visual Studio Code and Eclipse 
 - Copilot discovers the skills to use automatically by matching the user prompt with the skill description. Only the body of a matching skill will be loaded into the context. Additional resources will only be added if they are referenced in the instructions.
 - You can create a new skill manually by creating the required folder and a _SKILL.md_ file in that folder
 - You can create a new skill with the help of AI by using the `/create-skill` slash command in the chat
-- You can use _Configure Chat_ in the Copilot chat window by clicking the gear icon in the upper-right corner and selecting the _Skills_ item to guide you through the initial creation.  
-  <img src="images/copilot_configure_skill.png"/>
+- You can use the _Chat Customizations_ dialog by clicking the gear icon in the upper-right corner of the Copilot chat window, select the _Skills_ menu item on the left side and select an option to generate a skill via the dropdown on the upper right corner to guide you through the initial creation.  
+  <img src="images/copilot_chat_menu.png"/>
+
+  <img src="images/copilot_customizations_skills.png"/>
 
 You can learn more about the use of _Agent Skills_ in Visual Studio Code in [Use Agent Skills in VS Code](https://code.visualstudio.com/docs/copilot/customization/agent-skills) and [Extending Copilot in Visual Studio Code - Further Customization - Agent Skills](vscode_copilot_extension.md#agent-skills).
 
