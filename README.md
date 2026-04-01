@@ -49,3 +49,10 @@ It describes these patterns in short and how they can be implemented with _Custo
 
 The corresponding tutorial is located in this repository:  
 [AI Agent Orchestration](/tutorials/ai_agent_orchestration.md)
+
+## Recipe Showdown - Visual Studio Code GitHub Copilot vs. Eclipse Theia AI
+
+This comprehensive comparison examines the strategic differences (ownership, licensing, and customization options) and technical details (Language Model Tools, MCP Servers, and chat customization) to help you understand where Visual Studio Code GitHub Copilot and Eclipse Theia AI align and where they diverge. Whether you're evaluating which platform best fits your needs or planning to implement AI extensions, this showdown provides the insights needed to make an informed decision.
+
+The corresponding article is located in this repository:  
+[Visual Studio Code GitHub Copilot vs. Eclipse Theia AI](/tutorials/vscode_copilot_theia_ai_comparison.md)
