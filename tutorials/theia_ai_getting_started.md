@@ -62,7 +62,7 @@ You need at least to use Theia 1.70.0 to make all features work that are describ
 Theia and Visual Studio Code can use Node 22 in the meanwhile. The [Theia Prerequisites](https://github.com/eclipse-theia/theia/blob/master/doc/Developing.md#prerequisites) talk about the requirement _Node.js >= 22 and <= 24_ and the [VS Code Dev Container](https://github.com/microsoft/vscode/blob/main/.devcontainer/Dockerfile) is based on `typescript-node:22-bookworm`. Therefore we first update the project setup to use Node 22.
 
 - Open the file _theia/package.json_
-  - Update the `enginges` section
+  - Update the `engines` section
     ```json
     "engines": {
       "node": ">=22 <=24",
