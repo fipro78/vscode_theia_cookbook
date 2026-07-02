@@ -57,7 +57,7 @@ As this tutorial is part of my [Visual Studio Code Extension - Theia - Cookbook]
 Developing applications that are based on web frameworks typically means that you have to handle dependency updates quite often. The reason is the high frequency in which libraries are updated. Sometimes it feels like the tutorials and blog posts that rely on a specific version of a library is outdated at the time it is published. The Eclipse Theia project also publishes new releases quite often, so it is a common task to update your dependencies. As several things happened since the [Getting Started with Eclipse Theia](./theia_getting_started.md) tutorial, I will update the setup in the following section. It should be at least up-to-date at the time the tutorial is published, and describe in general the steps to follow for updating in the future.
 
 _**Note:**_  
-You need at least to use Theia 1.70.0 to make all features work that are described and used in this tutorial.
+You need at least to use Theia 1.73.0 to make all features work that are described and used in this tutorial.
 
 Theia and Visual Studio Code can use Node 22 in the meanwhile. The [Theia Prerequisites](https://github.com/eclipse-theia/theia/blob/master/doc/Developing.md#prerequisites) talk about the requirement _Node.js >= 22 and <= 24_ and the [VS Code Dev Container](https://github.com/microsoft/vscode/blob/main/.devcontainer/Dockerfile) is based on `typescript-node:22-bookworm`. Therefore we first update the project setup to use Node 22.
 
@@ -142,14 +142,14 @@ or by executing `npm outdated` to get a list of outdated dependencies and the av
     ```
 
     - Uncheck the `electron` package to avoid that it gets updated automatically.  
-      This is necessary because the package `@theia/electron@1.70.0` has a peer dependency to `electron@39.7.0` and a newer dependency would break the build.
+      This is necessary because the package `@theia/electron@1.73.1` has a peer dependency to `electron@39.8.7` and a newer dependency would break the build.
     - Answer the question `Run npm install to install new versions?` with `n` as we need to execute `npm install` from the _theia_ parent folder.
 
   - Open the file _theia/electron-app/package.json_
     - Update the `electron` version
       ```json
       "devDependencies": {
-        "electron": "^39.7.0"
+        "electron": "^39.8.7"
       },
       ```
   - Switch back to **Terminal** to the _theia_ folder
@@ -386,7 +386,7 @@ Theia already contains a tool function with the name `writeFileContent` that can
     import {
       ToolProvider,
       ToolRequest,
-      ToolInvocationContext,
+      ToolInvocationContext
     } from "@theia/ai-core";
     import { CommandRegistry } from "@theia/core";
     import { BinaryBuffer } from "@theia/core/lib/common/buffer";
@@ -421,22 +421,22 @@ Theia already contains a tool function with the name `writeFileContent` that can
               path: {
                 type: "string",
                 description:
-                  "The name of the folder in the workspace where the joke file should be created.",
+                  "The name of the folder in the workspace where the joke file should be created."
               },
               filename: {
                 type: "string",
-                description: "The name of the jokefile that should be created.",
+                description: "The name of the jokefile that should be created."
               },
               joke: {
                 type: "string",
-                description: "The joke content to be written in the joke file.",
-              },
+                description: "The joke content to be written in the joke file."
+              }
             },
-            required: ["path", "filename", "joke"],
+            required: ["path", "filename", "joke"]
           },
           handler: async (
             args: string,
-            ctx: ToolInvocationContext,
+            ctx: ToolInvocationContext
           ): Promise<string> => {
             if (ctx?.cancellationToken?.isCancellationRequested) {
               return JSON.stringify({ error: "Operation cancelled by user" });
@@ -462,25 +462,25 @@ Theia already contains a tool function with the name `writeFileContent` that can
             // ensure that we do not overwrite existing files
             if (await this.fileService.exists(fileUri)) {
               return JSON.stringify({
-                error: `File ${fileUri} already exists`,
+                error: `File ${fileUri} already exists`
               });
             }
 
             try {
               await this.fileService.createFile(
                 fileUri,
-                BinaryBuffer.fromString(joke),
+                BinaryBuffer.fromString(joke)
               );
 
               this.commandRegistry.executeCommand(
-                FileNavigatorCommands.REFRESH_NAVIGATOR.id,
+                FileNavigatorCommands.REFRESH_NAVIGATOR.id
               );
 
               return `Successfully wrote a joke in the file ${fileUri}`;
             } catch (error) {
               return JSON.stringify({ error: error.message });
             }
-          },
+          }
         };
       }
     }
@@ -554,7 +554,7 @@ In this section I will describe how to manually configure MCP servers via _setti
 We will install
 
 - the [Filesystem MCP Server](https://modelcontextprotocol.io/quickstart/user#installing-the-filesystem-server) as a local MCP Server
-- the [Fetch MCP Server](https://github.com/modelcontextprotocol/servers/tree/main/src/fetch) as a remote MCP Server
+- the [GoDaddy MCP Server](https://developer.godaddy.com/mcp) as a remote MCP Server
 - the [GitHub MCP Server](https://github.com/github/github-mcp-server) as a remote MCP Server that requires an authorization
 
 ### Add MCP server via settings.json
@@ -622,21 +622,21 @@ or a more extended one
 
 #### Remote MCP Server
 
-- Add the following content to the _settings.json_ in the `ai-features.mcp.mcpServers` section to configure the fetch server as remote MCP server.
+- Add the following content to the _settings.json_ in the `ai-features.mcp.mcpServers` section to configure the `godaddy` server as remote MCP server.
   ```json
-  "fetch": {
-    "serverUrl": "https://remote.mcpservers.org/fetch/mcp"
+  "godaddy": {
+    "serverUrl": "https://api.godaddy.com/v1/domains/mcp"
   }
   ```
-- Click on the _Connect_ button to connect to the **fetch** remote MCP server  
-  <img src="images/theia_mcp_fetch.png"/>
+- Click on the _Connect_ button to connect to the **godaddy** remote MCP server if it is not autostarted automatically  
+  <img src="images/theia_mcp_godaddy.png"/>
 - Test if the configuration works by entering the following to the AI Chat
 
   ```
-  @Universal fetch the content from https://eclipse.dev/nattable ~mcp_fetch_fetch
+  @Universal is the domain vogella.com available ~mcp_godaddy_domains_check_availability
   ```
 
-- You should now see that the `mcp_fetch_fetch` tool from the _fetch (MCP Server)_ is executed to solve your request.
+- You should now see that the `mcp_godaddy_domains_check_availability` tool from the _godaddy (MCP Server)_ is executed to solve your request.
 
 #### Remote MCP Server with authorization
 
@@ -724,11 +724,29 @@ or by setting the optional header `X-MCP-Toolsets`
 
 Further details about this are available in [Remote GitHub MCP Server](https://github.com/github/github-mcp-server/blob/main/docs/remote-server.md).
 
+_**Note:**_  
+The [Fetch MCP Server](https://github.com/modelcontextprotocol/servers/tree/main/src/fetch) is not provided as a remote server anymore, so we need to configure it as a local MCP server.
+
+_**Note:**_  
+With the issue [Support provider-native server-side tools](https://github.com/eclipse-theia/theia/issues/17637) and the corresponding PR [feat(ai): support provider-native server-side tools](https://github.com/eclipse-theia/theia/pull/17707) the support for server-side tools like `web_fetch` from Anthropic is supported since Theia 1.73.0. In case other LLMs than Anthropic or Gemini are used, you still need a local `fetch` MCP server.
+
+- Open the _AI Configuration_ via _Menu -> View -> AI Configuration_
+  - Switch to the _MCP Servers_ tab
+  - Add the [Fetch MCP Server](https://github.com/modelcontextprotocol/servers/tree/main/src/fetch) as a local MCP Server
+    - Click on _Add MCP Server_
+    - Set the following values in the dialog
+      - **Server Name:** _fetch_
+      - **Server Type:** _Local (Command)_
+      - **Command:** _docker_
+      - **Arguments:** _run -i --rm mcp/fetch_
+      - Keep the **Autostart** flag checked
+    - Click _Add Server_
+
 - Test if the GitHub MCP Server configuration works
   - Start the server
   - Enter the following in the chat
     ```
-    @Universal fetch the publications written by Dirk Fauth in the gists of fipro78. Provide the links to blog posts about VS Code and Eclipse Theia in the chat that are extracted from a related gists file. Use ~mcp_github_list_gists  to list the available gists. Then use ~mcp_fetch_fetch  to fetch the content of the found gists with a max-length parameter of 15000.
+    @Universal fetch the publications written by Dirk Fauth in the gists of fipro78. Provide the links to blog posts about VS Code and Eclipse Theia in the chat that are extracted from a related gists file. Use ~mcp_github_list_gists  to list the available gists. Then use ~mcp_fetch_fetch to fetch the content of the found gists with a max-length parameter of 15000.
     ```
 
 ### Add MCP server programmatically via Theia Extension
@@ -751,14 +769,14 @@ Remember to remove the MCP server configuration from the _settings.json_ or use 
     import {
       LocalMCPServerDescription,
       MCPFrontendService,
-      RemoteMCPServerDescription,
+      RemoteMCPServerDescription
     } from "@theia/ai-mcp/lib/common";
     ```
   - Add a new class `McpFrontendContribution` that implements `FrontendApplicationContribution`
   - Get the `MCPFrontendService` and the `EnvVariablesServer` injected
   - Implement the `onStart()` method
     - Register the `filesystem` MCP server as local MCP server via `LocalMCPServerDescription`
-    - Register the `fetch` MCP server as remote MCP server via `RemoteMCPServerDescription`
+    - Register the `godaddy` MCP server as remote MCP server via `RemoteMCPServerDescription`
     - Register the `github` MCP server as remote MCP server via `RemoteMCPServerDescription` and add a `resolve` function to provide the `GITHUB_TOKEN` environment variable
 
     ```typescript
@@ -782,17 +800,25 @@ Remember to remove the MCP server configuration from the _settings.json_ or use 
             args: [
               "-y",
               "@modelcontextprotocol/server-filesystem",
-              "/home/node/example",
-            ],
+              "/home/node/example"
+            ]
           };
           this.mcpFrontendService.addOrUpdateServer(fileSystemServer);
 
-          // add a remote MCP server
-          const fetchServer: RemoteMCPServerDescription = {
+          // add fetch as local MCP server
+          const fetchServer: LocalMCPServerDescription = {
             name: "fetch",
-            serverUrl: "https://remote.mcpservers.org/fetch/mcp",
+            command: "docker",
+            args: ["run", "-i", "--rm", "mcp/fetch"]
           };
           this.mcpFrontendService.addOrUpdateServer(fetchServer);
+
+          // add a remote MCP server
+          const godaddyServer: RemoteMCPServerDescription = {
+            name: "godaddy",
+            serverUrl: "https://api.godaddy.com/v1/domains/mcp"
+          };
+          this.mcpFrontendService.addOrUpdateServer(godaddyServer);
 
           // get the GITHUB_TOKEN environment variable
           const githubTokenVar =
@@ -803,14 +829,14 @@ Remember to remove the MCP server configuration from the _settings.json_ or use 
             serverUrl: "https://api.githubcopilot.com/mcp/",
             serverAuthToken: githubTokenVar?.value,
             headers: {
-              "X-MCP-Toolsets": "gists",
-            },
+              "X-MCP-Toolsets": "gists"
+            }
           };
           this.mcpFrontendService.addOrUpdateServer(githubServer);
         } catch (error) {
           console.error("Error configuring MCP server:", error);
           this.messageService.error(
-            "Failed to configure MCP server. Please check the console for details.",
+            "Failed to configure MCP server. Please check the console for details."
           );
         }
       }
@@ -834,7 +860,7 @@ Remember to remove the MCP server configuration from the _settings.json_ or use 
       name: "github",
       serverUrl: "https://api.githubcopilot.com/mcp/",
       headers: {
-        "X-MCP-Toolsets": "gists",
+        "X-MCP-Toolsets": "gists"
       },
       resolve: async (serverDescription) => {
         console.log("Resolving GitHub MCP server description");
@@ -846,20 +872,20 @@ Remember to remove the MCP server configuration from the _settings.json_ or use 
           value:
             "serverAuthToken" in serverDescription
               ? serverDescription.serverAuthToken || ""
-              : "",
+              : ""
         });
 
         if (authToken) {
           // Return updated server description with new token
           return {
             ...serverDescription,
-            serverAuthToken: authToken,
+            serverAuthToken: authToken
           } as RemoteMCPServerDescription;
         }
 
         // If no token provided, return original description
         return serverDescription;
-      },
+      }
     };
     this.mcpFrontendService.addOrUpdateServer(githubServer);
     ```
@@ -879,7 +905,7 @@ Remember to remove the MCP server configuration from the _settings.json_ or use 
   ```typescript
   import {
     McpFrontendContribution,
-    JokeFileCreationFunction,
+    JokeFileCreationFunction
   } from "./ai-extension-contribution";
   import { bindToolProvider } from "@theia/ai-core/lib/common";
   import { FrontendApplicationContribution } from "@theia/core/lib/browser";
@@ -932,7 +958,7 @@ In this section we will implement a _Custom Agent_. In the section after this on
     import { AbstractStreamParsingChatAgent } from "@theia/ai-chat";
     import {
       BasePromptFragment,
-      LanguageModelRequirement,
+      LanguageModelRequirement
     } from "@theia/ai-core";
     import { CREATE_JOKE_FILE_FUNCTION_ID } from "./ai-extension-contribution";
     import { injectable } from "@theia/core/shared/inversify";
@@ -947,7 +973,7 @@ In this section we will implement a _Custom Agent_. In the section after this on
       To keep the distraction going on, write the joke to a file. Use **~{${CREATE_JOKE_FILE_FUNCTION_ID}}** to write the joke to a file.
       If the user does not provide a path, create a new folder "bat-jokes" in the current workspace folder and store the file in that folder.
       Choose a filename that is related to the joke itself.
-      `,
+      `
     };
 
     @injectable()
@@ -957,8 +983,8 @@ In this section we will implement a _Custom Agent_. In the section after this on
       languageModelRequirements: LanguageModelRequirement[] = [
         {
           purpose: "chat",
-          identifier: "default/universal",
-        },
+          identifier: "default/universal"
+        }
       ];
       protected defaultLanguageModelPurpose: string = "chat";
       override description =
@@ -967,7 +993,7 @@ In this section we will implement a _Custom Agent_. In the section after this on
       override iconClass: string = "codicon codicon-feedback";
       protected override systemPromptId: string = "joker-system";
       override prompts = [
-        { id: "joker-system", defaultVariant: jokerTemplate, variants: [] },
+        { id: "joker-system", defaultVariant: jokerTemplate, variants: [] }
       ];
       override functions = [CREATE_JOKE_FILE_FUNCTION_ID];
     }
@@ -982,7 +1008,7 @@ In this section we will implement a _Custom Agent_. In the section after this on
     ```typescript
     import {
       McpFrontendContribution,
-      JokeFileCreationFunction,
+      JokeFileCreationFunction
     } from "./ai-extension-contribution";
     import { Agent, bindToolProvider } from "@theia/ai-core/lib/common";
     import { ChatAgent } from "@theia/ai-chat/lib/common";
@@ -1045,7 +1071,7 @@ Theia supports a feature called [_Prompt Variants_](https://eclipsesource.com/bl
     
       You are the Joker, the arch enemy of Batman.
       To attack Batman, you tell a joke that is so funny, it distracts him from his mission.
-      `,
+      `
     };
     ```
 
@@ -1097,7 +1123,7 @@ As mentioned, there is an [`AbstractModeAwareChatAgent`](https://github.com/ecli
       You are the Joker, the arch enemy of Batman.
       To attack Batman, you tell a joke that is so funny, it distracts him from his mission.
       You swear a lot and use a lot of emojis in your jokes to make them even more distracting for Batman.
-      `,
+      `
     };
     ```
 
@@ -1120,7 +1146,7 @@ As mentioned, there is an [`AbstractModeAwareChatAgent`](https://github.com/ecli
     modes = [
       { id: jokerTemplate.id, name: "Default Mode" },
       { id: jokerTemplateSimple.id, name: "Simple Mode" },
-      { id: jokerTemplateSwear.id, name: "Swear Mode" },
+      { id: jokerTemplateSwear.id, name: "Swear Mode" }
     ];
     ```
 
@@ -1188,7 +1214,7 @@ At this point, we use the _Agent Mode_ to let a user easily switch between avail
     import { ChatAgentService, ChatMode } from "@theia/ai-chat";
     import {
       BasePromptFragment,
-      LanguageModelRequirement,
+      LanguageModelRequirement
     } from "@theia/ai-core";
     import { AbstractModeAwareChatAgent } from "@theia/ai-ide/lib/browser/mode-aware-chat-agent";
     import { CREATE_JOKE_FILE_FUNCTION_ID } from "./ai-extension-contribution";
@@ -1257,12 +1283,12 @@ In this section we will implement another chat agent that uses _Agent-specific V
   ```typescript
   import {
     AbstractStreamParsingChatAgent,
-    SystemMessageDescription,
+    SystemMessageDescription
   } from "@theia/ai-chat";
   import {
     AIVariableContext,
     BasePromptFragment,
-    LanguageModelRequirement,
+    LanguageModelRequirement
   } from "@theia/ai-core";
   import { injectable } from "@theia/core/shared/inversify";
   import { CREATE_JOKE_FILE_FUNCTION_ID } from "./ai-extension-contribution";
@@ -1279,7 +1305,7 @@ In this section we will implement another chat agent that uses _Agent-specific V
   
         The content to persist is as follows:
         {{content}}
-        `,
+        `
   };
 
   @injectable()
@@ -1289,8 +1315,8 @@ In this section we will implement another chat agent that uses _Agent-specific V
     languageModelRequirements: LanguageModelRequirement[] = [
       {
         purpose: "chat",
-        identifier: "default/universal",
-      },
+        identifier: "default/universal"
+      }
     ];
     protected defaultLanguageModelPurpose: string = "chat";
     override description =
@@ -1299,24 +1325,24 @@ In this section we will implement another chat agent that uses _Agent-specific V
     override iconClass: string = "codicon codicon-new-file";
     protected override systemPromptId: string = "writer-system";
     override prompts = [
-      { id: "writer-system", defaultVariant: writerTemplate, variants: [] },
+      { id: "writer-system", defaultVariant: writerTemplate, variants: [] }
     ];
     override functions = [CREATE_JOKE_FILE_FUNCTION_ID];
     override agentSpecificVariables = [
       {
         name: "folder",
         description: "The folder in which the file should be created.",
-        usedInPrompt: true,
+        usedInPrompt: true
       },
       {
         name: "content",
         description: "The content to persist into the file.",
-        usedInPrompt: true,
-      },
+        usedInPrompt: true
+      }
     ];
 
     protected override async getSystemMessageDescription(
-      context: AIVariableContext,
+      context: AIVariableContext
     ): Promise<SystemMessageDescription | undefined> {
       // extract data from the context
       let request = (context as any).request;
@@ -1334,14 +1360,14 @@ In this section we will implement another chat agent that uses _Agent-specific V
 
       const variableValues = {
         folder: folder,
-        content: content,
+        content: content
       };
 
       // get the resolved prompt
       const resolvedPrompt = await this.promptService.getResolvedPromptFragment(
         this.systemPromptId,
         variableValues,
-        context,
+        context
       );
 
       // return the system message description
@@ -1431,13 +1457,13 @@ There are different ways to find out which _Prompt Template_ was selected, depen
     import {
       AbstractStreamParsingChatAgent,
       ChatAgentService,
-      MutableChatRequestModel,
+      MutableChatRequestModel
     } from "@theia/ai-chat";
     import {
       BasePromptFragment,
       getTextOfResponse,
       LanguageModelRequirement,
-      LanguageModelResponse,
+      LanguageModelResponse
     } from "@theia/ai-core";
     import { CREATE_JOKE_FILE_FUNCTION_ID } from "./ai-extension-contribution";
     import { inject, injectable } from "@theia/core/shared/inversify";
@@ -1489,15 +1515,15 @@ To add a simple static text to the response, you can use the `TextChatResponseCo
     ```typescript
     request.response.response.addContent(
       new TextChatResponseContentImpl(
-        `Hilarious, Batman will never recover from this as he will always try to remember my distracting jokes!`,
-      ),
+        `Hilarious, Batman will never recover from this as he will always try to remember my distracting jokes!`
+      )
     );
     ```
     ```typescript
     request.response.response.addContent(
       new MarkdownChatResponseContentImpl(
-        `Hilarious, **Batman** :bat: will never recover from this :dizzy_face: as he will always try to remember my _distracting jokes_!`,
-      ),
+        `Hilarious, **Batman** :bat: will never recover from this :dizzy_face: as he will always try to remember my _distracting jokes_!`
+      )
     );
     ```
 

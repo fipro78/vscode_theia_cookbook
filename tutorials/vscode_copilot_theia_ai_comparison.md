@@ -249,8 +249,8 @@ You can use predefined variables in the `servers` section and the variables defi
       "command": "npx",
       "args": ["-y", "@modelcontextprotocol/server-filesystem"]
     },
-    "fetch": {
-      "url": "https://remote.mcpservers.org/fetch/mcp",
+    "godaddy": {
+      "url": "https://api.godaddy.com/v1/domains/mcp",
       "type": "http"
     },
     "github": {
@@ -309,8 +309,8 @@ Comparing Visual Studio Code _mcp.json_ and Eclipse Theia _settings.json_ MCP se
       ],
       "autostart": false
     },
-    "fetch": {
-      "serverUrl": "https://remote.mcpservers.org/fetch/mcp",
+    "godaddy": {
+      "serverUrl": "https://api.godaddy.com/v1/domains/mcp",
       "autostart": false
     },
     "github": {

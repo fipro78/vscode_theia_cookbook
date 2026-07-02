@@ -5,8 +5,8 @@
       "command": "npx",
       "args": ["-y", "@modelcontextprotocol/server-filesystem"]
     },
-    "fetch": {
-      "url": "https://remote.mcpservers.org/fetch/mcp",
+    "godaddy": {
+      "url": "https://api.godaddy.com/v1/domains/mcp",
       "type": "http"
     },
     "github": {

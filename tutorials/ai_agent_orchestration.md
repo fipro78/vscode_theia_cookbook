@@ -320,14 +320,21 @@ At the time of writing this article, the only Copilot models that are working in
 
 To set up the example process like in Visual Studio Code to retrieve a list of publications from a GitHub Gist and then fetch the data for further processing, we need to configure the necessary MCP server. This is again the _GitHub MCP Server_ with the _gists_ toolset enabled, and the _fetch MCP Server_ as Theia does not provide a built-in fetch tool.
 
+_**Note:**_  
+The [Fetch MCP Server](https://github.com/modelcontextprotocol/servers/tree/main/src/fetch) is not provided as a remote server anymore, so we need to configure it as a local MCP server.
+
+_**Note:**_  
+With the issue [Support provider-native server-side tools](https://github.com/eclipse-theia/theia/issues/17637) and the corresponding PR [feat(ai): support provider-native server-side tools](https://github.com/eclipse-theia/theia/pull/17707) the support for server-side tools like `web_fetch` from Anthropic is supported since Theia 1.73.0. In case other LLMs than Anthropic or Gemini are used, you still need a local `fetch` MCP server.
+
 - Open the _AI Configuration_ via _Menu -> View -> AI Configuration_
   - Switch to the _MCP Servers_ tab
-  - Add the [Fetch MCP Server](https://github.com/modelcontextprotocol/servers/tree/main/src/fetch) as a remote MCP Server
+  - Add the [Fetch MCP Server](https://github.com/modelcontextprotocol/servers/tree/main/src/fetch) as a local MCP Server
     - Click on _Add MCP Server_
     - Set the following values in the dialog
       - **Server Name:** _fetch_
-      - **Server Type:** _Remote (URL)_
-      - **Server URL:** _https://remote.mcpservers.org/fetch/mcp_
+      - **Server Type:** _Local (Command)_
+      - **Command:** _docker_
+      - **Arguments:** _run -i --rm mcp/fetch_
       - Keep the **Autostart** flag checked
     - Click _Add Server_
 
@@ -378,9 +385,15 @@ To set up the example process like in Visual Studio Code to retrieve a list of p
       "ai-features.chat.defaultChatAgent": "Universal",
       "ai-features.mcp.mcpServers": {
         "fetch": {
-          "serverUrl": "https://remote.mcpservers.org/fetch/mcp",
-          "autostart": true
-        },
+            "command": "docker",
+            "autostart": true,
+            "args": [
+                "run",
+                "-i",
+                "--rm",
+                "mcp/fetch"
+            ]
+        }
         "github": {
           "serverUrl": "https://api.githubcopilot.com/mcp/x/gists",
           "autostart": true,

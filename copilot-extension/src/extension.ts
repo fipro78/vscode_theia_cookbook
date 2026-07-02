@@ -36,14 +36,14 @@ export function activate(context: vscode.ExtensionContext) {
           new vscode.McpStdioServerDefinition("filesystem", "npx", [
             "-y",
             "@modelcontextprotocol/server-filesystem",
-            "/home/node/example",
+            "/home/node/example"
           ])
         );
 
         servers.push(
           new vscode.McpHttpServerDefinition(
-            "fetch",
-            vscode.Uri.parse("https://remote.mcpservers.org/fetch/mcp")
+            "godaddy",
+            vscode.Uri.parse("https://api.godaddy.com/v1/domains/mcp")
           )
         );
 
@@ -68,7 +68,7 @@ export function activate(context: vscode.ExtensionContext) {
             token = await vscode.window.showInputBox({
               prompt: `Enter the authorization token for ${server.label}`,
               password: true,
-              placeHolder: `Enter your authorization token for ${server.label} ...`,
+              placeHolder: `Enter your authorization token for ${server.label} ...`
             });
 
             if (token) {
@@ -92,7 +92,7 @@ export function activate(context: vscode.ExtensionContext) {
           // Update the server headers with the new token
           const updatedHeaders = {
             ...(server as any).headers,
-            Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${token}`
           };
 
           (server as any).headers = updatedHeaders;
@@ -102,7 +102,7 @@ export function activate(context: vscode.ExtensionContext) {
         // If there is a pending tool call, the editor will cancel it and return an error message
         // to the language model.
         return server;
-      },
+      }
     })
   );
 
@@ -126,9 +126,9 @@ export function activate(context: vscode.ExtensionContext) {
           responseStreamOptions: {
             stream,
             references: true,
-            responseText: true,
+            responseText: true
           },
-          tools,
+          tools
         },
         token
       );

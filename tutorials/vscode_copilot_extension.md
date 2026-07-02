@@ -392,7 +392,7 @@ In the following section I will describe how to manually configure MCP servers v
 We will install
 
 - the [Filesystem MCP Server](https://modelcontextprotocol.io/quickstart/user#installing-the-filesystem-server) as a local MCP Server
-- the [Fetch MCP Server](https://github.com/modelcontextprotocol/servers/tree/main/src/fetch) as a remote MCP Server
+- the [GoDaddy MCP Server](https://developer.godaddy.com/mcp) as a remote MCP Server
 - the [GitHub MCP Server](https://github.com/github/github-mcp-server) as a remote MCP Server that requires an authorization
 
 ### Add MCP server via mcp.json
@@ -436,31 +436,30 @@ The [Filesystem MCP Server](https://github.com/modelcontextprotocol/servers/tree
 
 #### Remote MCP Server
 
-- Add the following content to the _mcp.json_ to configure the `fetch` server as remote MCP server.
+- Add the following content to the _mcp.json_ to configure the `godaddy` server as remote MCP server.
 
   ```json
-  "fetch": {
-    "url": "https://remote.mcpservers.org/fetch/mcp",
+  "godaddy": {
+    "url": "https://api.godaddy.com/v1/domains/mcp",
     "type": "http"
   }
   ```
 
   _**Note:**_  
-  Visual Studio Code already provides `fetch` as a built-in tool. So this is actually not needed for usage, but an example to show a simple remote MCP server configuration. For testing that the added remote `fetch` MCP server works
+  Previously I used `fetch` as a remote MCP server in this tutorial. Visual Studio Code already provides `fetch` as a built-in tool and the remote MCP server seems to be not available anymore. I therefore switched to another remote MCP server that does not require authorization.
   - Click on _Configure Tools..._  
     <img src="images/copilot_tools_configuration.png" width="50%"/>
-  - Disable the built-in `fetch` tool
-  - Enable the added MCP server `fetch` in the configuration
+  - Enable the added MCP server `godaddy` in the configuration
   - Click on _OK_ to apply the changes  
-    <img src="images/copilot_tools_configuration_fetch.png" width="75%"/>
+    <img src="images/copilot_tools_configuration_godaddy.png" width="75%"/>
 
-- Start the _fetch_ MCP server via Codelens
+- Start the _godaddy_ MCP server via Codelens
 - Test if the configuration works by entering the following to the Copilot Chat
   ```
-  fetch the content from https://eclipse.dev/nattable
+  is the domain visualstudio.com available
   ```
-- When asked if the tool _`fetch` - fetch (MCP Server)_ should be executed, select _Allow_
-- You should now see that the `fetch` tool from the _fetch (MCP Server)_ is executed to solve your request.
+- When asked if the tool _`domains_check_availability` - godaddy (MCP Server)_ should be executed, select _Allow_
+- You should now see that the `domains_check_availability` tool from the _godaddy (MCP Server)_ is executed to solve your request.
 
 #### Remote MCP Server with authorization
 
@@ -669,8 +668,8 @@ You can also register MCP server programmatically via a Visual Studio Code exten
     ```typescript
     servers.push(
       new vscode.McpHttpServerDefinition(
-        "fetch",
-        vscode.Uri.parse("https://remote.mcpservers.org/fetch/mcp"),
+        "godaddy",
+        vscode.Uri.parse("https://api.godaddy.com/v1/domains/mcp"),
       ),
     );
     ```
@@ -733,8 +732,8 @@ export function activate(context: vscode.ExtensionContext) {
 
         servers.push(
           new vscode.McpHttpServerDefinition(
-            "fetch",
-            vscode.Uri.parse("https://remote.mcpservers.org/fetch/mcp"),
+            "godaddy",
+            vscode.Uri.parse("https://api.godaddy.com/v1/domains/mcp"),
           ),
         );
 

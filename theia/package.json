@@ -9,13 +9,27 @@
     "build:customization": "npm --prefix theia-customization run build",
     "build:browser": "lerna run build --ignore electron-app",
     "build:electron": "lerna run build --ignore browser-app",
-    "prepare": "lerna run prepare",
+    "download:plugins": "theia download:plugins",
+    "prepare": "lerna run clean && lerna run build && npm run download:plugins",
     "postinstall": "theia check:theia-version",
     "start:browser": "npm --prefix browser-app start",
     "start:electron": "npm --prefix electron-app start",
     "watch:browser": "lerna run --parallel watch --ignore electron-app",
     "watch:electron": "lerna run --parallel watch --ignore browser-app"
   },
+  "theiaPluginsDir": "plugins",
+  "theiaPlugins": {
+    "eclipse-keybindings": "https://open-vsx.org/api/alphabotsec/vscode-eclipse-keybindings/0.16.1/file/alphabotsec.vscode-eclipse-keybindings-0.16.1.vsix",
+    "vscode-builtin-extensions": "https://github.com/eclipse-theia/vscode-builtin-extensions/releases/download/1.108.2/vscode-builtin-extensions-1.108.2.tar.gz"
+  },
+  "theiaPluginsExcludeIds": [
+    "ms-vscode.js-debug-companion",
+    "VisualStudioExptTeam.vscodeintellicode",
+    "vscode.extension-editing",
+    "vscode.github",
+    "vscode.github-authentication",
+    "vscode.microsoft-authentication"
+  ],
   "devDependencies": {
     "lerna": "9.0.7"
   },
