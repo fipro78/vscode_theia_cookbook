@@ -321,20 +321,20 @@ At the time of writing this article, the only Copilot models that are working in
 To set up the example process like in Visual Studio Code to retrieve a list of publications from a GitHub Gist and then fetch the data for further processing, we need to configure the necessary MCP server. This is again the _GitHub MCP Server_ with the _gists_ toolset enabled, and the _fetch MCP Server_ as Theia does not provide a built-in fetch tool.
 
 _**Note:**_  
-The [Fetch MCP Server](https://github.com/modelcontextprotocol/servers/tree/main/src/fetch) is not provided as a remote server anymore, so we need to configure it as a local MCP server.
+The [Fetch MCP Server](https://github.com/modelcontextprotocol/servers/tree/main/src/fetch) is not provided as a remote server anymore. You can configure it as a local MCP server, but it uses [Readability](https://github.com/mozilla/readability) and I faced a lot of issues when using it. I therefore decided to use the [Fetcher MCP Server](https://github.com/jae-jae/fetcher-mcp) for the following examples.
 
 _**Note:**_  
-With the issue [Support provider-native server-side tools](https://github.com/eclipse-theia/theia/issues/17637) and the corresponding PR [feat(ai): support provider-native server-side tools](https://github.com/eclipse-theia/theia/pull/17707) the support for server-side tools like `web_fetch` from Anthropic is supported since Theia 1.73.0. In case other LLMs than Anthropic or Gemini are used, you still need a local `fetch` MCP server.
+With the issue [Support provider-native server-side tools](https://github.com/eclipse-theia/theia/issues/17637) and the corresponding PR [feat(ai): support provider-native server-side tools](https://github.com/eclipse-theia/theia/pull/17707) the support for server-side tools like `web_fetch` from Anthropic is supported since Theia 1.73.0. In case other LLMs than Anthropic or Gemini are used, you still need a MCP server that provides tools for fetching web pages.
 
 - Open the _AI Configuration_ via _Menu -> View -> AI Configuration_
   - Switch to the _MCP Servers_ tab
-  - Add the [Fetch MCP Server](https://github.com/modelcontextprotocol/servers/tree/main/src/fetch) as a local MCP Server
+  - Add the [Fetcher MCP Server](https://github.com/jae-jae/fetcher-mcp) as a local MCP Server
     - Click on _Add MCP Server_
     - Set the following values in the dialog
-      - **Server Name:** _fetch_
+      - **Server Name:** _fetcher-mcp_
       - **Server Type:** _Local (Command)_
-      - **Command:** _docker_
-      - **Arguments:** _run -i --rm mcp/fetch_
+      - **Command:** _npx_
+      - **Arguments:** _-y fetcher-mcp_
       - Keep the **Autostart** flag checked
     - Click _Add Server_
 
@@ -384,20 +384,15 @@ With the issue [Support provider-native server-side tools](https://github.com/ec
       },
       "ai-features.chat.defaultChatAgent": "Universal",
       "ai-features.mcp.mcpServers": {
-        "fetch": {
-            "command": "docker",
-            "autostart": true,
-            "args": [
-                "run",
-                "-i",
-                "--rm",
-                "mcp/fetch"
-            ]
-        }
+        "fetcher-mcp": {
+          "command": "npx",
+          "args": ["-y", "fetcher-mcp"],
+          "autostart": true
+        },
         "github": {
           "serverUrl": "https://api.githubcopilot.com/mcp/x/gists",
-          "autostart": true,
-          "serverAuthToken": "<your-github-pat>"
+          "serverAuthToken": "<your-github-pat>",
+          "autostart": true
         }
       }
     }
@@ -415,36 +410,36 @@ We again first create a single _Custom Agent_ that performs all steps itself. Th
   - Switch to the _Agents_ tab
   - Click on **Add Custom Agent**  
     <img src="images/theia_add_custom_agent.png"/>
-  - Select the _.prompts_ folder of the current workspace
-  - Verify that a _.prompts_ folder is generated in your workspace that contains a _customAgents.yml_ file
-  - Define a custom agent with the name _Research_ by defining the following information
-    - _id_: A unique identifier for the agent.
+  - If asked, select the workspace _.agents/agents_ folder as location for the new agent (_.prompts/agents_ is also supported)
+    - Other possible options would be the _.prompts/agents_ folder in the workspace or the folder _~/.theia/prompt-templates/agents_ in the user home directory.
+  - Enter the name _Research_
+  - Verify that a _.agents/agents/Research_ folder is generated in your workspace that contains a _agent.md_ file
+  - Define a custom agent by defining the prompt and the following information in the frontmatter YAML
     - _name_: The display name of the agent.
     - _description_: A brief explanation of what the agent does.
-    - _prompt_: The default prompt that the agent will use for processing requests.
     - _defaultLLM_: The language model used by default.
     - _showInChat_: Whether the agent should be shown in the chat UI. This one is optional and defaults to `true`.
-  - Replace the content of the _customAgents.yml_ with the following snippet
+  - Replace the content of the _agent.md_ with the following snippet
 
-  ```yaml
-  - id: Research
-    name: Research
-    description: This agent provides a collection of links for a specific topic.
-    prompt: >-
-      You are an agent that helps the developer by extracting and providing links mentioned in blog posts.
+  ```markdown
+  ---
+  name: Research
+  description: This agent provides a collection of links for a specific topic.
+  defaultLLM: default/universal
+  showInChat: true
+  ---
 
-      To provide the necessary links execute the following steps:
+  You are an agent that helps the developer by extracting and providing links mentioned in blog posts.
 
-      1. Fetch the publications of Dirk Fauth in the gists of the user fipro78. Use ~{mcp_github_list_gists} to find the correct gist.
-      2. Use ~{mcp_fetch_fetch} to fetch the content of the gist with a max-length parameter of 15000.
-      3. Filter the fetched content for links about the requested information.
-      4. For every found blog post, use ~{mcp_fetch_fetch} to fetch the content of the given blog post with a max-length parameter of 15000.
-      5. Collect all links that are mentioned in the blog post and relevant for the topic.
-      6. Filter out duplicate links and links that are not relevant for the topic. Relevance can be determined by the presence of keywords related to the topic in the context of the link.
-      7. Provide a collection of the extracted filtered links ordered by the blog post they are mentioned in. Use the anchor text as the name of the link if available. If the anchor text is not available, use the URL as the name of the link. Order them alphabetically by the name of the link.
+  To provide the necessary links execute the following steps:
 
-    defaultLLM: default/universal
-    showInChat: true
+  1. Fetch the publications of Dirk Fauth in the gists of the user fipro78. Use ~{mcp_github_list_gists} to find the correct gist.
+  2. Use ~{mcp_fetcher-mcp_fetch_url} to fetch the content of the gist with a max-length parameter of 15000. If there is an error on fetching the content, try to install a browser via ~{mcp_fetcher-mcp_browser_install} first and then retry once.
+  3. Filter the fetched content for links about the requested information.
+  4. For every found blog post, use ~{mcp_fetcher-mcp_fetch_url} to fetch the content of the given blog post with a max-length parameter of 15000.
+  5. Collect all links that are mentioned in the blog post and relevant for the topic.
+  6. Filter out duplicate links and links that are not relevant for the topic. Relevance can be determined by the presence of keywords related to the topic in the context of the link.
+  7. Provide a collection of the extracted filtered links ordered by the blog post they are mentioned in. Use the anchor text as the name of the link if available. If the anchor text is not available, use the URL as the name of the link. Order them alphabetically by the name of the link.
   ```
 
   Compared to a custom agent in Visual Studio Code, we do not need to configure which tools we want to use in the prompt. They can simply be referenced in the prompt via `~<tool-name>`.
@@ -470,54 +465,65 @@ Theia does not provide a feature like the [Handoffs](https://code.visualstudio.c
 
 In Eclipse Theia, multiple [Custom Agents](https://theia-ide.org/docs/user_ai/#custom-agents) are configured in a single custom agent configuration file. We therefore add the new agents to the previously created _customAgents.yml_.
 
-- Open the _.prompts/customAgents.yml_ file
-- Add a new `Link_Extractor` agent
-  - Use the _MCP Tool_ `mcp_fetch_fetch` to fetch the content of the blog posts
+- Create a new `Link_Extractor` agent.
+  - Open the _AI Configuration_ via _Menu -> View -> AI Configuration_
+  - Switch to the _Agents_ tab
+  - Click on **Add Custom Agent**  
+    <img src="images/theia_add_custom_agent.png"/>
+  - If asked, select the workspace _.agents/agents_ folder
+  - Enter the name _Link_Extractor_
+  - Use the _MCP Tool_ `mcp_fetcher-mcp_fetch_url` to fetch the content of the blog posts
   - Add a prompt that defines the steps to process
   - The following snippet shows how such an agent could look like
 
-  ```yaml
-  - id: Link_Extractor
-    name: Link_Extractor
-    description: This agent provides a list of links extracted from blog posts.
-    prompt: >-
-      You are an agent that helps the developer by extracting links mentioned in blog posts and providing them in a structured format.
+  ```markdown
+  ---
+  name: Link_Extractor
+  description: This agent provides a list of links extracted from blog posts.
+  defaultLLM: default/universal
+  showInChat: true
+  ---
 
-      To provide the necessary links execute the following steps:
+  You are an agent that helps the developer by extracting links mentioned in blog posts and providing them in a structured format.
 
-      1. Iterate over the list of provided blog posts
-      2. For every blog post use ~{mcp_fetch_fetch} to fetch the content of the blog post with a max-length parameter of 15000.
-      3. Collect all links that are mentioned in the blog post and relevant for the topic.
-      4. Filter out duplicate links and links that are not relevant for the topic. Relevance can be determined by the presence of keywords related to the topic in the context of the link.
-      5. Provide a collection of the extracted filtered links ordered by the blog post they are mentioned in. Use the anchor text as the name of the link if available. If the anchor text is not available, use the URL as the name of the link. Order them alphabetically by the name of the link.
+  To provide the necessary links execute the following steps:
 
-    defaultLLM: default/universal
-    showInChat: true
+  1. Iterate over the list of provided blog posts
+  2. Use ~{mcp_fetcher-mcp_fetch_url} to fetch the content of the gist with a max-length parameter of 15000. If there is an error on fetching the content, try to install a browser via ~{mcp_fetcher-mcp_browser_install} first and then retry once.
+  3. Collect all links that are mentioned in the blog post and relevant for the topic.
+  4. Filter out duplicate links and links that are not relevant for the topic. Relevance can be determined by the presence of keywords related to the topic in the context of the link.
+  5. Provide a collection of the extracted filtered links ordered by the blog post they are mentioned in. Use the anchor text as the name of the link if available. If the anchor text is not available, use the URL as the name of the link. Order them alphabetically by the name of the link.
   ```
 
 - Add a new `Gists` agent
+  - Open the _AI Configuration_ via _Menu -> View -> AI Configuration_
+  - Switch to the _Agents_ tab
+  - Click on **Add Custom Agent**  
+    <img src="images/theia_add_custom_agent.png"/>
+  - If asked, select the workspace _.agents/agents_ folder
+  - Enter the name _Gists_
   - Use the _MCP Tool_ `mcp_github_list_gists` to list the gists
-  - Use the _MCP Tool_ `mcp_fetch_fetch` to fetch the content
+  - Use the _MCP Tool_ `mcp_fetcher-mcp_fetch_url` to fetch the content
   - Use the Theia built-in _Tool Function_ `delegateToAgent` to delegate processing to the `Link_Extractor` agent
   - The following snippet shows how such an agent could look like
 
-  ```yaml
-  - id: Gists
-    name: Gists
-    description: This agent provides a list of links to blog posts from a GitHub Gist.
-    prompt: >-
-      You are an agent that helps the developer by providing links to blog posts.
+  ```markdown
+  ---
+  name: Gists
+  description: This agent provides a list of links to blog posts from a GitHub Gist.
+  defaultLLM: default/universal
+  showInChat: true
+  ---
 
-      To provide the necessary links execute the following steps:
+  You are an agent that helps the developer by providing links to blog posts.
 
-      1. Fetch the publications of Dirk Fauth in the gists of the user fipro78. Use ~{mcp_github_list_gists} to find the correct gist.
-      2. Use ~{mcp_fetch_fetch} to fetch the content of the gist with a max-length parameter of 15000.
-      3. Filter the fetched content for links about the requested information.
-      4. Provide a list of links to the relevant blog posts.
-      5. Pass the provided list of links to the Link_Extractor agent via ~{delegateToAgent} to extract links from the given list of blog posts
+  To provide the necessary links execute the following steps:
 
-    defaultLLM: default/universal
-    showInChat: true
+  1. Fetch the publications of Dirk Fauth in the gists of the user fipro78. Use ~{mcp_github_list_gists} to find the correct gist.
+  2. Use ~{mcp_fetcher-mcp_fetch_url} to fetch the content of the gist with a max-length parameter of 15000. If there is an error on fetching the content, try to install a browser via ~{mcp_fetcher-mcp_browser_install} first and then retry once.
+  3. Filter the fetched content for links about the requested information.
+  4. Provide a list of links to the relevant blog posts.
+  5. Pass the provided list of links to the Link_Extractor agent via ~{delegateToAgent} to extract links from the given list of blog posts
   ```
 
 - Use the _Custom Agent_ `Gists` by selecting it in the chat prompt via `@` syntax and add the prompt to execute, for example `@Gists show links about theia`.  
@@ -543,22 +549,22 @@ At the time of writing this blog post, Theia does not support an automatic _Hand
   - Remove the last step that passes the processing to the `Link_Extractor` agent
   - The following snippet shows how such an agent could look like
 
-  ```yaml
-  - id: Gists
-    name: Gists
-    description: This agent provides a list of links to blog posts from a GitHub Gist.
-    prompt: >-
-      You are an agent that helps the developer by providing links to blog posts.
+  ```markdown
+  ---
+  name: Gists
+  description: This agent provides a list of links to blog posts from a GitHub Gist.
+  defaultLLM: default/universal
+  showInChat: true
+  ---
 
-      To provide the necessary links execute the following steps:
+  You are an agent that helps the developer by providing links to blog posts.
 
-      1. Fetch the publications of Dirk Fauth in the gists of the user fipro78. Use ~{mcp_github_list_gists} to find the correct gist.
-      2. Use ~{mcp_fetch_fetch} to fetch the content of the gist with a max-length parameter of 15000.
-      3. Filter the fetched content for links about the requested information.
-      4. Provide a list of links to the relevant blog posts.
+  To provide the necessary links execute the following steps:
 
-    defaultLLM: default/universal
-    showInChat: true
+  1. Fetch the publications of Dirk Fauth in the gists of the user fipro78. Use ~{mcp_github_list_gists} to find the correct gist.
+  2. Use ~{mcp_fetcher-mcp_fetch_url} to fetch the content of the gist with a max-length parameter of 15000. If there is an error on fetching the content, try to install a browser via ~{mcp_fetcher-mcp_browser_install} first and then retry once.
+  3. Filter the fetched content for links about the requested information.
+  4. Provide a list of links to the relevant blog posts.
   ```
 
 - Use the _Custom Agent_ `Gists` by selecting it in the chat prompt via `@` syntax and add the prompt to execute, for example `@Gists show links about theia`.  
@@ -579,71 +585,73 @@ In Eclipse Theia, you implement the _Coordinator and Worker Pattern_ by using _S
 
 In this section, the previously created agents are converted into coordinator and worker agents.
 
-- Open the _.prompts/customAgents.yml_ file
+- Open the _.agents/agents/Research/agent.md_ file
 - Change the prompt of the `Research` agent
   - Use `~{delegateToAgent}` to delegate tasks to the `Gists` and the `Link_Extractor` agent
   - The following snippet shows how such an agent could look like
 
-    ```yaml
-    - id: Research
-      name: Research
-      description: This agent provides a collection of links for a specific topic.
-      prompt: >-
-        You are an agent that helps the developer by providing links to blog posts about a specific topic.
-        To provide the necessary links use subagents to execute the following steps:
+    ```markdown
+    ---
+    name: Research
+    description: This agent provides a collection of links for a specific topic.
+    defaultLLM: default/universal
+    showInChat: true
+    ---
 
-        1. Use the Gists subagent via ~{delegateToAgent} to fetch a collection of blog posts about the specific topic.
-        2. For each of the found blog post link use the Link_Extractor subagent via ~{delegateToAgent} to fetch the content of the blog post and extract all links that are mentioned in the blog post.
-        3. Provide a collection of the extracted links ordered by the blog post they are mentioned in. Use the anchor text as the name of the link if available. If the anchor text is not available, use the URL as the name of the link. Order them alphabetically by the name of the link.
+    You are an agent that helps the developer by providing links to blog posts about a specific topic.
+    To provide the necessary links use subagents to execute the following steps:
 
-      defaultLLM: default/universal
-      showInChat: true
+    1. Use the Gists subagent via ~{delegateToAgent} to fetch a collection of blog posts about the specific topic.
+    2. For each of the found blog post link use the Link_Extractor subagent via ~{delegateToAgent} to fetch the content of the blog post and extract all links that are mentioned in the blog post.
+    3. Provide a collection of the extracted links ordered by the blog post they are mentioned in. Use the anchor text as the name of the link if available. If the anchor text is not available, use the URL as the name of the link. Order them alphabetically by the name of the link.
     ```
 
+- Open the _.agents/agents/Gists/agent.md_ file
 - Change the prompt of the `Gists` agent
   - Remove the last step that delegates to the `Link_Extractor` agent
   - Ensure that the agent returns something at the end
   - The following snippet shows how such an agent could look like
 
-    ```yaml
-    - id: Gists
-      name: Gists
-      description: This agent provides a list of links to blog posts from a GitHub Gist.
-      prompt: >-
-        You are an agent that helps the developer by providing links to blog posts.
+    ```markdown
+    ---
+    name: Gists
+    description: This agent provides a list of links to blog posts from a GitHub Gist.
+    defaultLLM: default/universal
+    showInChat: true
+    ---
 
-        To provide the necessary links execute the following steps:
+    You are an agent that helps the developer by providing links to blog posts.
 
-        1. Fetch the publications of Dirk Fauth in the gists of the user fipro78. Use ~{mcp_github_list_gists} to find the correct gist.
-        2. Use ~{mcp_fetch_fetch} to fetch the content of the gist with a max-length parameter of 15000.
-        3. Filter the fetched content for links about the requested information.
-        4. Provide a list of links to the relevant blog posts.
+    To provide the necessary links execute the following steps:
 
-      defaultLLM: default/universal
-      showInChat: true
+    1. Fetch the publications of Dirk Fauth in the gists of the user fipro78. Use ~{mcp_github_list_gists} to find the correct gist.
+    2. Use ~{mcp_fetcher-mcp_fetch_url} to fetch the content of the gist with a max-length parameter of 15000. If there is an error on fetching the content, try to install a browser via ~{mcp_fetcher-mcp_browser_install} first and then retry once.
+    3. Filter the fetched content for links about the requested information.
+    4. Provide a list of links to the relevant blog posts.
     ```
 
+- Open the _.agents/agents/Link_Extractor/agent.md_ file
 - Change the prompt of the `Link_Extractor` agent
   - Remove the iteration, as now the agent is called once per blog post
   - Ensure that the agent returns something at the end
   - The following snippet shows how such an agent could look like
 
-    ```yaml
-    - id: Link_Extractor
-      name: Link_Extractor
-      description: This agent provides a list of links extracted from blog posts.
-      prompt: >-
-        You are an agent that helps the developer by extracting links mentioned in a blog post and providing them in a structured format.
+    ```markdown
+    ---
+    name: Link_Extractor
+    description: This agent provides a list of links extracted from blog posts.
+    defaultLLM: default/universal
+    showInChat: true
+    ---
 
-        To provide the necessary links execute the following steps:
+    You are an agent that helps the developer by extracting links mentioned in a blog post and providing them in a structured format.
 
-        1. Use ~{mcp_fetch_fetch} to fetch the content of the blog post with a max-length parameter of 15000.
-        2. Collect all links that are mentioned in the blog post and relevant for the topic.
-        3. Filter out duplicate links and links that are not relevant for the topic. Relevance can be determined by the presence of keywords related to the topic in the context of the link.
-        4. Provide a collection of the extracted filtered links ordered by the blog post they are mentioned in. Use the anchor text as the name of the link if available. If the anchor text is not available, use the URL as the name of the link. Order them alphabetically by the name of the link.
+    To provide the necessary links execute the following steps:
 
-      defaultLLM: default/universal
-      showInChat: true
+    1. Use ~{mcp_fetcher-mcp_fetch_url} to fetch the content of the gist with a max-length parameter of 15000. If there is an error on fetching the content, try to install a browser via ~{mcp_fetcher-mcp_browser_install} first and then retry once.
+    2. Collect all links that are mentioned in the blog post and relevant for the topic.
+    3. Filter out duplicate links and links that are not relevant for the topic. Relevance can be determined by the presence of keywords related to the topic in the context of the link.
+    4. Provide a collection of the extracted filtered links ordered by the blog post they are mentioned in. Use the anchor text as the name of the link if available. If the anchor text is not available, use the URL as the name of the link. Order them alphabetically by the name of the link.
     ```
 
 - Use the _Custom Agent_ `Research` by selecting it in the chat prompt via `@` syntax and add the prompt to execute, for example `@Research show links about theia`.  

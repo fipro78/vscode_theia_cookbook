@@ -725,20 +725,20 @@ or by setting the optional header `X-MCP-Toolsets`
 Further details about this are available in [Remote GitHub MCP Server](https://github.com/github/github-mcp-server/blob/main/docs/remote-server.md).
 
 _**Note:**_  
-The [Fetch MCP Server](https://github.com/modelcontextprotocol/servers/tree/main/src/fetch) is not provided as a remote server anymore, so we need to configure it as a local MCP server.
+The [Fetch MCP Server](https://github.com/modelcontextprotocol/servers/tree/main/src/fetch) is not provided as a remote server anymore. You can configure it as a local MCP server, but it uses [Readability](https://github.com/mozilla/readability) and I faced a lot of issues when using it. I therefore decided to use the [Fetcher MCP Server](https://github.com/jae-jae/fetcher-mcp) for the following examples.
 
 _**Note:**_  
-With the issue [Support provider-native server-side tools](https://github.com/eclipse-theia/theia/issues/17637) and the corresponding PR [feat(ai): support provider-native server-side tools](https://github.com/eclipse-theia/theia/pull/17707) the support for server-side tools like `web_fetch` from Anthropic is supported since Theia 1.73.0. In case other LLMs than Anthropic or Gemini are used, you still need a local `fetch` MCP server.
+With the issue [Support provider-native server-side tools](https://github.com/eclipse-theia/theia/issues/17637) and the corresponding PR [feat(ai): support provider-native server-side tools](https://github.com/eclipse-theia/theia/pull/17707) the support for server-side tools like `web_fetch` from Anthropic is supported since Theia 1.73.0. In case other LLMs than Anthropic or Gemini are used, you still need a MCP server that provides tools for fetching web pages.
 
 - Open the _AI Configuration_ via _Menu -> View -> AI Configuration_
   - Switch to the _MCP Servers_ tab
-  - Add the [Fetch MCP Server](https://github.com/modelcontextprotocol/servers/tree/main/src/fetch) as a local MCP Server
+  - Add the [Fetcher MCP Server](https://github.com/jae-jae/fetcher-mcp) as a local MCP Server
     - Click on _Add MCP Server_
     - Set the following values in the dialog
-      - **Server Name:** _fetch_
+      - **Server Name:** _fetcher-mcp_
       - **Server Type:** _Local (Command)_
-      - **Command:** _docker_
-      - **Arguments:** _run -i --rm mcp/fetch_
+      - **Command:** _npx_
+      - **Arguments:** _-y fetcher-mcp_
       - Keep the **Autostart** flag checked
     - Click _Add Server_
 
@@ -746,7 +746,7 @@ With the issue [Support provider-native server-side tools](https://github.com/ec
   - Start the server
   - Enter the following in the chat
     ```
-    @Universal fetch the publications written by Dirk Fauth in the gists of fipro78. Provide the links to blog posts about VS Code and Eclipse Theia in the chat that are extracted from a related gists file. Use ~mcp_github_list_gists  to list the available gists. Then use ~mcp_fetch_fetch to fetch the content of the found gists with a max-length parameter of 15000.
+    @Universal fetch the publications written by Dirk Fauth in the gists of fipro78. Provide the links to blog posts about VS Code and Eclipse Theia in the chat that are extracted from a related gists file. Use ~mcp_github_list_gists  to list the available gists. Then use ~mcp_fetcher-mcp_fetch_url to fetch the content of the found gists with a max-length parameter of 15000. If there is an error on fetching the content, try to install a browser via ~{mcp_fetcher-mcp_browser_install} first and then retry once.
     ```
 
 ### Add MCP server programmatically via Theia Extension
@@ -805,11 +805,11 @@ Remember to remove the MCP server configuration from the _settings.json_ or use 
           };
           this.mcpFrontendService.addOrUpdateServer(fileSystemServer);
 
-          // add fetch as local MCP server
+          // add fetcher-mcp as local MCP server
           const fetchServer: LocalMCPServerDescription = {
-            name: "fetch",
-            command: "docker",
-            args: ["run", "-i", "--rm", "mcp/fetch"]
+            name: "fetcher-mcp",
+            command: "npx",
+            args: ["-y", "fetcher-mcp"]
           };
           this.mcpFrontendService.addOrUpdateServer(fetchServer);
 
@@ -1777,7 +1777,10 @@ As mentioned before, the creation of a _Prompt Fragment_ and configure it as a _
 
 As a user you can create a _Custom Agent_ in Theia via a configuration file. Dependent on the available tools, the integration into the user interface is limited compared to [Implementing a Custom Agent](#implement-a-custom-agent), as you have no access to the Theia API of course.
 
-[Custom Agents](https://theia-ide.org/docs/user_ai/#custom-agents) are used to create a specialist assistant for specific tasks that can be used in the chat for planning or research or to define specialized workflows. _Custom Agents_ are stored in a _.prompts/customAgents.yml_ file with the default settings. They are similar to Visual Studio Code Copilot [Custom Agents](https://code.visualstudio.com/docs/copilot/customization/custom-agents).
+[Custom Agents](https://theia-ide.org/docs/user_ai/#custom-agents) are used to create a specialist assistant for specific tasks that can be used in the chat for planning or research or to define specialized workflows. They are similar to Visual Studio Code Copilot [Custom Agents](https://code.visualstudio.com/docs/copilot/customization/custom-agents).
+
+_**Note:**_  
+Before Theia 1.73.0 _Custom Agents_ were stored in a _.prompts/customAgents.yml_ file. Since 1.73.0 Theia supports the markdown format with a YAML frontmatter configuration block via [PR 17523](https://github.com/eclipse-theia/theia/pull/17523). As the markdown format is the preferred default now, the following example is based on that. The previous _customAgents.yml_ format is still supported as legacy, with a migration feature that helps on changing the format automatically.
 
 - Start the Theia browser application
 - Open the Theia browser application on http://localhost:3000
@@ -1786,39 +1789,39 @@ As a user you can create a _Custom Agent_ in Theia via a configuration file. Dep
 - Switch to the _Agents_ tab
 - Click on **Add Custom Agent**  
   <img src="images/theia_add_custom_agent.png"/>
-- Select the _.prompts_ folder of the current workspace
-- Verify that a _.prompts_ folder is generated in your workspace that contains a _customAgents.yml_ file
-- Define a custom agent by defining the following information
-  - _id_: A unique identifier for the agent.
+- If asked, select the workspace _.agents/agents_ folder as location for the new agent (_.prompts/agents_ is also supported)
+  - Other possible options would be the _.prompts/agents_ folder in the workspace or the folder _~/.theia/prompt-templates/agents_ in the user home directory.
+- Enter the name _blog_
+- Verify that a _.agents/agents/blog_ folder is generated in your workspace that contains a _agent.md_ file
+- Define a custom agent by defining the prompt and the following information in the frontmatter YAML
   - _name_: The display name of the agent.
   - _description_: A brief explanation of what the agent does.
-  - _prompt_: The default prompt that the agent will use for processing requests.
   - _defaultLLM_: The language model used by default.
   - _showInChat_: Whether the agent should be shown in the chat UI. This one is optional and defaults to `true`.
-- Replace the content of the _customAgents.yml_ with the following snippet
+- Replace the content of the _agent.md_ with the following snippet
 
-  ```yaml
-  - id: Blog
-    name: Blog
-    description: This agent provides a list of blog posts related to VS Code and Theia written by Dirk Fauth.
-    prompt: >-
+  ```markdown
+  ---
+  name: Blog
+  description: This agent provides a list of blog posts related to VS Code and Theia written by Dirk Fauth.
+  defaultLLM: default/universal
+  showInChat: true
+  ---
 
-      You are an agent that helps the developer by providing links to blog posts about VS Code and Theia written by Dirk Fauth.
+  You are an agent that helps the developer by providing links to blog posts about VS Code and Theia written by Dirk Fauth.
 
-      To provide the necessary links execute the following steps:
-      1. Fetch the publications of Dirk Fauth in the gists of fipro78. Use ~{mcp_github_list_gists} to find the correct gist.
-      2. Use ~{mcp_fetch_fetch} to fetch the content of the gists with a max-length parameter of 15000.
-      3. Filter the found links for information about VS Code or Theia
-      4. Provide a list of links to the blog posts about VS Code or Theia
+  To provide the necessary links execute the following steps:
 
-    defaultLLM: default/universal
-    showInChat: true
+  1. Fetch the publications of Dirk Fauth in the gists of fipro78. Use ~{mcp_github_list_gists} to find the correct gist.
+  2. Use ~{mcp_fetcher-mcp_fetch_url} to fetch the content of the gists with a max-length parameter of 15000.
+  3. Filter the found links for information about VS Code or Theia
+  4. Provide a list of links to the blog posts about VS Code or Theia
   ```
 
 - Test the new _Custom Agent_
   - Open the _AI Configuration_ via _Menu -> View -> AI Configuration_
   - Switch to the _MCP Servers_ tab
-  - Ensure that the _fetch_ MCP server and the _github_ MCP server configured for the _gists_ tools are available and started
+  - Ensure that the _fetcher-mcp_ MCP server and the _github_ MCP server configured for the _gists_ tools are available and started
   - Open the _AI Chat_ and enter the following prompt
     ```
     @Blog show me the list
@@ -1837,41 +1840,39 @@ The tasks that can be performed by AI agents are getting more and more complicat
 - Open the _AI Configuration_ via _Menu -> View -> AI Configuration_
 - Switch to the _Agents_ tab
 - Click on **Add Custom Agent**
-- Alternatively simply open the _.prompts/customAgents.yaml_ file created before
 - Add a new `FileWriter` agent that uses the Theia built-in _Tool Function_ `writeFileContent` to persist content to a file
 
-  ```yaml
-  - id: FileWriter
-    name: FileWriter
-    description: This is an agent that is able to persist content into a file in the workspace.
-    prompt: >-
+  ```markdown
+  ---
+  name: FileWriter
+  description: This is an agent that is able to persist content into a file in the workspace.
+  defaultLLM: default/universal
+  showInChat: true
+  ---
 
-      You are an agent that operates in the current workspace of the Theia IDE.
-      You are able to persist the provided content into a file by using ~{writeFileContent}.
-
-    defaultLLM: default/universal
-    showInChat: true
+  You are an agent that operates in the current workspace of the Theia IDE.
+  You are able to persist the provided content into a file by using ~{writeFileContent}.
   ```
 
 - Add a new step to the `Blog` agent that delegates to the new `FileWriter` agent to persist the result by using the `delegateToAgent` _Tool Function_
 
-  ```yaml
-  - id: Blog
-    name: Blog
-    description: This agent provides a list of blog posts related to VS Code and Theia written by Dirk Fauth.
-    prompt: >-
+  ```markdown
+  ---
+  name: Blog
+  description: This agent provides a list of blog posts related to VS Code and Theia written by Dirk Fauth.
+  defaultLLM: default/universal
+  showInChat: true
+  ---
 
-      You are an agent that helps the developer by providing links to blog posts about VS Code and Theia written by Dirk Fauth.
+  You are an agent that helps the developer by providing links to blog posts about VS Code and Theia written by Dirk Fauth.
 
-      To provide the necessary links execute the following steps:
-      1. Fetch the publications of Dirk Fauth in the gists of fipro78. Use ~{mcp_github_list_gists} to find the correct gist.
-      2. Use ~{mcp_fetch_fetch} to fetch the content of the gists with a max-length parameter of 15000.
-      3. Filter the found links for information about VS Code or Theia
-      4. Provide a list of links to the blog posts about VS Code or Theia
-      5. Persist the result by delegating to `FileWriter` via ~{delegateToAgent} and write to the links folder in a file named fauth.html
+  To provide the necessary links execute the following steps:
 
-    defaultLLM: default/universal
-    showInChat: true
+  1. Fetch the publications of Dirk Fauth in the gists of fipro78. Use ~{mcp_github_list_gists} to find the correct gist.
+  2. Use ~{mcp_fetcher-mcp_fetch_url} to fetch the content of the gists with a max-length parameter of 15000.
+  3. Filter the found links for information about VS Code or Theia
+  4. Provide a list of links to the blog posts about VS Code or Theia
+  5. Persist the result by delegating to `FileWriter` via ~{delegateToAgent} and write to the links folder in a file named fauth.html
   ```
 
 - Open the _AI Chat_ and enter the following prompt
@@ -1920,7 +1921,7 @@ The support for _Agent Skills_ was [introduced with Theia 1.68.0](https://eclips
     ## Execution Rules
 
     1. Run this workflow end-to-end without asking the user for intermediate confirmations.
-    2. Preferred tools are ~{mcp_github_list_gists} and ~{mcp_fetch_fetch}. If those exact names are unavailable, use equivalent tools that provide the same capability.
+    2. Preferred tools are ~{mcp_github_list_gists} and ~{mcp_fetcher-mcp_fetch_url}. If those exact names are unavailable, use equivalent tools that provide the same capability.
     3. On fetch failures, retry once. If the second attempt fails, continue with remaining items and report the skipped URL in the final output.
     4. If fetched content appears truncated, fetch additional chunks (for example via start index or pagination) until no additional content is returned.
 

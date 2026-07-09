@@ -2,7 +2,7 @@ import { ContainerModule } from "@theia/core/shared/inversify";
 import { TheiaCustomizationContribution } from "./theia-customization-contribution";
 import {
   ApplicationShell,
-  FrontendApplicationContribution,
+  FrontendApplicationContribution
 } from "@theia/core/lib/browser";
 import { TheiaCustomizationFilterContribution } from "./theia-customization-filter-contribution";
 import { bindContribution, FilterContribution } from "@theia/core";
@@ -16,7 +16,7 @@ export default new ContainerModule((bind, unbind, isBound, rebind) => {
 
   bind(TheiaCustomizationFilterContribution).toSelf().inSingletonScope();
   bindContribution(bind, TheiaCustomizationFilterContribution, [
-    FilterContribution,
+    FilterContribution
   ]);
 
   bind(CleanupFrontendContribution).toSelf().inSingletonScope();

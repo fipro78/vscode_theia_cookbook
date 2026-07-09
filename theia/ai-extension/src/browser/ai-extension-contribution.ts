@@ -132,11 +132,11 @@ export class McpFrontendContribution implements FrontendApplicationContribution 
       };
       this.mcpFrontendService.addOrUpdateServer(fileSystemServer);
 
-      // add fetch as local MCP server
+      // add fetcher-mcp as local MCP server
       const fetchServer: LocalMCPServerDescription = {
-        name: "fetch",
-        command: "docker",
-        args: ["run", "-i", "--rm", "mcp/fetch"]
+        name: "fetcher-mcp",
+        command: "npx",
+        args: ["-y", "fetcher-mcp"]
       };
       this.mcpFrontendService.addOrUpdateServer(fetchServer);
 

@@ -175,8 +175,7 @@ In Visual Studio Code, a _Tool_ is used when processing a prompt if:
   #jokeFileCreator create a file that contains a joke in the folder test
   ```
 
-For tools provided via MCP, the tool is also selected by name. Assuming you added the _fetch MCP server_, you can use the provided tool via `#fetch`. Unfortunately, this is not unique because there is also a built-in `fetch` tool in Visual Studio Code.
-
+For tools provided via MCP, the tool is also selected by name. Assuming you added the _fetcher MCP server_, you can use the provided tool via `#fetch_url`.
 By default, you will be prompted before a _Language Model Tool_ is executed.
 
 <img src="images/copilot_language_model_tool_allow.png"/>
@@ -201,10 +200,10 @@ The name of an MCP server tool in Theia is derived from the server name and func
 ~{mcp_<server-name>_<function-name>}
 ```
 
-For example, to use the `fetch` function of the `fetch` MCP server, you could write a prompt like this:
+For example, to use the `fetch_url` function of the `fetcher-mcp` MCP server, you could write a prompt like this:
 
 ```
-@Universal show me the allowed directories ~{mcp_fetch_fetch}
+@Universal show me the allowed directories ~{mcp_fetcher-mcp_fetch_url}
 ```
 
 By default, the _Tool Confirmation Mode_ is **Always Allow**. Users can change this setting.
@@ -430,9 +429,9 @@ Further information can be found in [Using agents in Visual Studio Code](https:/
 
 #### Eclipse Theia
 
-In Eclipse Theia, multiple [Custom Agents](https://theia-ide.org/docs/user_ai/#custom-agents) are configured in a single custom agent configuration file. The _Custom Agent File_ is a YAML file named _customAgents.yml_. It is located either in the _.prompts_ folder in the workspace or in user-wide local directories configured in the settings (_AI Features -> Prompt Templates_).
+In Eclipse Theia < 1.73.0, multiple [Custom Agents](https://theia-ide.org/docs/user_ai/#custom-agents) were configured in a single custom agent configuration file _customAgents.yml_. It is located either in the _.prompts_ folder in the workspace or in user-wide local directories configured in the settings (_AI Features -> Prompt Templates_). Because there is only one file for multiple _Custom Agents_, there is no frontmatter configuration header. Instead, each _Custom Agent_ configuration has its own attributes. In addition to the obvious fields such as `id`, `name`, `description`, and `prompt`, you need to specify the model via the `defaultLLM` field.
 
-Because there is only one file for multiple _Custom Agents_, there is no frontmatter configuration header. Instead, each _Custom Agent_ configuration has its own attributes. In addition to the obvious fields such as `id`, `name`, `description`, and `prompt`, you need to specify the model via the `defaultLLM` field.
+Since Eclipse Theia 1.73.0, [Custom Agents](https://theia-ide.org/docs/user_ai/#custom-agents) are configured in separate markdown files. They can be either located in the workspace in the _.agents/agents_ or _.prompts/agents_ folder. Globally available agents can be stored in the user home directory _~/.theia/prompt-templates/agents_.
 
 You can use any available [Context Variable](https://theia-ide.org/docs/user_ai/#context-variables) in the prompt.
 
