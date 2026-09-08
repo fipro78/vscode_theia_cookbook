@@ -57,10 +57,12 @@ As explained earlier, I want to set up an example process where the first step i
 We start by creating a single _Custom Agent_ that performs all steps itself. This agent will then be split to explain the orchestration patterns.
 
 - Create a new _Custom Agent_ that executes the previously described process to provide the user with a collection of links for a specific topic.
-  - In the Copilot chat window, click the gear icon in the upper right corner (_Configure Chat..._) and select  
-    _Custom Agents_ -> _Create new custom agent..._ -> _.github/agents_ -> name: research
-
-    This creates the file _.github/agents/research.agent.md_
+  - In the Copilot chat window, click the gear icon in the upper right corner (_Open Customizations_)
+  - In the _Agent Customizations_ dialog, select _Agents_ on the left side
+  - In the right area, expand the button dropdown and select (_Generate Agent_) and select _New Agent (Workspace)_
+  - Select _.github/agents_ for the location
+  - Enter _research_ as name and confirm via ENTER
+  - This creates the file _.github/agents/research.agent.md_
 
 - Add the tools `web/fetch` and `github/list_gists`
 - Add a prompt that defines the steps to process
@@ -77,9 +79,9 @@ We start by creating a single _Custom Agent_ that performs all steps itself. Thi
   To provide the necessary links execute the following steps:
 
   1. Fetch the publications of Dirk Fauth in the gists of the user fipro78. Use #tool:github/list_gists to find the correct gist.
-  2. Use #tool:web/fetch to fetch the content of the gist with a max-length parameter of 15000.
+  2. Use #tool:web/fetch to fetch the content of the gist with a max-length parameter of 100000.
   3. Filter the fetched content for links about the requested information.
-  4. For every found blog post, use #tool:web/fetch to fetch the content of the given blog post with a max-length parameter of 15000.
+  4. For every found blog post, use #tool:web/fetch to fetch the content of the given blog post with a max-length parameter of 100000.
   5. Collect all links that are mentioned in the blog post and relevant for the topic.
   6. Filter out duplicate links and links that are not relevant for the topic. Relevance can be determined by the presence of keywords related to the topic in the context of the link.
   7. Provide a collection of the extracted filtered links ordered by the blog post they are mentioned in. Use the anchor text as the name of the link if available. If the anchor text is not available, use the URL as the name of the link. Order them alphabetically by the name of the link.
@@ -87,7 +89,7 @@ We start by creating a single _Custom Agent_ that performs all steps itself. Thi
 
 _**Hint:**_  
 The built-in `web/fetch` tool asks for approval to execute `fetch` and to access the URLs it wants to retrieve, ensuring no malicious content is fetched.
-If you use the custom agent prompts that I prepared, it will fetch my gist with my publications and blog posts published at [https://vogella.com/blog/](https://vogella.com/blog/). If you trust these sources (at least I do :smile:), you can configure trust in _settings.json_ by adding the following configuration to reduce the number of prompts during processing:
+If you use the custom agent prompts that I prepared, it will fetch my gist with my publications and blog posts published at [https://vogella.com/blog/](https://vogella.com/blog/). If you trust these sources (at least I do :smile:), you can configure trust in _settings.json_ (_Command Palette (F1) -> Preferences: Open User Settings (JSON)_) by adding the following configuration to reduce the number of prompts during processing:
 
 ```json
   "chat.tools.urls.autoApprove": {
@@ -98,16 +100,18 @@ If you use the custom agent prompts that I prepared, it will fetch my gist with 
 - Use the _Custom Agent_ `research` by selecting it in the agents dropdown in the chat view, then enter a prompt, for example `show links about visual studio code`.  
   <img src="images/copilot_select_custom_agent_research.png"/>
   - When asked to allow fetching the gist and the content of the gist, select _Allow and Review Once_ for the first request, and _Allow Once_ afterwards.  
-    Further information can be found in the official documentation: [Use tools with agents - URL approval](https://code.visualstudio.com/docs/copilot/agents/agent-tools#_url-approval)
+    Further information can be found in the official documentation: [Manage approvals and permissions - URL approval](https://code.visualstudio.com/docs/agents/run/approvals#_url-approval)
 
-After the agent finishes its task, you can [monitor the context window usage](https://code.visualstudio.com/docs/copilot/chat/copilot-chat-context#_monitor-context-window-usage).
-The following screenshots show the context window usage when I ran the _Custom Agent_ with Gemini 2.5 Pro and GPT-5.3-Codex. The values might be different when executing it again.
+After the agent finishes its task, you can [monitor the context window usage](https://code.visualstudio.com/docs/agents/guides/optimize-usage#_monitor-your-usage) and inspect the token usage in the [Agent Debug Log](https://code.visualstudio.com/docs/agents/agent-troubleshooting/chat-debug-view).
+The following screenshots show the context window usage (hover over or select the context window control in the chat input) and the Agent Debug Log Summary (select the ellipsis (...) menu in the Chat view and select _Show Agent Debug Logs_) when I ran the _Custom Agent_ with Gemini 3.7 Flash and GPT-5.6-Luna. The values might be different when executing it again.
 
-This is the context window usage with _Gemini 2.5 Pro_:  
-<img src="images/copilot_context_window_single_gemini.png"/>
+This is the context window usage and the Agent Debug Log Summary with _Gemini 3.7 Flash_:  
+<img src="images/copilot_context_window_single_gemini.png"/>  
+<img src="images/copilot_debug_summary_single_gemini.png"/>
 
-This is the context window usage with _GPT-5.3-Codex_:  
-<img src="images/copilot_context_window_single_codex.png"/>
+This is the context window usage and the Agent Debug Log Summary with _GPT-5.6-Luna_:  
+<img src="images/copilot_context_window_single_gpt.png"/>  
+<img src="images/copilot_debug_summary_single_gpt.png"/>
 
 ### Delegate Pattern
 
@@ -117,10 +121,12 @@ The _Delegate Pattern_ is supported via [Handoffs](https://code.visualstudio.com
 - One agent to extract the links from the found blog posts
 
 - Create a new _Custom Agent_ that extracts links from the text of a given blog post.
-  - In the Copilot chat window, click the gear icon in the upper right corner (_Configure Chat..._) and select  
-    _Custom Agents_ -> _Create new custom agent..._ -> _.github/agents_ -> name: link_extractor
-
-    This creates the file _.github/agents/link_extractor.agent.md_
+  - In the Copilot chat window, click the gear icon in the upper right corner (_Open Customizations_)
+  - In the _Agent Customizations_ dialog, select _Agents_ on the left side
+  - In the right area, expand the button dropdown and select (_Generate Agent_) and select _New Agent (Workspace)_
+  - Select _.github/agents_ for the location
+  - Enter _link_extractor_ as name and confirm via ENTER
+  - This creates the file _.github/agents/link_extractor.agent.md_
 
 - Add the built-in `web/fetch` tool to fetch the content
 - Add a prompt that defines the steps to process
@@ -132,21 +138,24 @@ The _Delegate Pattern_ is supported via [Handoffs](https://code.visualstudio.com
   tools: [web/fetch]
   ---
 
-  You are an agent that helps the developer by extracting links mentioned in a blog post and providing them in a structured format.
+  You are an agent that helps the developer by extracting links that are mentioned in a blog post and providing them in a structured format.
 
   To provide the necessary links execute the following steps:
 
-  1. Use #tool:web/fetch to fetch the content of the given blog post with a max-length parameter of 15000.
+  1. Use #tool:web/fetch to fetch the content of the given blog post with a max-length parameter of 100000.
   2. Collect all links that are mentioned in the blog post and relevant for the topic.
   3. Filter out duplicate links and links that are not relevant for the topic. Relevance can be determined by the presence of keywords related to the topic in the context of the link.
-  4. Provide a collection of the extracted filtered links ordered by the blog post they are mentioned in. Use the anchor text as the name of the link if available. If the anchor text is not available, use the URL as the name of the link. Order them alphabetically by the name of the link.
+  4. Return the list of links with their corresponding anchor text if available. If the anchor text is not available, return the URL as the anchor text.
+  5. Provide a collection of the extracted links ordered by the blog post they are mentioned in. Use the anchor text as the name of the link if available. If the anchor text is not available, use the URL as the name of the link. Order them alphabetically by the name of the link.
   ```
 
 - Create a new _Custom Agent_ that is able to retrieve information from a _gist_.
-  - In the Copilot chat window, click the gear icon in the upper right corner (_Configure Chat..._) and select  
-    _Custom Agents_ -> _Create new custom agent..._ -> _.github/agents_ -> name: gists
-
-    This creates the file _.github/agents/gists.agent.md_
+  - In the Copilot chat window, click the gear icon in the upper right corner (_Open Customizations_)
+  - In the _Agent Customizations_ dialog, select _Agents_ on the left side
+  - In the right area, expand the button dropdown and select (_Generate Agent_) and select _New Agent (Workspace)_
+  - Select _.github/agents_ for the location
+  - Enter _gists_ as name and confirm via ENTER
+  - This creates the file _.github/agents/gists.agent.md_
 
 - Add the GitHub MCP tool `github/list_gists` to list the gists
 - Add the built-in `web/fetch` tool to fetch the content
@@ -169,7 +178,7 @@ The _Delegate Pattern_ is supported via [Handoffs](https://code.visualstudio.com
   To provide the necessary links execute the following steps:
 
   1. Fetch the publications of Dirk Fauth in the gists of the user fipro78. Use #tool:github/list_gists to find the correct gist.
-  2. Use #tool:web/fetch to fetch the content of the gist with a max-length parameter of 15000.
+  2. Use #tool:web/fetch to fetch the content of the gist with a max-length parameter of 100000.
   3. Filter the fetched content for links about the requested information.
   4. Provide a list of links to the relevant blog posts.
   ```
@@ -177,20 +186,22 @@ The _Delegate Pattern_ is supported via [Handoffs](https://code.visualstudio.com
 - Use the _Custom Agent_ `gists` by selecting it in the agents dropdown in the chat view, then enter a prompt, for example `show links about visual studio code`.  
   <img src="images/copilot_select_custom_agent_gists.png"/>
   - When asked to allow fetching the gist and the content of the gist, select _Allow and Review Once_ for the first request, and _Allow Once_ afterwards.  
-    Further information can be found in the official documentation: [Use tools with agents - URL approval](https://code.visualstudio.com/docs/copilot/agents/agent-tools#_url-approval)
+    Further information can be found in the official documentation: [Manage approvals and permissions - URL approval](https://code.visualstudio.com/docs/agents/run/approvals#_url-approval)
   - After the `gists` agent finishes its task, the user must actively proceed with the handoff by clicking the _Proceed_ button in the chat.  
     <img src="images/copilot_handoff_proceed_gists.png"/>
   - You can see that the agent switches to the `link_extractor` agent in the chat  
     <img src="images/copilot_select_custom_agent_link_extractor.png"/>
 
-After the agent finishes its task, you can [monitor the context window usage](https://code.visualstudio.com/docs/copilot/chat/copilot-chat-context#_monitor-context-window-usage).
-The following screenshots show the context window usage when I ran the _Custom Agent_ with Gemini 2.5 Pro and GPT-5.3-Codex. The values might be different when executing it again.
+After the agent finishes its task, you can [monitor the context window usage](https://code.visualstudio.com/docs/agents/guides/optimize-usage#_monitor-your-usage) and inspect the token usage in the [Agent Debug Log](https://code.visualstudio.com/docs/agents/agent-troubleshooting/chat-debug-view).
+The following screenshots show the context window usage (hover over or select the context window control in the chat input) and the Agent Debug Log Summary (select the ellipsis (...) menu in the Chat view and select _Show Agent Debug Logs_) when I ran the _Custom Agent_ with Gemini 3.7 Flash and GPT-5.6-Luna. The values might be different when executing it again.
 
-This is the context window usage with _Gemini 2.5 Pro_:  
-<img src="images/copilot_context_window_delegate_gemini.png"/>
+This is the context window usage with _Gemini 3.7 Flash_:  
+<img src="images/copilot_context_window_delegate_gemini.png"/>  
+<img src="images/copilot_debug_summary_delegate_gemini.png"/>
 
-This is the context window usage with _GPT-5.3-Codex_:  
-<img src="images/copilot_context_window_delegate_codex.png"/>
+This is the context window usage with _GPT-5.6-Luna_:  
+<img src="images/copilot_context_window_delegate_gpt.png"/>  
+<img src="images/copilot_debug_summary_delegate_gpt.png"/>
 
 You can see that the context window looks quite similar to executing the process with a single agent. The reason is that we stay in the same conversation, so the relevant context is largely the same. This means the context contains information from the first agent that is also available to the second agent. The _Delegate Pattern_ therefore helps create a better structure for a multi-agent system and reusable agents for various scenarios via "encapsulation", but it has little to no effect on token usage compared to the single-agent solution.
 
@@ -216,7 +227,7 @@ In this section, the previously created agents are converted into coordinator an
   To provide the necessary links execute the following steps:
 
   1. Fetch the publications of Dirk Fauth in the gists of the user fipro78. Use #tool:github/list_gists to find the correct gist.
-  2. Use #tool:web/fetch to fetch the content of the gist with a max-length parameter of 15000.
+  2. Use #tool:web/fetch to fetch the content of the gist with a max-length parameter of 100000.
   3. Filter the fetched content for links about the requested information.
   4. Provide a list of links to the relevant blog posts.
   ```
@@ -252,16 +263,18 @@ When watching the execution, you should notice that:
 - While the subagents are called, the coordinator waits until they are done
 - The `link_extractor` agent is called multiple times, once per found blog post. These multiple agent calls are executed in parallel, while the coordinator agent waits until all spawned child agents are finished.
 
-After the agent finishes its task, you can [monitor the context window usage](https://code.visualstudio.com/docs/copilot/chat/copilot-chat-context#_monitor-context-window-usage).
-The following screenshots show the context window usage when I ran the _Custom Agent_ with Gemini 2.5 Pro and GPT-5.3-Codex. The values might be different when executing it again.
+After the agent finishes its task, you can [monitor the context window usage](https://code.visualstudio.com/docs/agents/guides/optimize-usage#_monitor-your-usage) and inspect the token usage in the [Agent Debug Log](https://code.visualstudio.com/docs/agents/agent-troubleshooting/chat-debug-view).
+The following screenshots show the context window usage (hover over or select the context window control in the chat input) and the Agent Debug Log Summary (select the ellipsis (...) menu in the Chat view and select _Show Agent Debug Logs_) when I ran the _Custom Agent_ with Gemini 3.7 Flash and GPT-5.6-Luna. The values might be different when executing it again.
 
-This is the context window usage with _Gemini 2.5 Pro_:  
-<img src="images/copilot_context_window_subagents_gemini.png"/>
+This is the context window usage with _Gemini 3.7 Flash_:  
+<img src="images/copilot_context_window_subagents_gemini.png"/>  
+<img src="images/copilot_debug_summary_subagents_gemini.png"/>
 
-This is the context window usage with _GPT-5.3-Codex_:  
-<img src="images/copilot_context_window_subagents_codex.png"/>
+This is the context window usage with _GPT-5.6-Luna_:  
+<img src="images/copilot_context_window_subagents_gpt.png"/>  
+<img src="images/copilot_debug_summary_subagents_gpt.png"/>
 
-You can see that the context window is smaller compared to the other patterns, which can be explained by the fact that each subagent is executed in its own isolated context window.
+You can see that the context window is smaller compared to the other patterns, which can be explained by the fact that each subagent is executed in its own isolated context window. But looking at the costs caused by the used tokens, you can also see that the usage of subagents is more expensive.
 
 ## Eclipse Theia
 
@@ -286,19 +299,21 @@ For the following sections, I assume that you have a Theia application with AI s
     - Click on **Create key**
 
 - Switch to the Theia application (e.g. the Theia IDE)
-  - Open the settings page by pressing **CTRL** + **,**
-    - Select the **AI Features**
-    - Check **Enable AI**
+  - Open the _AI Configuration_ view by pressing **ALT** + **A** or click on the gear icon in the bottom left corner and select _AI Configuration_ from the menu
+    - Enable the AI features
+      - Select _General_ in the tree view on the left
+      - Enable the switch **Enable AI features**
     - Configure the LLM you want to use
-      - Google
+      - Expand _Providers & Models_ in the tree view on the left
+      - _Google_
         - **Api Key**: Copy and paste your Google AI API key (see above)  
           For this tutorial we simply configure the API key via preferences as it is easier than setting up the environment.
           In a productive environment you should use the environment variable `GOOGLE_API_KEY` to set the key securely.
         - **Models**: Ensure to have models in the list that are currently available according to [Gemini Models](https://ai.google.dev/gemini-api/docs/models)
-    - Configure the _Model Aliases_
-      - Open the _AI Configuration_ via _Menu -> View -> AI Configuration_
-      - Switch to the _Model Aliases_ tab
-      - For every model alias, select the model that you configured, e.g. `google/gemini-3.1-flash-lite-preview`
+    - Optional: Configure the _Model Aliases_  
+      Theia prodives a default list for the model aliases. If you are fine with the default, you can skip this setting.
+      - Select _Model Aliases_ in the tree view on the left
+      - For every model alias select the model that you configured and want to use
 
 Since version 1.68.0 Theia also supports a [GitHub Copilot language model integration](https://github.com/eclipse-theia/theia/pull/16841).
 To try it out, you need to authenticate with GitHub
@@ -314,7 +329,7 @@ To try it out, you need to authenticate with GitHub
 - After successful authentication, you can select a Copilot model as _Model Alias_, e.g. `copilot/gpt-4o`
 
 _**Note:**_  
-At the time of writing this article, the only Copilot models that are working in Theia are `gpt-4o` and `gpt-4o-mini`. Using other models results in the following issue: [AI Chat with GitHub Copilot fails with: 400 The requested model is not supported](https://github.com/eclipse-theia/theia-ide/issues/675).
+At the time of writing this article, the only Copilot models that are working in Theia are `gpt-4o` and `gpt-4o-mini`. Using other models results in the following issue: [AI Chat with GitHub Copilot fails with: 400 The requested model is not supported](https://github.com/eclipse-theia/theia-ide/issues/675). With Theia 1.76.0 the Copilot integration in Theia is changed to use Copilot CLI for the integration via [PR 17919](https://github.com/eclipse-theia/theia/pull/17919). With this change all available models work.
 
 ### MCP Server Configuration
 
@@ -326,8 +341,8 @@ The [Fetch MCP Server](https://github.com/modelcontextprotocol/servers/tree/main
 _**Note:**_  
 With the issue [Support provider-native server-side tools](https://github.com/eclipse-theia/theia/issues/17637) and the corresponding PR [feat(ai): support provider-native server-side tools](https://github.com/eclipse-theia/theia/pull/17707) the support for server-side tools like `web_fetch` from Anthropic is supported since Theia 1.73.0. In case other LLMs than Anthropic or Gemini are used, you still need a MCP server that provides tools for fetching web pages.
 
-- Open the _AI Configuration_ via _Menu -> View -> AI Configuration_
-  - Switch to the _MCP Servers_ tab
+- Open the _AI Configuration_ view by pressing **ALT** + **A** or click on the gear icon in the bottom left corner and select _AI Configuration_ from the menu
+  - Select _MCP Servers_ from the tree view on the left
   - Add the [Fetcher MCP Server](https://github.com/jae-jae/fetcher-mcp) as a local MCP Server
     - Click on _Add MCP Server_
     - Set the following values in the dialog
@@ -339,6 +354,22 @@ With the issue [Support provider-native server-side tools](https://github.com/ec
     - Click _Add Server_
 
     <img src="images/theia_mcp_add_fetch.png"/>
+
+    If the local fetcher-mcp server is not starting, you can try to use the dockerized variant. For this start the fetcher-mcp server as Docker service in a separate shell (to be able to use the fetcher-mcp server also in Theia, which is started by default on port 3000, we map the host port 3001 to container port 3000):
+
+    ```
+    docker run --rm -p 3001:3000 ghcr.io/jae-jae/fetcher-mcp:latest
+    ```
+
+    Then configure the fetcher-mcp server as remote MCP server:
+
+    ```json
+      "fetcher-mcp": {
+        "serverUrl": "http://localhost:3001/mcp",
+        "autostart": false,
+        "deferLoading": false
+      }
+    ```
 
   - Add the [Remote GitHub MCP Server](https://github.com/github/github-mcp-server/blob/main/docs/remote-server.md) with the _gists_ toolset
     - Click on _Add MCP Server_
@@ -362,24 +393,26 @@ With the issue [Support provider-native server-side tools](https://github.com/ec
       "ai-features.AiEnable.enableAI": true,
       "ai-features.google.apiKey": "<your-api-key>",
       "ai-features.google.models": [
-        "gemini-3.1-flash-lite-preview",
-        "gemini-3-flash-preview",
+        "gemini-3.1-pro-preview",
+        "gemini-3.7-flash",
+        "gemini-3.6-flash",
+        "gemini-3.5-flash",
+        "gemini-3.5-flash-lite",
         "gemini-2.5-flash",
-        "gemini-2.5-flash-lite",
-        "gemini-2.5-pro"
+        "gemini-2.5-flash-lite"
       ],
       "ai-features.languageModelAliases": {
         "default/code": {
-          "selectedModel": "google/gemini-3.1-flash-lite-preview"
+          "selectedModel": "google/gemini-3.7-flash"
         },
         "default/universal": {
-          "selectedModel": "google/gemini-3.1-flash-lite-preview"
+          "selectedModel": "google/gemini-3.7-flash"
         },
         "default/code-completion": {
-          "selectedModel": "google/gemini-3.1-flash-lite-preview"
+          "selectedModel": "google/gemini-3.7-flash"
         },
         "default/summarize": {
-          "selectedModel": "google/gemini-3.1-flash-lite-preview"
+          "selectedModel": "google/gemini-3.7-flash"
         }
       },
       "ai-features.chat.defaultChatAgent": "Universal",
@@ -406,11 +439,12 @@ After performing the above steps, you should see the two MCP servers in the over
 We again first create a single _Custom Agent_ that performs all steps itself. This agent will then be split to explain the orchestration patterns.
 
 - Create a new _Custom Agent_ that executes the previously described process to provide the user with a collection of links for a specific topic.
-  - Open the _AI Configuration_ via _Menu -> View -> AI Configuration_
-  - Switch to the _Agents_ tab
+  - Open the _AI Configuration_ view by pressing **ALT** + **A** or click on the gear icon in the bottom left corner and select _AI Configuration_ from the menu
+  - Select _Agents_ from the tree view on the left
+  - Scroll down in the right content area and click on **Add Custom Agent**
   - Click on **Add Custom Agent**  
     <img src="images/theia_add_custom_agent.png"/>
-  - If asked, select the workspace _.agents/agents_ folder as location for the new agent (_.prompts/agents_ is also supported)
+  - If asked, select the workspace _.agents/agents_ folder as location for the new agent
     - Other possible options would be the _.prompts/agents_ folder in the workspace or the folder _~/.theia/prompt-templates/agents_ in the user home directory.
   - Enter the name _Research_
   - Verify that a _.agents/agents/Research_ folder is generated in your workspace that contains a _agent.md_ file
@@ -434,9 +468,9 @@ We again first create a single _Custom Agent_ that performs all steps itself. Th
   To provide the necessary links execute the following steps:
 
   1. Fetch the publications of Dirk Fauth in the gists of the user fipro78. Use ~{mcp_github_list_gists} to find the correct gist.
-  2. Use ~{mcp_fetcher-mcp_fetch_url} to fetch the content of the gist with a max-length parameter of 15000. If there is an error on fetching the content, try to install a browser via ~{mcp_fetcher-mcp_browser_install} first and then retry once.
+  2. Use ~{mcp_fetcher-mcp_fetch_url} to fetch the content of the gist with a max-length parameter of 100000. If there is an error on fetching the content, try to install a browser via ~{mcp_fetcher-mcp_browser_install} first and then retry once.
   3. Filter the fetched content for links about the requested information.
-  4. For every found blog post, use ~{mcp_fetcher-mcp_fetch_url} to fetch the content of the given blog post with a max-length parameter of 15000.
+  4. For every found blog post, use ~{mcp_fetcher-mcp_fetch_url} to fetch the content of the given blog post with a max-length parameter of 100000.
   5. Collect all links that are mentioned in the blog post and relevant for the topic.
   6. Filter out duplicate links and links that are not relevant for the topic. Relevance can be determined by the presence of keywords related to the topic in the context of the link.
   7. Provide a collection of the extracted filtered links ordered by the blog post they are mentioned in. Use the anchor text as the name of the link if available. If the anchor text is not available, use the URL as the name of the link. Order them alphabetically by the name of the link.
@@ -447,12 +481,12 @@ We again first create a single _Custom Agent_ that performs all steps itself. Th
 - Use the _Custom Agent_ `Research` by selecting it in the chat prompt via `@` syntax and add the prompt to execute, for example `@Research show links about theia`.  
   <img src="images/theia_select_custom_agent_research.png"/>
 
-Theia does not yet support context window monitoring like Visual Studio Code, so we cannot inspect detailed context usage. This feature has been requested via [Context window inspection / analysis command](https://github.com/eclipse-theia/theia/issues/16779). For several LLMs, token usage can still be inspected via _AI Configuration_ by switching to the _Token Usage_ tab. I tested the example using _GPT-5.3-Codex_ hosted on Azure, _GPT-4o_ via Copilot, and _Gemini 3.1 Flash Lite Preview_ via Google AI Studio in the Free Tier.
+Theia does not yet support context window monitoring like Visual Studio Code, so we cannot inspect detailed context usage. This feature has been requested via [Context window inspection / analysis command](https://github.com/eclipse-theia/theia/issues/16779). For several LLMs, token usage can still be inspected via _AI Configuration -> Token Usage_. I tested the example using _Claude Sonnet 5_ hosted on Azure, _GPT-5.6-Luna_ via Copilot, and _Gemini 3.5 Flash Lite_ via Google AI Studio in the Free Tier.
 
 <img src="images/theia_token_single.png"/>
 
 _**Note:**_  
-The token counts reported for Gemini models are incorrect in Theia 1.69.0. I created the ticket [Token usage shows incorrect values for Gemini models](https://github.com/eclipse-theia/theia/issues/17165) and submitted a pull request that fixes this issue. The screenshot above shows token usage with the fix applied for a fair comparison.
+The token counts reported for Gemini models are incorrect in Theia 1.69.0 and again in Theia 1.75.0. I created the ticket [Token usage shows incorrect values for Gemini models](https://github.com/eclipse-theia/theia/issues/17165) and submitted a pull request that fixes this issue.
 
 Token usage is not persisted and is reset when restarting the application. To get a better comparison, I restart after each example.
 
@@ -466,8 +500,9 @@ Theia does not provide a feature like the [Handoffs](https://code.visualstudio.c
 In Eclipse Theia, multiple [Custom Agents](https://theia-ide.org/docs/user_ai/#custom-agents) are configured in a single custom agent configuration file. We therefore add the new agents to the previously created _customAgents.yml_.
 
 - Create a new `Link_Extractor` agent.
-  - Open the _AI Configuration_ via _Menu -> View -> AI Configuration_
-  - Switch to the _Agents_ tab
+  - Open the _AI Configuration_ view by pressing **ALT** + **A** or click on the gear icon in the bottom left corner and select _AI Configuration_ from the menu
+  - Select _Agents_ from the tree view on the left
+  - Scroll down in the right content area and click on **Add Custom Agent**
   - Click on **Add Custom Agent**  
     <img src="images/theia_add_custom_agent.png"/>
   - If asked, select the workspace _.agents/agents_ folder
@@ -489,15 +524,16 @@ In Eclipse Theia, multiple [Custom Agents](https://theia-ide.org/docs/user_ai/#c
   To provide the necessary links execute the following steps:
 
   1. Iterate over the list of provided blog posts
-  2. Use ~{mcp_fetcher-mcp_fetch_url} to fetch the content of the gist with a max-length parameter of 15000. If there is an error on fetching the content, try to install a browser via ~{mcp_fetcher-mcp_browser_install} first and then retry once.
+  2. Use ~{mcp_fetcher-mcp_fetch_url} to fetch the content of the gist with a max-length parameter of 100000. If there is an error on fetching the content, try to install a browser via ~{mcp_fetcher-mcp_browser_install} first and then retry once.
   3. Collect all links that are mentioned in the blog post and relevant for the topic.
   4. Filter out duplicate links and links that are not relevant for the topic. Relevance can be determined by the presence of keywords related to the topic in the context of the link.
   5. Provide a collection of the extracted filtered links ordered by the blog post they are mentioned in. Use the anchor text as the name of the link if available. If the anchor text is not available, use the URL as the name of the link. Order them alphabetically by the name of the link.
   ```
 
 - Add a new `Gists` agent
-  - Open the _AI Configuration_ via _Menu -> View -> AI Configuration_
-  - Switch to the _Agents_ tab
+  - Open the _AI Configuration_ view by pressing **ALT** + **A** or click on the gear icon in the bottom left corner and select _AI Configuration_ from the menu
+  - Select _Agents_ from the tree view on the left
+  - Scroll down in the right content area and click on **Add Custom Agent**
   - Click on **Add Custom Agent**  
     <img src="images/theia_add_custom_agent.png"/>
   - If asked, select the workspace _.agents/agents_ folder
@@ -520,7 +556,7 @@ In Eclipse Theia, multiple [Custom Agents](https://theia-ide.org/docs/user_ai/#c
   To provide the necessary links execute the following steps:
 
   1. Fetch the publications of Dirk Fauth in the gists of the user fipro78. Use ~{mcp_github_list_gists} to find the correct gist.
-  2. Use ~{mcp_fetcher-mcp_fetch_url} to fetch the content of the gist with a max-length parameter of 15000. If there is an error on fetching the content, try to install a browser via ~{mcp_fetcher-mcp_browser_install} first and then retry once.
+  2. Use ~{mcp_fetcher-mcp_fetch_url} to fetch the content of the gist with a max-length parameter of 100000. If there is an error on fetching the content, try to install a browser via ~{mcp_fetcher-mcp_browser_install} first and then retry once.
   3. Filter the fetched content for links about the requested information.
   4. Provide a list of links to the relevant blog posts.
   5. Pass the provided list of links to the Link_Extractor agent via ~{delegateToAgent} to extract links from the given list of blog posts
@@ -533,12 +569,12 @@ You can see in the chat response that the `Gists` agent stays the active agent, 
 
 <img src="images/theia_delegate_response.png"/>
 
-Theia does not yet support context window monitoring like Visual Studio Code, so we cannot inspect detailed context usage. This feature has been requested via [Context window inspection / analysis command](https://github.com/eclipse-theia/theia/issues/16779). For several LLMs, token usage can still be inspected via _AI Configuration_ by switching to the _Token Usage_ tab. I tested the example using _GPT-5.3-Codex_ hosted on Azure, _GPT-4o_ via Copilot, and _Gemini 3.1 Flash Lite Preview_ via Google AI Studio in the Free Tier.
+Theia does not yet support context window monitoring like Visual Studio Code, so we cannot inspect detailed context usage. This feature has been requested via [Context window inspection / analysis command](https://github.com/eclipse-theia/theia/issues/16779). For several LLMs, token usage can still be inspected via _AI Configuration -> Token Usage_. I tested the example using _Claude Sonnet 5_ hosted on Azure, _GPT-5.6-Luna_ via Copilot, and _Gemini 3.5 Flash Lite_ via Google AI Studio in the Free Tier.
 
 <img src="images/theia_token_delegate.png"/>
 
 _**Note:**_  
-The token counts reported for Gemini models are incorrect in Theia 1.69.0. I created the ticket [Token usage shows incorrect values for Gemini models](https://github.com/eclipse-theia/theia/issues/17165) and submitted a pull request that fixes this issue. The screenshot above shows token usage with the fix applied for a fair comparison.
+The token counts reported for Gemini models are incorrect in Theia 1.69.0 and again in Theia 1.75.0. I created the ticket [Token usage shows incorrect values for Gemini models](https://github.com/eclipse-theia/theia/issues/17165) and submitted a pull request that fixes this issue. The screenshot above shows token usage with the fix applied for a fair comparison.
 
 Interestingly, token usage for the _Delegate Pattern_ in Theia is slightly higher compared to the single-agent solution.
 It is also interesting that the _Delegate Pattern_ is not exactly the same as in Visual Studio Code via _Handoffs_. It seems that _Agent-to-Agent Delegation_ is similar to _Subagents_ in Visual Studio Code, at least based on the chat output.
@@ -562,7 +598,7 @@ At the time of writing this blog post, Theia does not support an automatic _Hand
   To provide the necessary links execute the following steps:
 
   1. Fetch the publications of Dirk Fauth in the gists of the user fipro78. Use ~{mcp_github_list_gists} to find the correct gist.
-  2. Use ~{mcp_fetcher-mcp_fetch_url} to fetch the content of the gist with a max-length parameter of 15000. If there is an error on fetching the content, try to install a browser via ~{mcp_fetcher-mcp_browser_install} first and then retry once.
+  2. Use ~{mcp_fetcher-mcp_fetch_url} to fetch the content of the gist with a max-length parameter of 100000. If there is an error on fetching the content, try to install a browser via ~{mcp_fetcher-mcp_browser_install} first and then retry once.
   3. Filter the fetched content for links about the requested information.
   4. Provide a list of links to the relevant blog posts.
   ```
@@ -625,7 +661,7 @@ In this section, the previously created agents are converted into coordinator an
     To provide the necessary links execute the following steps:
 
     1. Fetch the publications of Dirk Fauth in the gists of the user fipro78. Use ~{mcp_github_list_gists} to find the correct gist.
-    2. Use ~{mcp_fetcher-mcp_fetch_url} to fetch the content of the gist with a max-length parameter of 15000. If there is an error on fetching the content, try to install a browser via ~{mcp_fetcher-mcp_browser_install} first and then retry once.
+    2. Use ~{mcp_fetcher-mcp_fetch_url} to fetch the content of the gist with a max-length parameter of 100000. If there is an error on fetching the content, try to install a browser via ~{mcp_fetcher-mcp_browser_install} first and then retry once.
     3. Filter the fetched content for links about the requested information.
     4. Provide a list of links to the relevant blog posts.
     ```
@@ -648,7 +684,7 @@ In this section, the previously created agents are converted into coordinator an
 
     To provide the necessary links execute the following steps:
 
-    1. Use ~{mcp_fetcher-mcp_fetch_url} to fetch the content of the gist with a max-length parameter of 15000. If there is an error on fetching the content, try to install a browser via ~{mcp_fetcher-mcp_browser_install} first and then retry once.
+    1. Use ~{mcp_fetcher-mcp_fetch_url} to fetch the content of the gist with a max-length parameter of 100000. If there is an error on fetching the content, try to install a browser via ~{mcp_fetcher-mcp_browser_install} first and then retry once.
     2. Collect all links that are mentioned in the blog post and relevant for the topic.
     3. Filter out duplicate links and links that are not relevant for the topic. Relevance can be determined by the presence of keywords related to the topic in the context of the link.
     4. Provide a collection of the extracted filtered links ordered by the blog post they are mentioned in. Use the anchor text as the name of the link if available. If the anchor text is not available, use the URL as the name of the link. Order them alphabetically by the name of the link.
@@ -661,12 +697,12 @@ I noticed that it depends on the model used whether subagent calls are executed 
 
 <img src="images/theia_coordinate_response.png"/>
 
-Theia does not yet support context window monitoring like Visual Studio Code, so we cannot inspect detailed context usage. This feature has been requested via [Context window inspection / analysis command](https://github.com/eclipse-theia/theia/issues/16779). For several LLMs, token usage can still be inspected via _AI Configuration_ by switching to the _Token Usage_ tab. I tested the example using _GPT-5.3-Codex_ hosted on Azure, _GPT-4o_ via Copilot, and _Gemini 3.1 Flash Lite Preview_ via Google AI Studio in the Free Tier.
+Theia does not yet support context window monitoring like Visual Studio Code, so we cannot inspect detailed context usage. This feature has been requested via [Context window inspection / analysis command](https://github.com/eclipse-theia/theia/issues/16779). For several LLMs, token usage can still be inspected via _AI Configuration -> Token Usage_. I tested the example using _Claude Sonnet 5_ hosted on Azure, _GPT-5.6-Luna_ via Copilot, and _Gemini 3.5 Flash Lite_ via Google AI Studio in the Free Tier.
 
 <img src="images/theia_token_coordinate.png"/>
 
 _**Note:**_  
-The token counts reported for Gemini models are incorrect in Theia 1.69.0. I created the ticket [Token usage shows incorrect values for Gemini models](https://github.com/eclipse-theia/theia/issues/17165) and submitted a pull request that fixes this issue. The screenshot above shows token usage with the fix applied for a fair comparison.
+The token counts reported for Gemini models are incorrect in Theia 1.69.0 and again in Theia 1.75.0. I created the ticket [Token usage shows incorrect values for Gemini models](https://github.com/eclipse-theia/theia/issues/17165) and submitted a pull request that fixes this issue. The screenshot above shows token usage with the fix applied for a fair comparison.
 
 Interestingly, token usage for the _Coordinator and Worker Pattern_ in Theia uses fewer tokens than the _Delegate Pattern_ but still slightly more than the single-agent solution.
 

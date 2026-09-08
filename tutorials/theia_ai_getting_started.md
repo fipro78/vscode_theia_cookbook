@@ -57,27 +57,27 @@ As this tutorial is part of my [Visual Studio Code Extension - Theia - Cookbook]
 Developing applications that are based on web frameworks typically means that you have to handle dependency updates quite often. The reason is the high frequency in which libraries are updated. Sometimes it feels like the tutorials and blog posts that rely on a specific version of a library is outdated at the time it is published. The Eclipse Theia project also publishes new releases quite often, so it is a common task to update your dependencies. As several things happened since the [Getting Started with Eclipse Theia](./theia_getting_started.md) tutorial, I will update the setup in the following section. It should be at least up-to-date at the time the tutorial is published, and describe in general the steps to follow for updating in the future.
 
 _**Note:**_  
-You need at least to use Theia 1.73.0 to make all features work that are described and used in this tutorial.
+You need at least to use Theia 1.75.0 to make all features work that are described and used in this tutorial.
 
-Theia and Visual Studio Code can use Node 22 in the meanwhile. The [Theia Prerequisites](https://github.com/eclipse-theia/theia/blob/master/doc/Developing.md#prerequisites) talk about the requirement _Node.js >= 22 and <= 24_ and the [VS Code Dev Container](https://github.com/microsoft/vscode/blob/main/.devcontainer/Dockerfile) is based on `typescript-node:22-bookworm`. Therefore we first update the project setup to use Node 22.
+Theia and Visual Studio Code can use Node 24 in the meanwhile. The [Theia Prerequisites](https://github.com/eclipse-theia/theia/blob/master/doc/Developing.md#prerequisites) talk about the requirement _Node.js >= 24_ and the [VS Code Dev Container](https://github.com/microsoft/vscode/blob/main/.devcontainer/Dockerfile) is based on `typescript-node:24-bookworm`. Therefore we first update the project setup to use Node 24.
 
 - Open the file _theia/package.json_
   - Update the `engines` section
     ```json
     "engines": {
-      "node": ">=22 <=24",
+      "node": ">=24",
       "npm": ">=10"
     },
     ```
 - Open the file _.devcontainer/devcontainer.json_
-  - Update the `image` to `typescript-node:22-bookworm`
+  - Update the `image` to `typescript-node:24-bookworm`
     ```json
-    "image": "mcr.microsoft.com/devcontainers/typescript-node:1-22-bookworm",
+    "image": "mcr.microsoft.com/devcontainers/typescript-node:24-bookworm",
     ```
 - Open the _Dockerfile_ in the project root (used to containerize the application)
   - Update the `NODE_VERSION`
     ```Dockerfile
-    ARG NODE_VERSION=22
+    ARG NODE_VERSION=24
     ```
 - Open the file _.devcontainer/postCreateCommand.sh_
   - Install [`npm-check-updates`](https://www.npmjs.com/package/npm-check-updates) to make dependency updates more comfortable.
@@ -108,7 +108,7 @@ or by executing `npm outdated` to get a list of outdated dependencies and the av
   - Change the content to the following
     ```json
     {
-      "lerna": "9.0.0",
+      "lerna": "10.0.1",
       "version": "0.0.0",
       "npmClient": "npm",
       "command": {
@@ -131,7 +131,7 @@ or by executing `npm outdated` to get a list of outdated dependencies and the av
     ncu -u -i
     ```
 
-    - Uncheck the `typescript` package to avoid that it gets updated automatically to version 6.x.
+    - Uncheck the `typescript` package to avoid that it gets updated automatically to version 7.x.
     - Answer the question `Run npm install to install new versions?` with `n` as we need to execute `npm install` from the _theia_ parent folder.
 
   - Switch to the folder _theia/electron-app_
@@ -142,14 +142,14 @@ or by executing `npm outdated` to get a list of outdated dependencies and the av
     ```
 
     - Uncheck the `electron` package to avoid that it gets updated automatically.  
-      This is necessary because the package `@theia/electron@1.73.1` has a peer dependency to `electron@39.8.7` and a newer dependency would break the build.
+      This is necessary because the package `@theia/electron@1.75.0` has a peer dependency to `electron@42.8.1` and a newer dependency would break the build.
     - Answer the question `Run npm install to install new versions?` with `n` as we need to execute `npm install` from the _theia_ parent folder.
 
   - Open the file _theia/electron-app/package.json_
     - Update the `electron` version
       ```json
       "devDependencies": {
-        "electron": "^39.8.7"
+        "electron": "42.8.1"
       },
       ```
   - Switch back to **Terminal** to the _theia_ folder
@@ -278,50 +278,58 @@ The code generator is generating basic project stubs. They do not contain the AI
 ### Configure AI
 
 - Open a browser on http://localhost:3000 and see the started Theia application.
-  - Open the settings page by pressing **CTRL** + **,**
-    - Select the **AI Features**
-    - Check **Enable AI**
+  - Open the _AI Configuration_ view by pressing **ALT** + **A** or click on the gear icon in the bottom left corner and select _AI Configuration_ from the menu
+    - Enable the AI features
+      - Select _General_ in the tree view on the left
+      - Enable the switch **Enable AI features**
     - Configure the LLM you want to use
-      - Google
+      - Expand _Providers & Models_ in the tree view on the left
+      - _Google_
         - **Api Key**: Copy and paste your Google AI API key (see above)  
           For this tutorial we simply configure the API key via preferences as it is easier than setting up the environment.
           In a productive environment you should use the environment variable `GOOGLE_API_KEY` to set the key securely.
         - **Models**: Ensure to have models in the list that are currently available according to [Gemini Models](https://ai.google.dev/gemini-api/docs/models)
-      - Ollama
+      - _Ollama_
         - **Ollama Host**: _http://localhost:11434_
         - **Ollama Models**: _llama3.2_
-    - Configure the _Model Aliases_
-      - Open the _AI Configuration_ via _Menu -> View -> AI Configuration_
-      - Switch to the _Model Aliases_ tab
-      - For every model alias select the model that you configured
+    - Optional: Configure the _Model Aliases_  
+      Theia prodives a default list for the model aliases. If you are fine with the default, you can skip this setting.
+      - Select _Model Aliases_ in the tree view on the left
+      - For every model alias select the model that you configured and want to use
   - Instead of configuring everything via user interface, you can also directly paste one of the following configurations directly in the settings JSON
-    - Switch to the JSON view of the settings by clicking the curly braces on the upper right corner of the editor (_Open Settings (JSON)_)
+    - Switch to the JSON view of the settings by clicking the curly braces on the upper right corner of the configuration editor (_Open Settings (JSON)_). If the _AI Configuration_ is currently the active editor, you first need to switch to the _Settings_ via the settings icon in the upper right corner of the AI Configuration editor (_Open Settings (UI)_).
     - Alternatively use the _Command Palette_ (F1) and search for _Preferences: Open Settings (JSON)_
-    - Copy one of the following snippets and paste it in the editor
+    - Copy one of the following snippets and paste it in the editor.  
+      Note that this is an example and probably not the most effective one compared to the Theia default.
       - Google
         ```json
         {
           "ai-features.AiEnable.enableAI": true,
           "ai-features.google.apiKey": "<your-api-key>",
           "ai-features.google.models": [
-            "gemini-2.5-pro",
+            "gemini-3.1-pro-preview",
+            "gemini-3.7-flash",
+            "gemini-3.6-flash",
+            "gemini-3.5-flash",
+            "gemini-3.5-flash-lite",
             "gemini-2.5-flash",
-            "gemini-2.5-flash-preview-09-2025",
-            "gemini-2.0-flash",
-            "gemini-2.0-flash-lite"
+            "gemini-2.5-flash-lite"
           ],
           "ai-features.languageModelAliases": {
             "default/code": {
-              "selectedModel": "google/gemini-2.5-flash"
+              "selectedModel": "google/gemini-3.7-flash"
             },
             "default/universal": {
-              "selectedModel": "google/gemini-2.5-flash"
+              "selectedModel": "google/gemini-3.7-flash"
             },
             "default/code-completion": {
-              "selectedModel": "google/gemini-2.5-flash"
+              "selectedModel": "google/gemini-3.7-flash"
             },
             "default/summarize": {
-              "selectedModel": "google/gemini-2.5-flash"
+              "selectedModel": "google/gemini-3.7-flash"
+            },
+            "default/fast": {
+              "selectedModel": "google/gemini-3.7-flash"
             }
           }
         }
@@ -508,23 +516,24 @@ Theia already contains a tool function with the name `writeFileContent` that can
 - Build the Theia browser application
 - Run the Theia browser application
 - Open the Theia browser application on http://localhost:3000
-- Open the _AI Configuration_ via _Menu -> View -> AI Configuration_
-  - Switch to the _Tools_ tab
-  - Verify that there is an entry for `jokeFileCreator` that is set to _Always Allow_  
-    If you like to get a confirmation dialog before executing the tool, change the value to _Confirm_
+- Open the _AI Configuration_ view by pressing **ALT** + **A** or click on the gear icon in the bottom left corner and select _AI Configuration_ from the menu
+  - Select _Tools_ from the tree view on the left
+  - Verify that there is an entry for `jokeFileCreator` that is set to _Confirm_  
+    If you like to always auto-approve the tool execution, change the value to _Always Allow_
 - Click on _Open Folder_ in the _Explorer_ tab to open a workspace
   - Select the created _node/example_ folder
 - In the _AI Chat_ enter a prompt that uses the created tool function. This can be done by typing `~` followed by the tool id, in our case `~jokeFileCreator`.
   ```
   @Universal create a file that contains a joke in the folder test. use a file name that relates to the joke. ~jokeFileCreator
   ```
+- When you see the _Confirm Tool Execution_ box in the chat for the `jokeFileCreator` tool, click on _Allow_.
 - Check in the response if the `jokeFileCreator` function was executed and if a file with a joke was created.
 
 _**Note:**_  
 If you compare the prompt we use in Theia with the prompt used in the Visual Studio Copilot tutorial, you notice some differences:
 
 - You specify a Theia Agent via `@Universal`  
-  In previous versions of Theia the `@Orchestrator` agent was called when no other agent was explicitly mentioned. This caused additional requests in the background to find a matching agent. Since 1.67.0 you can also select a default agent in the settings under _AI Features -> Chat: Default Agent_. This agent will be used when no other agent is mentioned explicitly using the `@` symbol. Note that specifying the default agent is done via agent ID without the leading `@`.
+  In previous versions of Theia the `@Orchestrator` agent was called when no other agent was explicitly mentioned. This caused additional requests in the background to find a matching agent. Since 1.67.0 you can also select a default agent in the settings under _AI Configuration -> Agents -> Default Chat Agent_. This agent will be used when no other agent is mentioned explicitly using the `@` symbol.
 - The **Tool Function** is specified via `~jokeFileCreator` while the _Language Model Tool_ in Visual Studio Code is targeted via `#jokeFileCreator`
 - The prompt is more descriptive, otherwise it might fail, where in Copilot the values are somehow set correctly. But that might be related to the model that is used.
 
@@ -542,14 +551,14 @@ There are basically two types of MCP servers:
 
 There are several ways to add MCP servers to Theia:
 
-- Configure them via _settings.json_
+- Configure them via _AI Configuration (settings.json)_
 - Programmatically via a Theia Extension
 
 _**Note:**_  
 The usage of a _mcp.json_ server configuration file, like in Visual Studio Code, is currently not supported, but proposed via [this ticket](https://github.com/eclipse-theia/theia/issues/16024).
 If you are interested in the _mcp.json_ format in Visual Studio Code, have a look at [Extending Copilot in Visual Studio Code - MCP Server](./vscode_copilot_extension.md#mcp-server) for further details.
 
-In this section I will describe how to manually configure MCP servers via _settings.json_ and programmatically via Theia extension.
+In this section I will describe how to manually configure MCP servers via _AI Configuration (settings.json)_ and programmatically via Theia extension.
 
 We will install
 
@@ -557,14 +566,29 @@ We will install
 - the [GoDaddy MCP Server](https://developer.godaddy.com/mcp) as a remote MCP Server
 - the [GitHub MCP Server](https://github.com/github/github-mcp-server) as a remote MCP Server that requires an authorization
 
-### Add MCP server via settings.json
+### Add MCP server via AI Configuration (settings.json)
 
-In the following section we will add MCP servers via _settings.json_ file. For this you need of course a running Theia application. At this point you don't need to build anything, so simply start the Theia browser application or use the running instance if you did not stop the server from the previous steps.
+In the following section we will add MCP servers via _AI Configuration (settings.json)_ file. For this you need of course a running Theia application. At this point you don't need to build anything, so simply start the Theia browser application or use the running instance if you did not stop the server from the previous steps.
 
 #### Local MCP Server
 
 - Run the Theia browser application
 - Open the Theia browser application on http://localhost:3000
+- Open the _AI Configuration_ view by pressing **ALT** + **A** or click on the gear icon in the bottom left corner and select _AI Configuration_ from the menu
+  - Select _MCP Servers_ from the tree view on the left
+  - Click _Add MCP Server_
+    - Set the following values in the dialog
+      - **Server Name:** _filesystem_
+      - **Server Type:** _Local (Command)_
+      - **Command:** _npx_
+      - **Arguments:** _-y @modelcontextprotocol/server-filesystem /home/node/example_
+      - Keep the **Autostart** flag checked
+    - Click _Add Server_
+
+    <img src="images/theia_mcp_add_filesystem.png"/>
+
+You can also directly add the MCP servers in the _settings.json_
+
 - Open the settings page by pressing **CTRL** + **,**
 - Switch to the JSON view of the settings by clicking the curly braces on the upper right corner of the editor (_Open Settings (JSON)_)
   - Alternatively use the _Command Palette_ (F1) and search for _Preferences: Open Settings (JSON)_
@@ -574,24 +598,27 @@ In the following section we will add MCP servers via _settings.json_ file. For t
   "ai-features.mcp.mcpServers": {
     "filesystem": {
       "command": "npx",
+      "autostart": true,
+      "deferLoading": false,
       "args": [
         "-y",
         "@modelcontextprotocol/server-filesystem",
         "/home/node/example"
       ]
     }
-  },
+  }
   ```
 
 _**Note:**_  
-The [Filesystem MCP Server](https://github.com/modelcontextprotocol/servers/tree/main/src/filesystem) supports [Roots](https://modelcontextprotocol.info/docs/concepts/roots/). Visual Studio Code as a MCP client supports roots and sets the workspace as such. Since version 1.69.0 Theia also supports roots which was added via this [pull request](https://github.com/eclipse-theia/theia/pull/16911). In Theia it is possible to configure whether the workspace should be used as _Root_ or not via the preference `ai-features.mcp.useWorkspaceAsRoot`.
+The [Filesystem MCP Server](https://github.com/modelcontextprotocol/servers/tree/main/src/filesystem) supports [Roots](https://modelcontextprotocol.info/docs/concepts/roots/). Visual Studio Code as a MCP client supports roots and sets the workspace as such. Since version 1.69.0 Theia also supports roots which was added via this [pull request](https://github.com/eclipse-theia/theia/pull/16911). In Theia it is possible to configure whether the workspace should be used as _Root_ or not via the preference `ai-features.mcp.useWorkspaceAsRoot`. Since Theia 1.75.0 this setting is also available via _AI Configuration -> MCP Servers -> Use Workspace as Root_.
 
 The above configuration sets the `autostart` flag by default to `true` if the current open workspace is trusted and the workspace trust setting is enabled. If `autostart` is disabled or the server does not start automatically, you can start the server manually.
 
 - To start the filesystem MCP server you can either
   - Use the command palette: _F1 -> MCP: Start MCP Server -> filesystem_
-  - Use the _AI Configuration_ view: _Menu_ -> _View_ -> _AI Configuration_
-    - Open the _MCP Servers_ tab
+  - Use the _AI Configuration_ via **ALT** + **A**
+    - Expand the _MCP Servers_ node in the tree view on the left
+    - Select the _filesystem_ MCP server
     - Click on the _Play_ button for the **filesystem** MCP server  
       <img src="images/theia_mcp_filesystem.png"/>
 
@@ -622,10 +649,24 @@ or a more extended one
 
 #### Remote MCP Server
 
-- Add the following content to the _settings.json_ in the `ai-features.mcp.mcpServers` section to configure the `godaddy` server as remote MCP server.
+- Open the _AI Configuration_ view by pressing **ALT** + **A** or click on the gear icon in the bottom left corner and select _AI Configuration_ from the menu
+  - Select _MCP Servers_ from the tree view on the left
+  - Click _Add MCP Server_
+    - Set the following values in the dialog
+      - **Server Name:** _godaddy_
+      - **Server Type:** _Remote (URL)_
+      - **Server URL:** _https://api.godaddy.com/v1/domains/mcp_
+      - Keep the **Autostart** flag checked
+    - Click _Add Server_
+
+    <img src="images/theia_mcp_add_godaddy.png"/>
+
+- You can also add the following content to the _settings.json_ in the `ai-features.mcp.mcpServers` section to configure the `godaddy` server as remote MCP server.
   ```json
   "godaddy": {
-    "serverUrl": "https://api.godaddy.com/v1/domains/mcp"
+    "serverUrl": "https://api.godaddy.com/v1/domains/mcp",
+    "autostart": true,
+    "deferLoading": false
   }
   ```
 - Click on the _Connect_ button to connect to the **godaddy** remote MCP server if it is not autostarted automatically  
@@ -653,11 +694,25 @@ You can use the GitHub MCP server locally via Docker. To make this work in a Dev
 
 ```json
 "features": {
-  "ghcr.io/devcontainers/features/docker-in-docker:2": {},
+  "ghcr.io/devcontainers/features/docker-in-docker:4.1.0": {},
 }
 ```
 
-The local GitHub MCP server can then be configured in the _settings.json_ file like this:
+The local GitHub MCP server can be configured via _AI Configuration_ like this:
+
+- Click _Add MCP Server_
+  - Set the following values in the dialog
+    - **Server Name:** _github_
+    - **Server Type:** _Local (Command)_
+    - **Command:** _docker_
+    - **Arguments:** _run -i --rm -e GITHUB_PERSONAL_ACCESS_TOKEN ghcr.io/github/github-mcp-server_
+    - **Environment Variables:** _GITHUB_PERSONAL_ACCESS_TOKEN=\<your-token\>_
+    - Keep the **Autostart** flag checked
+  - Click _Add Server_
+
+    <img src="images/theia_mcp_add_github_docker.png"/>
+
+Or it can be configured in the _settings.json_ file like this:
 
 ```json
 "github": {
@@ -672,7 +727,9 @@ The local GitHub MCP server can then be configured in the _settings.json_ file l
   ],
   "env": {
       "GITHUB_PERSONAL_ACCESS_TOKEN": "<your-token>"
-  }
+  },
+  "autostart": true,
+  "deferLoading": false
 }
 ```
 
@@ -722,6 +779,10 @@ or by setting the optional header `X-MCP-Toolsets`
 }
 ```
 
+Adding it via _AI Configuration_ would look like this:
+
+<img src="images/theia_mcp_add_github.png"/>
+
 Further details about this are available in [Remote GitHub MCP Server](https://github.com/github/github-mcp-server/blob/main/docs/remote-server.md).
 
 _**Note:**_  
@@ -730,8 +791,8 @@ The [Fetch MCP Server](https://github.com/modelcontextprotocol/servers/tree/main
 _**Note:**_  
 With the issue [Support provider-native server-side tools](https://github.com/eclipse-theia/theia/issues/17637) and the corresponding PR [feat(ai): support provider-native server-side tools](https://github.com/eclipse-theia/theia/pull/17707) the support for server-side tools like `web_fetch` from Anthropic is supported since Theia 1.73.0. In case other LLMs than Anthropic or Gemini are used, you still need a MCP server that provides tools for fetching web pages.
 
-- Open the _AI Configuration_ via _Menu -> View -> AI Configuration_
-  - Switch to the _MCP Servers_ tab
+- Open the _AI Configuration_ view by pressing **ALT** + **A** or click on the gear icon in the bottom left corner and select _AI Configuration_ from the menu
+  - Select _MCP Servers_ from the tree view on the left
   - Add the [Fetcher MCP Server](https://github.com/jae-jae/fetcher-mcp) as a local MCP Server
     - Click on _Add MCP Server_
     - Set the following values in the dialog
@@ -741,6 +802,8 @@ With the issue [Support provider-native server-side tools](https://github.com/ec
       - **Arguments:** _-y fetcher-mcp_
       - Keep the **Autostart** flag checked
     - Click _Add Server_
+
+    <img src="images/theia_mcp_add_fetch.png"/>
 
 - Test if the GitHub MCP Server configuration works
   - Start the server
@@ -922,8 +985,8 @@ Remember to remove the MCP server configuration from the _settings.json_ or use 
 - Build the Theia browser application
 - Run the Theia browser application
 - Open the Theia browser application on http://localhost:3000
-- Open the _AI Configuration_ via _Menu -> View -> AI Configuration_
-- Switch to the _MCP Servers_ tab
+- Open the _AI Configuration_ view by pressing **ALT** + **A** or click on the gear icon in the bottom left corner and select _AI Configuration_ from the menu
+- Select _MCP Servers_ from the tree view on the left
 - Start the MCP servers if they are not configured to `autostart`
 - In the _AI Chat_ view use prompts like in the section before to verify that the MCP servers are registered and working correctly.
 
@@ -1031,8 +1094,8 @@ In this section we will implement a _Custom Agent_. In the section after this on
 - Build the Theia browser application
 - Run the Theia browser application
 - Open the Theia browser application on http://localhost:3000
-- Open the _AI Configuration_ via _Menu -> View -> AI Configuration_
-  - Switch to the _Agents_ tab
+- Open the _AI Configuration_ view by pressing **ALT** + **A** or click on the gear icon in the bottom left corner and select _AI Configuration_ from the menu
+  - Select _Agents_ from the tree view on the left
   - Verify that the `Joker` agent is listed
 - In the _AI Chat_ enter a prompt that uses the `@Joker` agent.
   ```
@@ -1089,8 +1152,8 @@ Theia supports a feature called [_Prompt Variants_](https://eclipsesource.com/bl
 - Build the Theia browser application
 - Run the Theia browser application
 - Open the Theia browser application on http://localhost:3000
-- Open the _AI Configuration_ via _Menu -> View -> AI Configuration_
-  - Switch to the _Agents_ tab
+- Open the _AI Configuration_ view by pressing **ALT** + **A** or click on the gear icon in the bottom left corner and select _AI Configuration_ from the menu
+  - Select _Agents_ from the tree view on the left
   - Select the `Joker` agent
   - Select the _joker-system-simple_ entry in the _Prompt Templates_ combobox
 - In the _AI Chat_ enter a prompt that uses the `@Joker` agent.
@@ -1472,8 +1535,8 @@ There are different ways to find out which _Prompt Template_ was selected, depen
 - Build the Theia browser application
 - Run the Theia browser application
 - Open the Theia browser application on http://localhost:3000
-- Open the _AI Configuration_ via _Menu -> View -> AI Configuration_
-  - Switch to the _Agents_ tab
+- Open the _AI Configuration_ view by pressing **ALT** + **A** or click on the gear icon in the bottom left corner and select _AI Configuration_ from the menu
+  - Select _Agents_ from the tree view on the left
   - Select the `Joker` agent
   - Ensure that the _joker-system-simple_ entry is selected in the _Prompt Templates_ combobox  
     (note that this will preselect the _Simple Mode_ agent mode)
@@ -1666,8 +1729,8 @@ We are doing this because the default [QuestionPartRenderer](https://github.com/
 - Build the Theia browser application
 - Run the Theia browser application
 - Open the Theia browser application on http://localhost:3000
-- Open the _AI Configuration_ via _Menu -> View -> AI Configuration_
-  - Switch to the _Agents_ tab
+- Open the _AI Configuration_ view by pressing **ALT** + **A** or click on the gear icon in the bottom left corner and select _AI Configuration_ from the menu
+  - Select _Agents_ from the tree view on the left
   - Select the `Joker` agent
   - Ensure that the _joker-system-simple_ entry is selected in the _Prompt Templates_ combobox
 - In the _AI Chat_ enter a prompt that uses the `@Joker` agent.
@@ -1785,9 +1848,9 @@ Before Theia 1.73.0 _Custom Agents_ were stored in a _.prompts/customAgents.yml_
 - Start the Theia browser application
 - Open the Theia browser application on http://localhost:3000
 - Ensure that you have a workspace open otherwise open a folder somewhere (e.g. _/home/node/example_)
-- Open the _AI Configuration_ via _Menu -> View -> AI Configuration_
-- Switch to the _Agents_ tab
-- Click on **Add Custom Agent**  
+- Open the _AI Configuration_ view by pressing **ALT** + **A** or click on the gear icon in the bottom left corner and select _AI Configuration_ from the menu
+- Select _Agents_ from the tree view on the left
+- Scroll down in the right content area and click on **Add Custom Agent**  
   <img src="images/theia_add_custom_agent.png"/>
 - If asked, select the workspace _.agents/agents_ folder as location for the new agent (_.prompts/agents_ is also supported)
   - Other possible options would be the _.prompts/agents_ folder in the workspace or the folder _~/.theia/prompt-templates/agents_ in the user home directory.
@@ -1819,8 +1882,8 @@ Before Theia 1.73.0 _Custom Agents_ were stored in a _.prompts/customAgents.yml_
   ```
 
 - Test the new _Custom Agent_
-  - Open the _AI Configuration_ via _Menu -> View -> AI Configuration_
-  - Switch to the _MCP Servers_ tab
+  - Open the _AI Configuration_ view by pressing **ALT** + **A** or click on the gear icon in the bottom left corner and select _AI Configuration_ from the menu
+  - Select _MCP Servers_ from the tree view on the left
   - Ensure that the _fetcher-mcp_ MCP server and the _github_ MCP server configured for the _gists_ tools are available and started
   - Open the _AI Chat_ and enter the following prompt
     ```
@@ -1837,8 +1900,8 @@ The tasks that can be performed by AI agents are getting more and more complicat
 - Run the Theia browser application
 - Open the Theia browser application on http://localhost:3000
 - Ensure that you have a workspace open otherwise open a folder somewhere (e.g. _/home/node/example_)
-- Open the _AI Configuration_ via _Menu -> View -> AI Configuration_
-- Switch to the _Agents_ tab
+- Open the _AI Configuration_ view by pressing **ALT** + **A** or click on the gear icon in the bottom left corner and select _AI Configuration_ from the menu
+- Select _Agents_ from the tree view on the left
 - Click on **Add Custom Agent**
 - Add a new `FileWriter` agent that uses the Theia built-in _Tool Function_ `writeFileContent` to persist content to a file
 
@@ -1895,7 +1958,7 @@ The support for _Agent Skills_ was [introduced with Theia 1.68.0](https://eclips
 
 - Start the Theia browser application
 - Open the Theia browser application on http://localhost:3000
-- Ensure that you have a workspace open otherwise open a folder somewhere (e.g. _/home/node/example_)
+- Ensure that you have a workspace open, otherwise open a folder somewhere (e.g. _/home/node/example_)
 - Create a new folder _skills_ in the folder _.prompts_ in your workspace
 - Create a new folder _blog-link-extraction_ in the previously created _.prompts/skills_ folder
 - Create the _SKILL.md_ file in that folder
@@ -1986,7 +2049,7 @@ The support for _Agent Skills_ was [introduced with Theia 1.68.0](https://eclips
     - Enter something like `process` or `execute` to the chat to start the skill processing  
       You will get a message that the required tools are not available. This is because there is currently an issue in the loading and processing of _Agent Skills_.
     - Open the _Generic Capabilities_ panel
-      - Select the necessary MCP tools (`fetch/fetch` and `github/list_gists`)
+      - Select the necessary MCP tools (`fetcher-mcp/fetch_url` and `github/list_gists`)
       - Click on _Save_
 
       _**Note:**_  

@@ -7,7 +7,7 @@ If you have not read my previous blog posts and want more details, have a look a
 - [Getting Started with Theia AI](./theia_ai_getting_started.md)
 
 _**Note:**_  
-This blog post is based on Visual Studio Code 1.113.0 and Eclipse Theia 1.70.0. There may be differences if you read it when newer versions have been released.
+This blog post is based on Visual Studio Code 1.135.0 and Eclipse Theia 1.75.0. There may be differences if you read it when newer versions have been released.
 
 ## Strategic Comparison
 
@@ -206,10 +206,10 @@ For example, to use the `fetch_url` function of the `fetcher-mcp` MCP server, yo
 @Universal show me the allowed directories ~{mcp_fetcher-mcp_fetch_url}
 ```
 
-By default, the _Tool Confirmation Mode_ is **Always Allow**. Users can change this setting.
+By default, the _Tool Confirmation Mode_ is **Confirm**. Users can change this setting.
 
-- Open the _AI Configuration_ view via _Menu -> View -> AI Configuration_
-- Switch to the _Tools_ tab  
+- Open the _AI Configuration_ view by pressing **ALT** + **A** or click on the gear icon in the bottom left corner and select _AI Configuration_ from the menu
+- Select _Tools_ from the tree view on the left
   <img src="images/theia_tools_configuration_confirmation.png"/>
 - Alternatively, edit _settings.json_ and configure `ai-features.chat.toolConfirmation`. For example, if you want to be prompted for approval for every tool call but allow `jokeFileCreator` to execute without confirmation:
   ```json
@@ -304,7 +304,7 @@ Comparing Visual Studio Code _mcp.json_ and Eclipse Theia _settings.json_ MCP se
       "args": [
         "-y",
         "@modelcontextprotocol/server-filesystem",
-        "/home/node/examples"
+        "/home/node/example"
       ],
       "autostart": false
     },
@@ -325,8 +325,8 @@ Comparing Visual Studio Code _mcp.json_ and Eclipse Theia _settings.json_ MCP se
 
 You can manage the MCP server either via
 
-- _AI Configuration_ view: _Menu_ -> _View_ -> _AI Configuration_ -> _MCP Servers_ tab  
-  <img src="images/theia_mcp_filesystem.png"/>
+- _AI Configuration (**ALT** + **A**)_ -> _MCP Servers_
+  <img src="images/theia_configuration_mcp.png"/>
 - Command palette: _F1_
   - _MCP: Start MCP Server -> filesystem_
   - _MCP: Stop MCP Server -> filesystem_
@@ -379,7 +379,7 @@ Further information can be found in [Extending Copilot in Visual Studio Code - F
 
 In Eclipse Theia, you can create and use [Prompt Fragments](https://theia-ide.org/docs/user_ai/#prompt-fragments) to define reusable prompts for recurring development tasks.
 
-_Prompt Fragments_ are Markdown files with a _.prompttemplate_ file extension. They are located either in the _.prompts_ folder in the workspace or in user-wide local directories configured in the settings (_AI Features -> Prompt Templates_).
+_Prompt Fragments_ are Markdown files with a _.prompttemplate_ file extension. They are located either in the _.prompts_ folder in the workspace or in user-wide local directories configured in the settings (_AI Configuration -> General -> Prompt Templates_).
 
 In the optional YAML frontmatter header, prompts can be configured as a _Slash Command_:
 
@@ -531,7 +531,7 @@ Support for _Agent Skills_ in Eclipse Theia is still in alpha and currently has 
 - You can enable agents to load skills on demand by using the `{{skills}}` variable in an agent's prompt to list all available skills, and use the `~getSkillFileContent` function to load a selected skill on demand.
 - You can create a new skill manually by creating the required folder and a _SKILL.md_ file in that folder
 - You can create a new skill with the help of AI by using the built-in `@CreateSkill` agent in the chat
-- There is a [Skills and Slash Commands View](https://theia-ide.org/docs/user_ai/#skills-and-slash-commands-view) available via the _AI Configuration_ via the _Skills_ tab, which provides a convenient overview of the discovered skills and a button to directly open the corresponding _SKILL.md_ file in an editor.  
+- There is a [Skills and Slash Commands View](https://theia-ide.org/docs/user_ai/#skills-and-slash-commands-view) available in the _AI Configuration -> Skills & Slash Commands_ node, which provides a convenient overview of the discovered skills and a button to directly open the corresponding _SKILL.md_ file in an editor.  
   <img src="images/theia_configuration_skills.png"/>
 
 You can learn more about the use of _Agent Skills_ in Eclipse Theia via [Agent Skills (Alpha)](https://theia-ide.org/docs/user_ai/#agent-skills-alpha) and [Getting Started with Theia AI - Further Customization - Agent Skills](theia_ai_getting_started.md#agent-skills).
