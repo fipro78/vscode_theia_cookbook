@@ -10,8 +10,8 @@
       "type": "http"
     },
     "github": {
-      "url": "https://api.githubcopilot.com/mcp/",
-      "type": "sse",
+      "url": "https://api.githubcopilot.com/mcp",
+      "type": "http",
       "headers": {
         "X-MCP-Toolsets": "gists"
       }

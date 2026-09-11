@@ -1,0 +1,12 @@
+{
+    "permissions": {
+        "allow": [
+            "mcp__github__list_gists",
+            "WebFetch(domain:gist.githubusercontent.com)",
+            "WebFetch(domain:vogella.com)"
+        ]
+    },
+    "enabledMcpjsonServers": [
+        "github"
+    ]
+}

@@ -1,8 +1,8 @@
 # AI Agent Orchestration
 
-When talking about AI agents, we now often refer to _Agentic AI workflows_, where multiple agents collaborate to achieve complex goals. When creating _Custom Agents_, you need to consider collaboration options, especially if you design your agents for dedicated tasks rather than having one agent do everything. This is important because you should keep the context of your agent or prompt as minimal as possible while still providing enough information to achieve the desired results. Creating agents for dedicated tasks with a limited scope/context is similar to the encapsulation principle in object-oriented programming, and similarly, you need to consider processing or orchestration patterns.
+When talking about AI agents, we now often refer to _Agentic AI workflows_, which can involve multiple agents collaborating to achieve complex goals. When creating _Custom Agents_, you need to consider how they collaborate, especially if you design them for dedicated tasks rather than having one agent do everything. Keep each agent's context as small as practical while still providing enough information to achieve the desired results. Creating agents with dedicated tasks and a limited scope is similar to the encapsulation principle in object-oriented programming. Once you split responsibilities, you also need to consider how to orchestrate the work.
 
-Apart from a _Single Agent_ that does all the work alone, you currently have two options:
+Apart from a _Single Agent_ that does all the work itself, this article explores two orchestration patterns:
 
 - _Delegate Pattern_  
   Create guided sequential workflows that transition between agents. The agents are called one after the other.
@@ -11,7 +11,9 @@ Apart from a _Single Agent_ that does all the work alone, you currently have two
 
 You can also combine these patterns to have multiple "main" agents that use worker agents for specific tasks. Each "main" agent can delegate to the next "main" agent once it is done, creating a sequential workflow of main tasks.
 
-I will explain these patterns and show the differences between Visual Studio Code and Eclipse Theia using the following example: get a list of links for a specific topic. To get those links, first check a GitHub user's gists for a publication collection. Then inspect the list of publications for links contained in the posts.
+I will explain these patterns and show the differences between Visual Studio Code, Eclipse Theia, and Claude Code using the following example: collect links about a specific topic. First, check a GitHub user's gists for a collection of publications. Then fetch the relevant blog posts and extract the links they contain.
+
+The examples compare workflow structure, context window usage, and total token usage or estimated cost. These are related but distinct: a smaller coordinator context does not necessarily mean that the workflow consumes fewer tokens overall. The screenshots show individual runs with different models and configurations, not a controlled benchmark across platforms.
 
 ## Visual Studio Code
 
@@ -88,13 +90,15 @@ We start by creating a single _Custom Agent_ that performs all steps itself. Thi
   ```
 
 _**Hint:**_  
-The built-in `web/fetch` tool asks for approval to execute `fetch` and to access the URLs it wants to retrieve, ensuring no malicious content is fetched.
+The built-in `web/fetch` tool can ask for approval to run and to access the requested URLs. This gives you control over which sources the agent accesses, but does not guarantee that their content is safe.
 If you use the custom agent prompts that I prepared, it will fetch my gist with my publications and blog posts published at [https://vogella.com/blog/](https://vogella.com/blog/). If you trust these sources (at least I do :smile:), you can configure trust in _settings.json_ (_Command Palette (F1) -> Preferences: Open User Settings (JSON)_) by adding the following configuration to reduce the number of prompts during processing:
 
 ```json
+{
   "chat.tools.urls.autoApprove": {
-    "https://vogella.com/blog/": true,
-  },
+    "https://vogella.com/blog/": true
+  }
+}
 ```
 
 - Use the _Custom Agent_ `research` by selecting it in the agents dropdown in the chat view, then enter a prompt, for example `show links about visual studio code`.  
@@ -125,7 +129,7 @@ The _Delegate Pattern_ is supported via [Handoffs](https://code.visualstudio.com
   - In the _Agent Customizations_ dialog, select _Agents_ on the left side
   - In the right area, expand the button dropdown and select (_Generate Agent_) and select _New Agent (Workspace)_
   - Select _.github/agents_ for the location
-  - Enter _link_extractor_ as name and confirm via ENTER
+  - Enter _link\_extractor_ as name and confirm via ENTER
   - This creates the file _.github/agents/link_extractor.agent.md_
 
 - Add the built-in `web/fetch` tool to fetch the content
@@ -195,26 +199,26 @@ The _Delegate Pattern_ is supported via [Handoffs](https://code.visualstudio.com
 After the agent finishes its task, you can [monitor the context window usage](https://code.visualstudio.com/docs/agents/guides/optimize-usage#_monitor-your-usage) and inspect the token usage in the [Agent Debug Log](https://code.visualstudio.com/docs/agents/agent-troubleshooting/chat-debug-view).
 The following screenshots show the context window usage (hover over or select the context window control in the chat input) and the Agent Debug Log Summary (select the ellipsis (...) menu in the Chat view and select _Show Agent Debug Logs_) when I ran the _Custom Agent_ with Gemini 3.7 Flash and GPT-5.6-Luna. The values might be different when executing it again.
 
-This is the context window usage with _Gemini 3.7 Flash_:  
+This is the context window usage and the Agent Debug Log Summary with _Gemini 3.7 Flash_:  
 <img src="images/copilot_context_window_delegate_gemini.png"/>  
 <img src="images/copilot_debug_summary_delegate_gemini.png"/>
 
-This is the context window usage with _GPT-5.6-Luna_:  
+This is the context window usage and the Agent Debug Log Summary with _GPT-5.6-Luna_:  
 <img src="images/copilot_context_window_delegate_gpt.png"/>  
 <img src="images/copilot_debug_summary_delegate_gpt.png"/>
 
-You can see that the context window looks quite similar to executing the process with a single agent. The reason is that we stay in the same conversation, so the relevant context is largely the same. This means the context contains information from the first agent that is also available to the second agent. The _Delegate Pattern_ therefore helps create a better structure for a multi-agent system and reusable agents for various scenarios via "encapsulation", but it has little to no effect on token usage compared to the single-agent solution.
+In these runs, context window usage is similar to that of the single-agent workflow. The handoff stays in the same conversation, so the second agent can use information gathered by the first. The _Delegate Pattern_ therefore helps structure the workflow and makes specialized agents reusable, but does not provide context isolation. Any effect on total token usage depends on the additional turns, tool calls, and model behavior.
 
 ### Coordinator and Worker Pattern
 
-In Visual Studio Code, you implement the [Coordinator and Worker Pattern](https://code.visualstudio.com/docs/copilot/agents/subagents#_coordinator-and-worker-pattern) by using [Subagents](https://code.visualstudio.com/docs/copilot/agents/subagents). Using a subagent means spawning a child agent within a session to handle a subtask in its own isolated context window. From a pattern perspective, this means there is a main coordinator agent that manages the overall task and delegates subtasks to specialized subagents. To call a subagent, the built-in `agent/runSubagent` tool needs to be enabled for the coordinator agent. Each subagent call is sequential (the coordinator waits for that call to return), but the coordinator can spawn multiple subagent calls in parallel.
+In Visual Studio Code, you implement the [Coordinator and Worker Pattern](https://code.visualstudio.com/docs/copilot/agents/subagents#_coordinator-and-worker-pattern) by using [Subagents](https://code.visualstudio.com/docs/copilot/agents/subagents). A subagent handles a subtask in its own isolated context window. The coordinator manages the overall task and combines the results returned by specialized subagents. To call a subagent, enable the built-in `agent/runSubagent` tool, included in the `agent` tool set used below. Tasks that depend on earlier results must wait for them, while independent subagent calls can run in parallel.
 
 In this section, the previously created agents are converted into coordinator and worker agents.
 
 - Open the file _.github/agents/gists.agent.md_
 - Remove the `handoffs` header
 - Ensure that the agent returns something at the end
-- The following snippet shows how such an agent could look like
+- The following snippet shows what such an agent could look like
 
   ```markdown
   ---
@@ -261,20 +265,20 @@ When watching the execution, you should notice that:
 
 - The `research` agent stays active as the coordinator agent
 - While the subagents are called, the coordinator waits until they are done
-- The `link_extractor` agent is called multiple times, once per found blog post. These multiple agent calls are executed in parallel, while the coordinator agent waits until all spawned child agents are finished.
+- The `link_extractor` agent is called once per blog post. These independent calls can run in parallel; whether they do depends on the model and runtime. The coordinator collects their results before producing the final response.
 
 After the agent finishes its task, you can [monitor the context window usage](https://code.visualstudio.com/docs/agents/guides/optimize-usage#_monitor-your-usage) and inspect the token usage in the [Agent Debug Log](https://code.visualstudio.com/docs/agents/agent-troubleshooting/chat-debug-view).
 The following screenshots show the context window usage (hover over or select the context window control in the chat input) and the Agent Debug Log Summary (select the ellipsis (...) menu in the Chat view and select _Show Agent Debug Logs_) when I ran the _Custom Agent_ with Gemini 3.7 Flash and GPT-5.6-Luna. The values might be different when executing it again.
 
-This is the context window usage with _Gemini 3.7 Flash_:  
+This is the context window usage and the Agent Debug Log Summary with _Gemini 3.7 Flash_:  
 <img src="images/copilot_context_window_subagents_gemini.png"/>  
 <img src="images/copilot_debug_summary_subagents_gemini.png"/>
 
-This is the context window usage with _GPT-5.6-Luna_:  
+This is the context window usage and the Agent Debug Log Summary with _GPT-5.6-Luna_:  
 <img src="images/copilot_context_window_subagents_gpt.png"/>  
 <img src="images/copilot_debug_summary_subagents_gpt.png"/>
 
-You can see that the context window is smaller compared to the other patterns, which can be explained by the fact that each subagent is executed in its own isolated context window. But looking at the costs caused by the used tokens, you can also see that the usage of subagents is more expensive.
+In these runs, the coordinator's context window usage is smaller than with the other patterns because each subagent processes its source material in a separate context. However, the reported token costs are higher. Context isolation reduces what the coordinator needs to retain, but the workers still consume tokens and add coordination overhead.
 
 ## Eclipse Theia
 
@@ -308,15 +312,15 @@ For the following sections, I assume that you have a Theia application with AI s
       - _Google_
         - **Api Key**: Copy and paste your Google AI API key (see above)  
           For this tutorial we simply configure the API key via preferences as it is easier than setting up the environment.
-          In a productive environment you should use the environment variable `GOOGLE_API_KEY` to set the key securely.
+          In a production environment, prefer supplying the key through the `GOOGLE_API_KEY` environment variable rather than storing it in workspace settings. Do not commit API keys to version control.
         - **Models**: Ensure to have models in the list that are currently available according to [Gemini Models](https://ai.google.dev/gemini-api/docs/models)
     - Optional: Configure the _Model Aliases_  
-      Theia prodives a default list for the model aliases. If you are fine with the default, you can skip this setting.
+      Theia provides default model aliases. If their model assignments suit your setup, you can skip this step.
       - Select _Model Aliases_ in the tree view on the left
       - For every model alias select the model that you configured and want to use
 
-Since version 1.68.0 Theia also supports a [GitHub Copilot language model integration](https://github.com/eclipse-theia/theia/pull/16841).
-To try it out, you need to authenticate with GitHub
+Since version 1.68.0, Theia also supports a [GitHub Copilot language model integration](https://github.com/eclipse-theia/theia/pull/16841).
+To try it out, you need to authenticate with GitHub:
 
 - Click on _Sign in to GitHub Copilot_ in the footer of the Theia application  
   <img src="images/theia_copilot_footer.png"/>
@@ -329,17 +333,17 @@ To try it out, you need to authenticate with GitHub
 - After successful authentication, you can select a Copilot model as _Model Alias_, e.g. `copilot/gpt-4o`
 
 _**Note:**_  
-At the time of writing this article, the only Copilot models that are working in Theia are `gpt-4o` and `gpt-4o-mini`. Using other models results in the following issue: [AI Chat with GitHub Copilot fails with: 400 The requested model is not supported](https://github.com/eclipse-theia/theia-ide/issues/675). With Theia 1.76.0 the Copilot integration in Theia is changed to use Copilot CLI for the integration via [PR 17919](https://github.com/eclipse-theia/theia/pull/17919). With this change all available models work.
+With the earlier Copilot integration, only `gpt-4o` and `gpt-4o-mini` worked in my tests. Other models produced the error described in [AI Chat with GitHub Copilot fails with: 400 The requested model is not supported](https://github.com/eclipse-theia/theia-ide/issues/675). Theia 1.76.0 switches the integration to Copilot CLI via [PR 17919](https://github.com/eclipse-theia/theia/pull/17919), addressing this limitation. Model availability still depends on your Copilot account and configuration.
 
 ### MCP Server Configuration
 
-To set up the example process like in Visual Studio Code to retrieve a list of publications from a GitHub Gist and then fetch the data for further processing, we need to configure the necessary MCP server. This is again the _GitHub MCP Server_ with the _gists_ toolset enabled, and the _fetch MCP Server_ as Theia does not provide a built-in fetch tool.
+To reproduce the Visual Studio Code workflow, we need tools to retrieve the publication list from a GitHub Gist and fetch the blog posts. For this example, we configure the _GitHub MCP Server_ with the _gists_ toolset enabled and the _Fetcher MCP Server_ for fetching web pages independently of the selected model provider.
 
 _**Note:**_  
 The [Fetch MCP Server](https://github.com/modelcontextprotocol/servers/tree/main/src/fetch) is not provided as a remote server anymore. You can configure it as a local MCP server, but it uses [Readability](https://github.com/mozilla/readability) and I faced a lot of issues when using it. I therefore decided to use the [Fetcher MCP Server](https://github.com/jae-jae/fetcher-mcp) for the following examples.
 
 _**Note:**_  
-With the issue [Support provider-native server-side tools](https://github.com/eclipse-theia/theia/issues/17637) and the corresponding PR [feat(ai): support provider-native server-side tools](https://github.com/eclipse-theia/theia/pull/17707) the support for server-side tools like `web_fetch` from Anthropic is supported since Theia 1.73.0. In case other LLMs than Anthropic or Gemini are used, you still need a MCP server that provides tools for fetching web pages.
+Theia 1.73.0 added support for provider-native server-side tools, such as Anthropic's `web_fetch`, through [PR 17707](https://github.com/eclipse-theia/theia/pull/17707), addressing [Support provider-native server-side tools](https://github.com/eclipse-theia/theia/issues/17637). If your selected provider and model do not offer a suitable fetching tool, use an MCP server that provides one.
 
 - Open the _AI Configuration_ view by pressing **ALT** + **A** or click on the gear icon in the bottom left corner and select _AI Configuration_ from the menu
   - Select _MCP Servers_ from the tree view on the left
@@ -383,7 +387,7 @@ With the issue [Support provider-native server-side tools](https://github.com/ec
 
     <img src="images/theia_mcp_add_github.png"/>
 
-- Instead of configuring everything via user interface, you can also directly paste one of the following configurations directly in the settings JSON
+- Instead of configuring everything through the user interface, you can merge the following configuration into your settings JSON
   - Switch to the JSON view of the settings by clicking the curly braces on the upper right corner of the editor (_Open Settings (JSON)_)
   - Alternatively use the _Command Palette_ (F1) and search for _Preferences: Open Settings (JSON)_
   - Copy the following snippet and paste it in the editor
@@ -432,7 +436,7 @@ With the issue [Support provider-native server-side tools](https://github.com/ec
     ```
   - Replace `<your-api-key>` with your Google AI Studio AI key and `<your-github-pat>` with your PAT.
 
-After performing the above steps, you should see the two MCP servers in the overview and they should directly be _Connected_ as the servers are configured to autostart.
+After these steps, both MCP servers should appear in the overview. With the local configuration above, they should connect automatically. If you chose the remote Docker variant with `autostart: false`, start that connection manually after starting the container.
 
 ### Single Agent
 
@@ -441,13 +445,12 @@ We again first create a single _Custom Agent_ that performs all steps itself. Th
 - Create a new _Custom Agent_ that executes the previously described process to provide the user with a collection of links for a specific topic.
   - Open the _AI Configuration_ view by pressing **ALT** + **A** or click on the gear icon in the bottom left corner and select _AI Configuration_ from the menu
   - Select _Agents_ from the tree view on the left
-  - Scroll down in the right content area and click on **Add Custom Agent**
-  - Click on **Add Custom Agent**  
+  - Scroll down in the right content area and click on **Add Custom Agent**  
     <img src="images/theia_add_custom_agent.png"/>
   - If asked, select the workspace _.agents/agents_ folder as location for the new agent
     - Other possible options would be the _.prompts/agents_ folder in the workspace or the folder _~/.theia/prompt-templates/agents_ in the user home directory.
   - Enter the name _Research_
-  - Verify that a _.agents/agents/Research_ folder is generated in your workspace that contains a _agent.md_ file
+  - Verify that an _.agents/agents/Research_ folder is generated in your workspace containing an _agent.md_ file
   - Define a custom agent by defining the prompt and the following information in the frontmatter YAML
     - _name_: The display name of the agent.
     - _description_: A brief explanation of what the agent does.
@@ -476,7 +479,7 @@ We again first create a single _Custom Agent_ that performs all steps itself. Th
   7. Provide a collection of the extracted filtered links ordered by the blog post they are mentioned in. Use the anchor text as the name of the link if available. If the anchor text is not available, use the URL as the name of the link. Order them alphabetically by the name of the link.
   ```
 
-  Compared to a custom agent in Visual Studio Code, we do not need to configure which tools we want to use in the prompt. They can simply be referenced in the prompt via `~<tool-name>`.
+  Unlike in Visual Studio Code, tools do not need to be listed in a separate frontmatter field. Reference them directly in the prompt using `~{tool-name}`.
 
 - Use the _Custom Agent_ `Research` by selecting it in the chat prompt via `@` syntax and add the prompt to execute, for example `@Research show links about theia`.  
   <img src="images/theia_select_custom_agent_research.png"/>
@@ -486,7 +489,7 @@ Theia does not yet support context window monitoring like Visual Studio Code, so
 <img src="images/theia_token_single.png"/>
 
 _**Note:**_  
-The token counts reported for Gemini models are incorrect in Theia 1.69.0 and again in Theia 1.75.0. I created the ticket [Token usage shows incorrect values for Gemini models](https://github.com/eclipse-theia/theia/issues/17165) and submitted a pull request that fixes this issue.
+The token counts reported for Gemini models are incorrect in Theia 1.69.0 and again in Theia 1.75.0. I created the tickets [Token usage shows incorrect values for Gemini models](https://github.com/eclipse-theia/theia/issues/17165) and [Regression: Token usage shows incorrect values for Gemini models](https://github.com/eclipse-theia/theia/issues/17983) and submitted pull requests that fix this issue. The screenshot above shows token usage with the fix applied for a fair comparison.
 
 Token usage is not persisted and is reset when restarting the application. To get a better comparison, I restart after each example.
 
@@ -497,13 +500,12 @@ Theia does not provide a feature like the [Handoffs](https://code.visualstudio.c
 - One agent to get the information from a gist to find the blog posts
 - One agent to extract the links from the found blog posts
 
-In Eclipse Theia, multiple [Custom Agents](https://theia-ide.org/docs/user_ai/#custom-agents) are configured in a single custom agent configuration file. We therefore add the new agents to the previously created _customAgents.yml_.
+As in the previous section, each [Custom Agent](https://theia-ide.org/docs/user_ai/#custom-agents) is defined in its own _agent.md_ file under _.agents/agents/<agent-name>_. We now create definitions for `Link_Extractor` and `Gists`.
 
 - Create a new `Link_Extractor` agent.
   - Open the _AI Configuration_ view by pressing **ALT** + **A** or click on the gear icon in the bottom left corner and select _AI Configuration_ from the menu
   - Select _Agents_ from the tree view on the left
-  - Scroll down in the right content area and click on **Add Custom Agent**
-  - Click on **Add Custom Agent**  
+  - Scroll down in the right content area and click on **Add Custom Agent**  
     <img src="images/theia_add_custom_agent.png"/>
   - If asked, select the workspace _.agents/agents_ folder
   - Enter the name _Link_Extractor_
@@ -524,7 +526,7 @@ In Eclipse Theia, multiple [Custom Agents](https://theia-ide.org/docs/user_ai/#c
   To provide the necessary links execute the following steps:
 
   1. Iterate over the list of provided blog posts
-  2. Use ~{mcp_fetcher-mcp_fetch_url} to fetch the content of the gist with a max-length parameter of 100000. If there is an error on fetching the content, try to install a browser via ~{mcp_fetcher-mcp_browser_install} first and then retry once.
+  2. Use ~{mcp_fetcher-mcp_fetch_url} to fetch the content of the blog post with a max-length parameter of 100000. If there is an error on fetching the content, try to install a browser via ~{mcp_fetcher-mcp_browser_install} first and then retry once.
   3. Collect all links that are mentioned in the blog post and relevant for the topic.
   4. Filter out duplicate links and links that are not relevant for the topic. Relevance can be determined by the presence of keywords related to the topic in the context of the link.
   5. Provide a collection of the extracted filtered links ordered by the blog post they are mentioned in. Use the anchor text as the name of the link if available. If the anchor text is not available, use the URL as the name of the link. Order them alphabetically by the name of the link.
@@ -533,8 +535,7 @@ In Eclipse Theia, multiple [Custom Agents](https://theia-ide.org/docs/user_ai/#c
 - Add a new `Gists` agent
   - Open the _AI Configuration_ view by pressing **ALT** + **A** or click on the gear icon in the bottom left corner and select _AI Configuration_ from the menu
   - Select _Agents_ from the tree view on the left
-  - Scroll down in the right content area and click on **Add Custom Agent**
-  - Click on **Add Custom Agent**  
+  - Scroll down in the right content area and click on **Add Custom Agent**  
     <img src="images/theia_add_custom_agent.png"/>
   - If asked, select the workspace _.agents/agents_ folder
   - Enter the name _Gists_
@@ -574,12 +575,11 @@ Theia does not yet support context window monitoring like Visual Studio Code, so
 <img src="images/theia_token_delegate.png"/>
 
 _**Note:**_  
-The token counts reported for Gemini models are incorrect in Theia 1.69.0 and again in Theia 1.75.0. I created the ticket [Token usage shows incorrect values for Gemini models](https://github.com/eclipse-theia/theia/issues/17165) and submitted a pull request that fixes this issue. The screenshot above shows token usage with the fix applied for a fair comparison.
+The token counts reported for Gemini models are incorrect in Theia 1.69.0 and again in Theia 1.75.0. I created the tickets [Token usage shows incorrect values for Gemini models](https://github.com/eclipse-theia/theia/issues/17165) and [Regression: Token usage shows incorrect values for Gemini models](https://github.com/eclipse-theia/theia/issues/17983) and submitted pull requests that fix this issue. The screenshot above shows token usage with the fix applied for a fair comparison.
 
-Interestingly, token usage for the _Delegate Pattern_ in Theia is slightly higher compared to the single-agent solution.
-It is also interesting that the _Delegate Pattern_ is not exactly the same as in Visual Studio Code via _Handoffs_. It seems that _Agent-to-Agent Delegation_ is similar to _Subagents_ in Visual Studio Code, at least based on the chat output.
+In these runs, token usage with `delegateToAgent` is slightly higher than with the single-agent solution. Despite its name, _Agent-to-Agent Delegation_ uses a child session rather than switching the active agent. It is therefore a sequential form of the coordinator-worker pattern, not the same mechanism as Visual Studio Code's _Handoffs_.
 
-At the time of writing this blog post, Theia does not support an automatic _Handoff_ similar to Visual Studio Code. But you can try to simulate this manually.
+At the time of writing, Theia does not provide a configured _Handoff_ button like Visual Studio Code. To approximate that user-guided flow, you can switch agents manually within the conversation.
 
 - Update the `Gists` agent
   - Remove the last step that passes the processing to the `Link_Extractor` agent
@@ -613,11 +613,11 @@ As a result of manually changing the active agent, `Link_Extractor` is now the a
 
 <img src="images/theia_token_delegate_manually.png"/>
 
-The token usage increased as the whole conversation is passed to the next agent as context, and the token usage is accumulated over the whole session. Therefore the _Input Tokens_ and the _Output Tokens_ are higher than compared to using the _Agent-to-Agent Delegation_ with an isolated context or the _Single Agent_, where only a single request is processed.
+In this run, token usage increased when switching agents manually. The next agent receives the existing conversation as context, and the reported token usage accumulates across both stages. The _Input Tokens_ and _Output Tokens_ were higher than with isolated _Agent-to-Agent Delegation_ or the _Single Agent_ workflow. A single-agent workflow can still involve multiple model requests as it calls tools; it is not necessarily a single LLM request.
 
 ### Coordinator and Worker Pattern
 
-In Eclipse Theia, you implement the _Coordinator and Worker Pattern_ by using _Subagents_ via the built-in _Tool Function_ `delegateToAgent`. Using a subagent means spawning a child agent within a session to handle a subtask in its own isolated context window. This can be seen in the [`delegateToAgent` implementation](https://github.com/eclipse-theia/theia/blob/master/packages/ai-chat/src/browser/agent-delegation-tool.ts). From a pattern perspective, this means there is a main coordinator agent that manages the overall task and delegates subtasks to specialized subagents. Each subagent call is sequential (the coordinator waits for that call to return), but the coordinator can spawn multiple subagent calls in parallel.
+In Eclipse Theia, you implement the _Coordinator and Worker Pattern_ with the same built-in _Tool Function_, `delegateToAgent`. Each worker handles its subtask in a separate child session, as shown in the [`delegateToAgent` implementation](https://github.com/eclipse-theia/theia/blob/master/packages/ai-chat/src/browser/agent-delegation-tool.ts). The difference from the previous example is the workflow structure: a dedicated coordinator now delegates both publication discovery and link extraction. Dependent tasks run in sequence, while independent worker calls can run in parallel if the model and runtime support it.
 
 In this section, the previously created agents are converted into coordinator and worker agents.
 
@@ -684,7 +684,7 @@ In this section, the previously created agents are converted into coordinator an
 
     To provide the necessary links execute the following steps:
 
-    1. Use ~{mcp_fetcher-mcp_fetch_url} to fetch the content of the gist with a max-length parameter of 100000. If there is an error on fetching the content, try to install a browser via ~{mcp_fetcher-mcp_browser_install} first and then retry once.
+    1. Use ~{mcp_fetcher-mcp_fetch_url} to fetch the content of the blog post with a max-length parameter of 100000. If there is an error on fetching the content, try to install a browser via ~{mcp_fetcher-mcp_browser_install} first and then retry once.
     2. Collect all links that are mentioned in the blog post and relevant for the topic.
     3. Filter out duplicate links and links that are not relevant for the topic. Relevance can be determined by the presence of keywords related to the topic in the context of the link.
     4. Provide a collection of the extracted filtered links ordered by the blog post they are mentioned in. Use the anchor text as the name of the link if available. If the anchor text is not available, use the URL as the name of the link. Order them alphabetically by the name of the link.
@@ -693,7 +693,7 @@ In this section, the previously created agents are converted into coordinator an
 - Use the _Custom Agent_ `Research` by selecting it in the chat prompt via `@` syntax and add the prompt to execute, for example `@Research show links about theia`.  
   <img src="images/theia_select_custom_agent_research.png"/>
 
-I noticed that it depends on the model used whether subagent calls are executed sequentially or in parallel. For example, with _gemini-3.1-flash-lite-preview_ in the free tier, the `delegateToAgent` tool calls were executed sequentially. When executing the same workflow with _gpt-5.4_, the calls were executed in parallel, as you can see in the following screenshot:
+In separate runs to compare scheduling behavior, I noticed that the model affected whether subagent calls ran sequentially or in parallel. With _gemini-3.5-flash-lite_ in the free tier, the `delegateToAgent` calls ran sequentially. With _gpt-5.6-luna_, the independent extraction calls ran in parallel, as shown in the following screenshot. These runs used different models from the token-usage comparison below. Probably this is an issue in the language model implementation in Theia, which I reported via [Subagent execution inconsistent dependent on selected model](https://github.com/eclipse-theia/theia/issues/17996).
 
 <img src="images/theia_coordinate_response.png"/>
 
@@ -702,16 +702,306 @@ Theia does not yet support context window monitoring like Visual Studio Code, so
 <img src="images/theia_token_coordinate.png"/>
 
 _**Note:**_  
-The token counts reported for Gemini models are incorrect in Theia 1.69.0 and again in Theia 1.75.0. I created the ticket [Token usage shows incorrect values for Gemini models](https://github.com/eclipse-theia/theia/issues/17165) and submitted a pull request that fixes this issue. The screenshot above shows token usage with the fix applied for a fair comparison.
+The token counts reported for Gemini models are incorrect in Theia 1.69.0 and again in Theia 1.75.0. I created the tickets [Token usage shows incorrect values for Gemini models](https://github.com/eclipse-theia/theia/issues/17165) and [Regression: Token usage shows incorrect values for Gemini models](https://github.com/eclipse-theia/theia/issues/17983) and submitted pull requests that fix this issue. The screenshot above shows token usage with the fix applied for a fair comparison.
 
-Interestingly, token usage for the _Coordinator and Worker Pattern_ in Theia uses fewer tokens than the _Delegate Pattern_ but still slightly more than the single-agent solution.
+In these runs, the _Coordinator and Worker Pattern_ in Theia consumed fewer tokens than the earlier delegation workflow, but still slightly more than the single-agent solution.
+
+## Claude Code
+
+In the following sections, I describe how to create _Custom Agents_ in Claude Code and compare the different orchestration patterns.
+
+### GitHub MCP Server
+
+To retrieve a list of publications from a GitHub Gist, configure the _GitHub MCP Server_ with the _gists_ toolset enabled, as in Visual Studio Code and Eclipse Theia.
+
+MCP servers can be configured at the project level in _.mcp.json_ in the project root, or at the user level in _~/.claude.json_. The following example uses an environment variable for authentication. Set `GITHUB_TOKEN` in the environment before starting Claude Code; do not replace it with a token committed to version control.
+
+```json
+{
+  "mcpServers": {
+    "github": {
+      "type": "http",
+      "url": "https://api.githubcopilot.com/mcp/",
+      "headers": {
+        "Authorization": "Bearer ${GITHUB_TOKEN}",
+        "X-MCP-Toolsets": "gists"
+      }
+    }
+  }
+}
+```
+
+Claude Code provides the built-in [WebFetch tool](https://code.claude.com/docs/en/tools-reference#webfetch-tool-behavior), so these examples do not need a separate fetch MCP server. This is distinct from the Claude API's [server-side web fetch tool](https://platform.claude.com/docs/en/agents-and-tools/tool-use/web-fetch-tool). `WebFetch` accepts a URL and an extraction prompt, processes the page with a smaller model, and usually returns extracted content rather than the raw page. Ask it explicitly to preserve relevant URLs and anchor text.
+
+If `WebFetch` is unavailable in your environment, and your organization's policy permits it, you can configure the [Fetcher MCP Server](https://github.com/jae-jae/fetcher-mcp) instead. Merge this entry into the same `mcpServers` object and replace the `WebFetch` references and tool permissions in the examples with the corresponding MCP tools.
+
+```json
+{
+  "mcpServers": {
+    "fetcher-mcp": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "fetcher-mcp"]
+    }
+  }
+}
+```
+
+Further details can be found in [Claude Code Docs | MCP servers](https://code.claude.com/docs/en/mcp).
+
+### Single Agent
+
+We first create a single _Custom Agent_ that performs all workflow steps itself. This agent will then be split to explain the orchestration patterns.
+
+- Create a new _Custom Agent_ that collects links about a specific topic. Here, I create the agent file manually.
+  - Create the folder _.claude/agents_ in the project workspace if there is no such folder already
+  - Create a new file _.claude/agents/blog\_links.md_
+
+  - Add `WebFetch` and the `mcp__github__list_gists` tool
+  - Add a prompt that defines the steps to process
+  - The following snippet shows how such an agent could look like
+
+  ```markdown
+  ---
+  name: blog_links
+  description: "This agent provides a collection of links for a specific topic."
+  tools: WebFetch, mcp__github__list_gists
+  ---
+
+  You are an agent that helps the developer by extracting and providing links mentioned in blog posts.
+
+  To provide the necessary links execute the following steps:
+
+  1. Fetch the publications of Dirk Fauth in the gists of the user fipro78. Use mcp__github__list_gists to find the correct gist.
+  2. Use WebFetch to fetch the content of the gist with a max-length parameter of 100000.
+  3. Filter the fetched content for links about the requested information.
+  4. For every found blog post, use WebFetch to fetch the content of the given blog post with a max-length parameter of 100000.
+  5. Collect all links that are mentioned in the blog post and relevant for the topic.
+  6. Filter out duplicate links and links that are not relevant for the topic. Relevance can be determined by the presence of keywords related to the topic in the context of the link.
+  7. Provide a collection of the extracted filtered links ordered by the blog post they are mentioned in. Use the anchor text as the name of the link if available. If the anchor text is not available, use the URL as the name of the link. Order them alphabetically by the name of the link.
+  ```
+
+  _**Note:**_  
+  I use the name `blog_links` to distinguish this example from other research agents. Choose a unique name in your setup.
+
+  Further details about Agents in Claude Code can be found in [Claude Code Docs | Agents](https://code.claude.com/docs/en/sub-agents).
+
+  _**Hint:**_  
+  Depending on your permission mode and settings, `WebFetch` asks for approval before accessing a URL. Approval controls access; it does not guarantee that the fetched content is safe.
+  The example prompts fetch my publication gist and blog posts published at [https://vogella.com/blog/](https://vogella.com/blog/). If you trust these sources (at least I do :smile:), add the following [permissions](https://code.claude.com/docs/en/permissions) to _.claude/settings.json_ to reduce approval prompts. This also allows `mcp__github__list_gists` and enables the project-level `github` MCP server.
+
+  ```json
+  {
+    "permissions": {
+      "allow": [
+        "mcp__github__list_gists",
+        "WebFetch(domain:gist.githubusercontent.com)",
+        "WebFetch(domain:vogella.com)"
+      ]
+    },
+    "enabledMcpjsonServers": [
+      "github"
+    ]
+  }
+  ```
+
+- Test the _Custom Agent_ `blog_links`
+  - Start Claude Code CLI by typing `claude` in a terminal
+  - Type `@`, select the _Custom Agent_ `blog_links` from the suggestions, and enter a request such as `show links about visual studio code`.  
+    <img src="images/claude_select_custom_agent_blog_links.png"/>
+
+    _**Note:**_  
+    The permissions above should reduce prompts for the listed tools and domains. Redirects, other domains, or organization policies may still require approval.
+
+An `@` mention invokes the custom agent as a subagent of the main conversation; it does not switch the main session's agent. Here, _Single Agent_ means that one custom agent performs all research steps, even though Claude Code wraps that invocation in its main conversation. To run the custom agent as the main session instead, start Claude Code with `claude --agent blog_links`. Keep this distinction in mind when comparing context usage across platforms.
+
+After the agent finishes, use `/usage` to [inspect token usage and estimated costs](https://code.claude.com/docs/en/costs#track-your-costs), and `/context` to inspect the current conversation's context usage. The displayed API cost estimate is not necessarily the amount billed under a subscription. See [See Token Usage in Claude Code: /usage, /stats and How Many Tokens You Have Left](https://wmedia.es/en/tips/claude-code-track-usage-stats-dashboard) for additional background.
+The following screenshots show `/usage` and `/context` after this run. Results can vary between runs.
+
+<img src="images/claude_usage_single.png"/>  
+<img src="images/claude_context_single.png"/>
+
+### Delegate Pattern
+
+Claude Code does not provide a feature like the [Handoffs](https://code.visualstudio.com/docs/copilot/customization/custom-agents#_handoffs) in Visual Studio Code. In fact, you cannot switch the main session's agent; you can only invoke a custom agent as a subagent of the main conversation. You can chain subagents automatically by instructing the agent to do so, but this still executes in a subagent rather than switching the main session's agent.
+
+To illustrate this sequence, we split the previous _blog\_links_ agent into two _Custom Agents_, one per task:
+
+- One agent to get the information from a gist to find the blog posts
+- One agent to extract the links from the found blog posts
+
+- Create a new _Custom Agent_ that extracts links from the text of a given blog post.
+  - Create a new file _.claude/agents/link\_extractor.md_
+  - Add the built-in `WebFetch` tool
+  - Add a prompt that defines the steps to process
+  - The following snippet shows how such an agent could look like
+
+  ```markdown
+  ---
+  name: link_extractor
+  description: "This agent provides a list of links extracted from blog posts."
+  tools: WebFetch
+  ---
+
+  You are an agent that helps the developer by extracting links that are mentioned in a blog post and providing them in a structured format.
+
+  To provide the necessary links execute the following steps:
+
+  1. Use WebFetch to fetch the content of the given blog post.
+  2. Collect all links that are mentioned in the blog post and relevant for the topic.
+  3. Filter out duplicate links and links that are not relevant for the topic. Relevance can be determined by the presence of keywords related to the topic in the context of the link.
+  4. Return the list of links with their corresponding anchor text if available. If the anchor text is not available, return the URL as the anchor text.
+  5. Provide a collection of the extracted links ordered by the blog post they are mentioned in. Use the anchor text as the name of the link if available. If the anchor text is not available, use the URL as the name of the link. Order them alphabetically by the name of the link.
+  ```
+
+- Create a new _Custom Agent_ that is able to retrieve information from a _gist_.
+  - Create a new file _.claude/agents/gists.md_
+  - Add `WebFetch` and the `mcp__github__list_gists` tool to retrieve the information from the gist
+  - Add the `Agent` tool to be able to delegate a task to a subagent
+  - Add a prompt that defines the steps to process
+  - At the end of the process forward the processing to the `link_extractor` and finally show the results of that subagent
+  - The following snippet shows how such an agent could look like
+
+  ```markdown
+  ---
+  name: gists
+  description: "This agent provides a list of links to blog posts from a GitHub Gist."
+  tools: WebFetch, mcp__github__list_gists, Agent
+  ---
+
+  You are an agent that helps the developer by providing links to blog posts.
+
+  To provide the necessary links execute the following steps:
+
+  1. Fetch the publications of Dirk Fauth in the gists of the user fipro78. Use mcp__github__list_gists to find the correct gist.
+  2. Use WebFetch to fetch the content of the gist.
+  3. Filter the fetched content for links about the requested information.
+  4. Provide a list of links to the relevant blog posts.
+  5. Forward the list of links to the link_extractor subagent
+  6. Show the result of the link_extractor subagent
+  ```
+
+- Test the _Custom Agents_ `gists`
+  - Start Claude Code CLI by typing `claude` in a terminal
+  - Type `@`, select `gists` from the suggestions, and enter `show links about visual studio code`.  
+    <img src="images/claude_select_custom_agent_gists.png"/>
+
+    _**Note:**_  
+    The permissions above should reduce prompts for the listed tools and domains. Other requests may still require approval.
+
+While the processing is ongoing, you will notice that there is the `gists` subagent that is spawned from the main session, and at some point the `link_extractor` agent is spawned as a subagent from the `gists` agent.
+
+<img src="images/claude_delegate.png"/>  
+
+After the agent finishes, inspect `/usage` and `/context` again. The following screenshots show the results for this run; the usage totals cover both stages.
+
+<img src="images/claude_usage_delegate.png"/>  
+<img src="images/claude_context_delegate.png"/>
+
+The above agent setup is not a handoff in terms of switching the main session's agent. Actually it is more like the _Coordinator and Worker Pattern_ that is using subagents, which is shown in the next section. To process the _Delegate Pattern_ similar to the Visual Studio Code Handoffs, we can change the `gists` agent to not forward the processing automatically, and instead trigger it manually.
+
+- Change the `gists` agent
+  - Remove the `Agent` tool
+  - Remove the steps to forward the processing to the `link_extractor` and processing its results
+  - The following snippet shows how such an agent could look like
+
+  ```markdown
+  ---
+  name: gists
+  description: "This agent provides a list of links to blog posts from a GitHub Gist."
+  tools: WebFetch, mcp__github__list_gists
+  ---
+
+  You are an agent that helps the developer by providing links to blog posts.
+
+  To provide the necessary links execute the following steps:
+
+  1. Fetch the publications of Dirk Fauth in the gists of the user fipro78. Use mcp__github__list_gists to find the correct gist.
+  2. Use WebFetch to fetch the content of the gist.
+  3. Filter the fetched content for links about the requested information.
+  4. Provide a list of links to the relevant blog posts.
+  ```
+
+- Test the _Custom Agents_ `gists` and `link_extractor`
+  - Start Claude Code CLI by typing `claude` in a terminal
+  - Type `@`, select `gists` from the suggestions, and enter `show links about visual studio code`.  
+    <img src="images/claude_select_custom_agent_gists.png"/>
+
+    _**Note:**_  
+    The permissions above should reduce prompts for the listed tools and domains. Other requests may still require approval.
+  - Once `gists` finishes, select `link_extractor` through `@` and enter `fetch the previously found blog posts and extract links about visual studio code`.  
+    <img src="images/claude_select_custom_agent_link_extractor.png"/>
+
+After both stages finish, inspect `/usage` and `/context` again. The following screenshots show the results for this run; the usage totals cover both stages.
+
+<img src="images/claude_usage_delegate_manually.png"/>  
+<img src="images/claude_context_delegate_manually.png"/>
+
+### Coordinator and Worker Pattern
+
+In Claude Code, you implement the _Coordinator and Worker Pattern_ with [Subagents](https://code.claude.com/docs/en/sub-agents) and the `Agent` tool. Each worker handles a focused task in a separate context and returns its result to the coordinator. Foreground calls return their results directly; background tasks deliver completion notifications. Dependent tasks must wait for earlier results, while independent calls can run in parallel.
+
+In this section, the previously created agents are converted into coordinator and worker agents.
+
+- Open the file _.claude/agents/blog\_links.md_
+- Add the `Agent` tool to be able to delegate a task to a subagent
+- Remove the other tools as they are needed by the subagents, not the coordinator anymore
+- Update the prompt to forward the tasks to subagents by naming them in natural language
+- The following snippet shows how such an agent could look like
+
+  ```markdown
+  ---
+  name: blog_links
+  description: "This agent provides a collection of links for a specific topic."
+  tools: Agent
+  ---
+
+  You are an agent that helps the developer by providing links to blog posts about a specific topic.
+  To provide the necessary links use subagents to execute the following steps:
+
+  1. Use the gists subagent to fetch a collection of blog posts about the specific topic.
+  2. For each of the found blog posts use the link_extractor subagent to fetch the content of the blog post and extract all links that are mentioned in the blog post.
+  3. Show the combined result of all extracted links.
+  ```
+
+- The `gists` and `link_extractor` agents do not need to be modified because their prompts already instruct them to return results. Ensure to use the `gists` agent definition for manual delegation as otherwise it will output the results itself and not return them to the coordinator. The extractor accepts either a single post or a list; here it receives one post per call.
+
+_**Note:**_  
+Claude Code uses the case-sensitive tool name `Agent`, not Visual Studio Code's `agent` tool set, and does not use the `agents` frontmatter field shown in the Visual Studio Code example. To run `blog_links` as the main coordinator, start a session with `claude --agent blog_links`. In that mode, you can restrict the workers with `tools: ["Agent(gists, link_extractor)", Read]`. Invoking the coordinator through `@` instead requires a Claude Code version and configuration that allow nested subagents; see [subagent nesting](https://code.claude.com/docs/en/sub-agents#let-subagents-spawn-their-own-subagents).
+
+- In a session started with `claude --agent blog_links`, enter `show links about visual studio code`. Alternatively, select `blog_links` through `@` in a default session with nested subagents enabled, as in the screenshot.  
+  <img src="images/claude_select_custom_agent_blog_links.png"/>
+
+  _**Note:**_  
+  The permissions above should reduce prompts for the listed tools and domains. Other requests may still require approval.
+
+When watching the execution, you should notice that:
+
+- The `blog_links` agent coordinates the workflow rather than fetching the posts itself
+- It waits for `gists` to return the publication list before starting extraction
+- It calls `link_extractor` once per post and combines the results before producing the final response. Independent extraction calls can run in parallel, depending on the model and runtime
+
+<img src="images/claude_subagents.png"/>
+
+After the workflow finishes, inspect `/usage` and `/context` again. The context display describes the current conversation, not the sum of every worker's context. The following screenshots show the results for this run.
+
+<img src="images/claude_usage_subagents.png"/>  
+<img src="images/claude_context_subagents.png"/>
+
+The Claude Code screenshots report estimated session costs of $0.63 for the single-agent workflow, $0.65 for the manually sequenced workflow, and $0.61 for the coordinator-worker workflow. These differences are small. The reports include both Sonnet and Haiku usage, as well as cache reads and writes, so input and output token counts alone do not explain the total cost. These individual runs illustrate the trade-offs, but do not establish a consistently cheaper pattern.
 
 ## Conclusion
 
-There is no single "best" orchestration pattern for every scenario. The right choice depends on whether your priority is simplicity, reuse, user guidance, or token efficiency.
+There is no single "best" orchestration pattern for every scenario. The right choice depends on whether your priority is simplicity, reuse, user guidance, context isolation, execution time, or cost.
 
-For quick implementations and straightforward tasks, a single agent is often the easiest and most reliable option. If you want to split responsibilities into reusable building blocks and keep a guided user flow, delegation is a good fit. If you need better context isolation and potentially lower token usage for larger workflows, a coordinator with specialized worker subagents is usually the strongest approach.
+For straightforward tasks, a single agent is often the easiest starting point. If you want reusable specialists and explicit review points between stages, a guided delegation workflow is a good fit. For larger tasks with independent subtasks or substantial intermediate output, a coordinator with specialized workers can keep the coordinator's context focused and enable parallel processing. That does not automatically reduce total token usage or cost: every worker has its own overhead.
 
-The key takeaway is to treat orchestration as an architectural decision, not just a prompt-writing detail. In Visual Studio Code, the selected orchestration pattern can have a clear impact on token usage, while in Eclipse Theia the impact is almost negligible in this scenario. Start with the simplest setup that works, measure behavior and token usage with your target model, and then evolve toward delegation or coordinator-worker designs when your workflow grows in complexity.
+The three platforms expose these patterns differently:
 
-As agent tooling in Visual Studio Code and Eclipse Theia continues to evolve, these patterns will likely become even more powerful. Revisit your agent design regularly to benefit from new capabilities and improved model behavior.
+- **Visual Studio Code** provides explicit _Handoffs_ for user-guided transitions within the same conversation, and _Subagents_ for work in isolated contexts. In the runs shown here, subagents reduced the coordinator's context usage but increased the reported token costs.
+- **Eclipse Theia** uses `delegateToAgent` for child-agent execution. Both the sequential delegation example and the coordinator-worker example use this mechanism; manually switching agents within the conversation is a different workflow. The token differences between the automated patterns were relatively small in this example.
+- **Claude Code** uses the `Agent` tool for subagent orchestration. Manually requesting one agent after another provides review points, while a coordinator automates the sequence and can parallelize extraction. An `@` invocation delegates a task rather than switching the main session's agent. The reported costs were close across all three runs, with the coordinator-worker run slightly cheaper; caching and model selection make it important not to generalize from that result.
+
+The key takeaway is to treat orchestration as an architectural decision, not just a prompt-writing detail. Measure context usage, total tokens, estimated cost, execution time, and result quality separately. For a meaningful comparison, keep the topic, source posts, model configuration, and starting conditions as consistent as possible, and repeat the runs. Start with the simplest setup that works, then introduce delegation or coordinator-worker designs when the workflow benefits from them.
+
+As agent tooling in Visual Studio Code, Eclipse Theia, and Claude Code evolves, revisit both your agent definitions and your measurements. New capabilities, changes in model behavior, and runtime updates can alter which pattern works best.
