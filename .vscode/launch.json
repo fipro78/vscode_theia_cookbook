@@ -36,6 +36,17 @@
       "postDebugTask": "Terminate Tasks"
     },
     {
+      "name": "Run VSCode Extension",
+      "type": "extensionHost",
+      "request": "launch",
+      "args": [
+        "--extensionDevelopmentPath=${workspaceFolder}/vscode-extension"
+      ],
+      "outFiles": ["${workspaceFolder}/vscode-extension/out/**/*.js"],
+      "preLaunchTask": "VS Code Extension Watch",
+      "postDebugTask": "Terminate Tasks"
+    },
+    {
       "name": "ng serve",
       "type": "chrome",
       "request": "launch",
