@@ -11,7 +11,7 @@ This skill is designed to extract links from blog posts written by Dirk Fauth ab
 
 1. **Define the Extraction Goal**: Identify the specific information to be extracted (e.g., links to blog posts about VSCode or Theia).
 2. **Blog Collection**: Fetch a list of relevant blog posts from a specified data source (e.g., GitHub gists).
-3. **Link Extraction**: Create one new dynamic extraction subagent for each found blog post and run all extraction subagents in parallel. Each subagent extracts and filters links for exactly one post; then aggregate their results without user interaction to provide a complete result set. Do not select, name, or reuse an existing custom agent for these extractions.
+3. **Link Extraction**: Create one new generic extraction subagent for each found blog post and run all extraction subagents in parallel. Each subagent extracts and filters links for exactly one post; then aggregate their results without user interaction to provide a complete result set. Do not select, name, or reuse an existing custom agent for these extractions.
 4. **Output**: Provide a structured list grouped by source blog post, with deterministic ordering.
 
 ## Execution Rules
@@ -20,7 +20,7 @@ This skill is designed to extract links from blog posts written by Dirk Fauth ab
 2. Use `github/list_gists` only to discover gist metadata and identify the selected file. Use `web/fetch` as the only tool for retrieving content, including the publications file and the individual blog pages. Do not use `github/get_gist`.
 3. On fetch failures, retry once. If the second attempt fails, continue with remaining items and report the skipped URL in the final output.
 4. If fetched content appears truncated, continue with `web/fetch` using its chunking or pagination mechanism. Do not use another retrieval tool or re-fetch already received content merely to process it.
-5. For every extraction subagent, create a new dynamic subagent invocation without an `agentName` or other custom-agent selection. Never use an existing custom agent for this workflow.
+5. For every extraction subagent, create a new generic subagent invocation without an `agentName` or other custom-agent selection. Never use an existing custom agent for this workflow.
 
 ## Blog Collection
 
@@ -34,7 +34,7 @@ This skill is designed to extract links from blog posts written by Dirk Fauth ab
 
 ## Link Extraction
 
-1. After the blog post list is finalized and de-duplicated, spawn exactly one new dynamic subagent per blog post. Launch all of these subagents in the same turn so the posts are processed in parallel. The invocations must omit `agentName`; do not route them to an existing custom agent.
+1. After the blog post list is finalized and de-duplicated, spawn exactly one new generic subagent per blog post. Launch all of these subagents in the same turn so the posts are processed in parallel. The invocations must omit `agentName`; do not route them to an existing custom agent.
 2. Give each subagent exactly one assigned blog post URL and the requested topic. The subagent must:
    1. Fetch the assigned blog post; if needed, continue fetching additional chunks until complete.
    2. Retry one fetch failure once. If the retry fails, return the assigned URL as skipped and do not invent links.

@@ -990,18 +990,108 @@ After the workflow finishes, inspect `/usage` and `/context` again. The context 
 
 The Claude Code screenshots report estimated session costs of $0.63 for the single-agent workflow, $0.65 for the manually sequenced workflow, and $0.61 for the coordinator-worker workflow. These differences are small. The reports include both Sonnet and Haiku usage, as well as cache reads and writes, so input and output token counts alone do not explain the total cost. These individual runs illustrate the trade-offs, but do not establish a consistently cheaper pattern.
 
+## Agent Skills
+
+Agent Skills are a lightweight, open format for extending AI agents with specialized knowledge and workflows. A skill packages instructions and can also include scripts, examples, templates, or other resources. Because the format is designed for reuse across skills-compatible agents, the same workflow can be shared instead of being rewritten for each platform's custom-agent format. Skills can also be used with a platform's default agent, for example to apply the same planning or implementation workflow without creating a dedicated custom agent.
+
+You can create an agent skill either manually or use an agent skill creator skill of the used platform, e.g. `/create-skill` in Visual Studio Code or the [Skill Creator](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/overview) from [claude-plugins-official](https://github.com/anthropics/claude-plugins-official/tree/main) that could also be used in any AI platform.
+
+Further information about _Agent Skills_:
+- [Agent Skills Overview](https://agentskills.io/home)
+- [Use Agent Skills in VS Code](https://code.visualstudio.com/docs/agent-customization/agent-skills)
+- [Adding agent skills for GitHub Copilot](https://docs.github.com/en/copilot/how-tos/copilot-on-github/customize-copilot/customize-cloud-agent/add-skills)
+- [Adding agent skills for GitHub Copilot CLI](https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/add-skills)
+- [Claude - Agent Skills](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/overview)
+
+In the following section I show how to describe _AI Agent Orchestration Patterns_ in an Agent Skill. For the tests I used _GPT-5.6 Luna_ in Visual Studio Code and _Claude Haiku 4.5_ in Claude Code. I did not use a more capable model such as _GPT-5.6 Terra_ or _Claude Sonnet 5_, because the runtimes may select a different model for subagents. This happened in some runs, making those results unsuitable for a controlled comparison.
+
+A skill that processes the blog link extraction like above looks similar to the first version of the _blog\_links_ or _research_ agent that performed the whole blog link extraction process itself. The frontmatter YAML is different, as an agent provides different options for configuration than a skill. And typically a skill is a bit more descriptive than a custom agent. To define the link extraction process like before, you could write a **Process Overview** section in the skill and define the **Link Extraction** like this:
+
+```markdown
+3. **Link Extraction**: For each blog post, extract outbound links and filter them based on relevance to the topic.
+```
+
+The following shows the _blog-extraction-skill_ that describes the blog link extraction workflow without delegating the extraction step to subagents:  
+https://github.com/fipro78/vscode_theia_cookbook/blob/f49a24effe542019779d5c20dc9cbb1453b4023e/.claude/skills/blog-link-extraction/SKILL.md?plain=1#L1-L77
+
+_**Note:**_  
+The skill describes the workflow as a sequence, but a skill does not by itself guarantee how a runtime schedules independent work. In this version, the extraction is performed by the main agent because no extraction subagents are requested. If deterministic sequential execution matters, state that requirement explicitly in the skill and verify it in the runtime's logs.
+
+In the _Agent Flow Chart_ of the _Agent Debug Logs_ of Visual Studio Code, this run appears as a simple sequence without parallel streams or forks:  
+<img src="images/copilot_agent_flow_chart_skill_sequential.png"/>
+
+In Visual Studio Code the _Context Window_ and the _Agent Debug Log Summary_ show the tokens that were consumed:  
+<img src="images/copilot_context_window_skill_sequential.png"/>
+<img src="images/copilot_debug_summary_skill_sequential.png"/>
+
+In Claude Code The `/usage` and `/context` commands show the tokens that were consumed:
+<img src="images/claude_usage_skill_sequential.png"/>
+<img src="images/claude_context_skill_sequential.png"/>
+
+
+To define in a skill that the processing should use subagents for specific tasks that should run in parallel, you can write this down in the skill.
+
+```markdown
+3. **Link Extraction**: Create one new generic extraction subagent for each found blog post and run all extraction subagents in parallel.
+```
+
+The following shows a variant of the _blog-extraction-skill_ that defines the usage of generic subagent:  
+https://github.com/fipro78/vscode_theia_cookbook/blob/f49a24effe542019779d5c20dc9cbb1453b4023e/.claude/skills/blog-link-extraction-subagent/SKILL.md?plain=1#L1-L84
+
+In the _Agent Flow Chart_ of the _Agent Debug Logs_ of Visual Studio Code you can see that the process spawns four subagents with a generic name _Subagent: GitHub Copilot Chat_:  
+<img src="images/copilot_agent_flow_chart_skill_subagents.png"/>
+
+In the Visual Studio Code run, the _Context Window_ and the _Agent Debug Log Summary_ show higher token usage than the run without subagents:  
+<img src="images/copilot_context_window_skill_subagents.png"/>
+<img src="images/copilot_debug_summary_skill_subagents.png"/>
+
+In Claude Code you can see that a _general-purpose_ agent is used as subagent for the subtasks at processing time:  
+<img src="images/claude_skill_subagents_general_purpose.png"/>
+
+The `/usage` and `/context` show no real difference to the sequential processing without subagents:
+<img src="images/claude_usage_skill_subagents.png"/>
+<img src="images/claude_context_skill_subagents.png"/>
+
+You can also define that an existing _Custom Agent_ should be used as subagent. This gives you a better structure and control about the subagent, e.g. which tools the subagent can use, but of course introduces a dependency to a custom agent. To specify that an existing _Custom Agent_ should be used, simply name it in the skill, for example
+
+```markdown
+1. **Link Extraction**: Use the `link_extractor` custom agent for each found blog post and run all extraction agents in parallel.
+```
+
+The following shows a variant of the _blog-extraction-skill_ that defines the usage of the custom agent _link\_extractor_ as subagent:  
+https://github.com/fipro78/vscode_theia_cookbook/blob/f49a24effe542019779d5c20dc9cbb1453b4023e/.claude/skills/blog-link-extraction-subagent-custom-agent/SKILL.md?plain=1#L1-L84
+
+In the _Agent Flow Chart_ of the _Agent Debug Logs_ of Visual Studio Code you can see that the process spawns four subagents, and this time the subagents are the custom agent _link\_extractor_:  
+<img src="images/copilot_agent_flow_chart_skill_subagents_custom_agent.png"/>
+
+The _Context Window_ and the _Agent Debug Log Summary_ show that slightly less tokens were consumed when using a custom agent rather than the generic one:  
+<img src="images/copilot_context_window_skill_subagents_custom_agent.png"/>
+<img src="images/copilot_debug_summary_skill_subagents_custom_agent.png"/>
+
+In Claude Code you can see that the custom agent _link\_extractor_ is used as subagent for the subtasks at processing time:  
+<img src="images/claude_skill_subagents_custom_agent.png"/>
+
+The `/usage` and `/context` show no real difference to the usage of a generic subagent:
+<img src="images/claude_usage_skill_subagents_custom_agent.png"/>
+<img src="images/claude_context_skill_subagents_custom_agent.png"/>
+
+
+For this small example, the subagent runs consumed more tokens than the run without subagents. That does not contradict the purpose of context isolation: each worker still receives its own instructions and runtime system prompt, and the coordination itself adds overhead. If the coordinator's context becomes large enough, isolating workers can still reduce the coordinator's context usage and may improve total efficiency. Whether it reduces total tokens or cost depends on the task, runtime, model selection, and amount of shared context.
+
 ## Conclusion
 
-There is no single "best" orchestration pattern for every scenario. The right choice depends on whether your priority is simplicity, reuse, user guidance, context isolation, execution time, or cost.
+There is no single "best" orchestration pattern for every scenario. The right choice depends on whether your priority is simplicity, reuse, user guidance, context isolation, execution time, result quality, or cost.
 
 For straightforward tasks, a single agent is often the easiest starting point. If you want reusable specialists and explicit review points between stages, a guided delegation workflow is a good fit. For larger tasks with independent subtasks or substantial intermediate output, a coordinator with specialized workers can keep the coordinator's context focused and enable parallel processing. That does not automatically reduce total token usage or cost: every worker has its own overhead.
 
 The three platforms expose these patterns differently:
 
-- **Visual Studio Code** provides explicit _Handoffs_ for user-guided transitions within the same conversation, and _Subagents_ for work in isolated contexts. In the runs shown here, subagents reduced the coordinator's context usage but increased the reported token costs.
+- **Visual Studio Code** provides explicit _Handoffs_ for user-guided transitions within the same conversation, and _Subagents_ for work in isolated contexts. In the runs shown here, subagents reduced the coordinator's context usage but increased reported token usage and cost. That is an observation from these runs, not a general rule.
 - **Eclipse Theia** uses `delegateToAgent` for child-agent execution. Both the sequential delegation example and the coordinator-worker example use this mechanism; manually switching agents within the conversation is a different workflow. The token differences between the automated patterns were relatively small in this example.
-- **Claude Code** uses the `Agent` tool for subagent orchestration. Manually requesting one agent after another provides review points, while a coordinator automates the sequence and can parallelize extraction. An `@` invocation delegates a task rather than switching the main session's agent. The reported costs were close across all three runs, with the coordinator-worker run slightly cheaper; caching and model selection make it important not to generalize from that result.
+- **Claude Code** uses the `Agent` tool for subagent orchestration. Manually requesting one agent after another provides review points, while a coordinator automates the sequence and can parallelize extraction. An `@` invocation delegates a task rather than switching the main session's agent. The reported costs were close across the three runs, with the coordinator-worker run slightly cheaper. Caching, model selection, and run-to-run variation make that difference too small to generalize.
 
 The key takeaway is to treat orchestration as an architectural decision, not just a prompt-writing detail. Measure context usage, total tokens, estimated cost, execution time, and result quality separately. For a meaningful comparison, keep the topic, source posts, model configuration, and starting conditions as consistent as possible, and repeat the runs. Start with the simplest setup that works, then introduce delegation or coordinator-worker designs when the workflow benefits from them.
+
+To find the right orchestration pattern for a specific task, start simple and improve it step by step. Verify the result and inspect logs, context usage, token usage, cost, and execution time. Make the skill's delegation policy explicit: say whether workers should be generic or a specific custom agent, whether independent calls may run in parallel, and which model should be used when the runtime supports that control. Otherwise, the runtime may choose a different worker or model, making the behavior and measurements harder to compare.
 
 As agent tooling in Visual Studio Code, Eclipse Theia, and Claude Code evolves, revisit both your agent definitions and your measurements. New capabilities, changes in model behavior, and runtime updates can alter which pattern works best.
