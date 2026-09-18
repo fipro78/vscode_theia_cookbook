@@ -41,6 +41,12 @@ If you run into networking issues when trying to access the internet from the WS
 
 Further information about WSL configurations can be found in [Advanced settings configuration in WSL](https://learn.microsoft.com/en-us/windows/wsl/wsl-config)
 
+## Share Environment Variables
+
+It is possible to forward an environment variable from the Windows Host to the WSL. With this you don`t need to set the environment variable additionally in the WSL.
+
+To forward an environment variable from the Windows Host to the WSL you can configure the special environment variable `WSLENV` like this: `WSLENV=GITHUB_TOKEN/u`. Have a look at [Share Environment Vars between WSL and Windows](https://devblogs.microsoft.com/commandline/share-environment-vars-between-wsl-and-windows/).
+
 ## SSH configuration
 
 If the repository can only be accessed via SSH and you want to work from within a remote container with the repository, you need to:
@@ -61,14 +67,14 @@ If the repository can only be accessed via SSH and you want to work from within 
 
   - In case the permissions do not change in the mounded _.ssh_ folder, you need to perform the following steps to be able to change the permissions
     - For a temporary change, remount the C: drive as explained in [Chmod/Chown WSL Improvements](https://devblogs.microsoft.com/commandline/chmod-chown-wsl-improvements/)
-  
+
     ```bash
     // unmount
     sudo umount /mnt/c
-    
+
     // remount with metadata flag
     sudo mount -t drvfs C: /mnt/c -o metadata
-    
+
     // change permissions with sudo
     sudo chmod 600 ~/.ssh/config
     sudo chmod 600 ~/.ssh/id_ed25519
@@ -88,7 +94,6 @@ If the repository can only be accessed via SSH and you want to work from within 
     ```
 
 - Activate the SSH agent if you want to do `git` operations from a devcontainer
-
   - On Windows open a Powershell as Administrator and execute the following statements
     ```powershell
     # Make sure you're running as an Administrator
@@ -96,13 +101,13 @@ If the repository can only be accessed via SSH and you want to work from within 
     Start-Service ssh-agent
     Get-Service ssh-agent
     ```
-  - On Linux (in the WSL) 
+  - On Linux (in the WSL)
     - First, start the SSH Agent in the background by running the following in a terminal:
 
     ```bash
     eval "$(ssh-agent -s)"
     ```
-    
+
     - Then add the following lines to the end of _~/.profile_ to start the `ssh-agent` automatically on login and to add the ssh keys via `ssh-add`
 
     ```bash
@@ -160,71 +165,72 @@ If you want to commit from a Dev Container that is started from a WSL, there can
 ## Install Docker in the WSL
 
 To install Docker in the WSL follow the steps described in the following section. These steps are also described in more detail here:
+
 - [Install Docker on Windows (WSL) without Docker Desktop](https://dev.to/bowmanjd/install-docker-on-windows-wsl-without-docker-desktop-34m9)
 - [Ubuntu - Docker Docs](https://docs.docker.com/engine/install/ubuntu/#install-using-the-repository)
 
 - Install/udpate additional tools (curl, certificates)
-    ```
-    sudo apt update
-    sudo apt install ca-certificates curl
-    ```
+  ```
+  sudo apt update
+  sudo apt install ca-certificates curl
+  ```
 
 1. Set up Dockers `apt` repository (WSL)
 
-    ```bash
-    # Add Docker's official GPG key:
-    sudo install -m 0755 -d /etc/apt/keyrings
-    sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
-    sudo chmod a+r /etc/apt/keyrings/docker.asc
+   ```bash
+   # Add Docker's official GPG key:
+   sudo install -m 0755 -d /etc/apt/keyrings
+   sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+   sudo chmod a+r /etc/apt/keyrings/docker.asc
 
-    # Add the repository to Apt sources:
-    sudo tee /etc/apt/sources.list.d/docker.sources <<EOF
-    Types: deb
-    URIs: https://download.docker.com/linux/ubuntu
-    Suites: $(. /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}")
-    Components: stable
-    Architectures: $(dpkg --print-architecture)
-    Signed-By: /etc/apt/keyrings/docker.asc
-    EOF
+   # Add the repository to Apt sources:
+   sudo tee /etc/apt/sources.list.d/docker.sources <<EOF
+   Types: deb
+   URIs: https://download.docker.com/linux/ubuntu
+   Suites: $(. /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}")
+   Components: stable
+   Architectures: $(dpkg --print-architecture)
+   Signed-By: /etc/apt/keyrings/docker.asc
+   EOF
 
-    sudo apt update
-    ```
+   sudo apt update
+   ```
 
 2. Install the latest Docker version (WSL)
 
-    ```bash
-    sudo apt install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-    ```
+   ```bash
+   sudo apt install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+   ```
 
-  - After installation, verify that Docker is running:
+- After installation, verify that Docker is running:
 
-    ```bash
-    sudo systemctl status docker
-    ```
+  ```bash
+  sudo systemctl status docker
+  ```
 
-  - If Docker is not running, start it manually:
+- If Docker is not running, start it manually:
 
-    ```bash
-    sudo systemctl start docker
-    ```
+  ```bash
+  sudo systemctl start docker
+  ```
 
 - To be able to start `docker` without `sudo`, add your user to docker group (WSL)
-  
-    ```bash
-    sudo usermod -aG docker $USER
-    ```
+
+  ```bash
+  sudo usermod -aG docker $USER
+  ```
 
 - Restart the WSL (Windows)
-  
-    ```powershell
-    wsl --shutdown
-    ```
+
+  ```powershell
+  wsl --shutdown
+  ```
 
 - Verify that you can use `docker` without `sudo` via
-  
-    ```bash
-    docker run hello-world
-    ```
+
+  ```bash
+  docker run hello-world
+  ```
 
 - If you need to be able to access the Docker API, configure the remote access on Docker daemon as described in  
   [Configure remote access for Docker daemon](https://docs.docker.com/config/daemon/remote-access/)
