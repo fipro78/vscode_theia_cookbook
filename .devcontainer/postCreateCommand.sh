@@ -32,4 +32,4 @@ echo 'source <(ng completion script)' >> ~/.bashrc
 source ~/.bashrc
 
 # Install the npm packages
-npm run install:all
+npm run install:all:browser

@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "install:all": "cd vscode-extension && npm install && cd ../angular-extension && npm run install:all && cd ../react-extension && npm run install:all && cd ../custom-theme && npm install && cd ../theia && npm install",
+    "install:all:browser": "cd vscode-extension && npm install && cd ../angular-extension && npm run install:all && cd ../react-extension && npm run install:all && cd ../custom-theme && npm install && cd ../theia && npm run install:browser",
     "build:all:browser": "cd vscode-extension && npm run theia:prepare-app && cd ../angular-extension && npm run theia:prepare-app && cd ../react-extension && npm run theia:prepare-app && cd ../custom-theme && npm run theia:prepare-app && cd ../theia && npm run build:browser"
   },
   "devDependencies": {
