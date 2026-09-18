@@ -6,24 +6,28 @@ The official documentation can be found in [How to install Linux on Windows with
 - Open a Windows Terminal / Powershell
 - Update the WSL installation
 
-  ```
+  ```powershell
   wsl --update
   ```
 
 - Set the default to use WSL2
-  ```
+  ```powershell
   wsl --set-default-version 2
   ```
-- Install Ubuntu 22.04 as wsl
-  ```
-  wsl --install -d Ubuntu-22.04
+- Install Ubuntu 24.04 as wsl distribution
+  ```powershell
+  wsl --install -d Ubuntu-24.04
   ```
 - Convert it to WSL2 (only if the distro was installed prior setting the default to 2)
+  ```powershell
+  wsl --set-version Ubuntu-24.04 2
   ```
-  wsl --set-version Ubuntu-22.04 2
+- To set the installed distribution as new default distribution, use the following command
+  ```powershell
+  wsl -s Ubuntu-24.04
   ```
 
-### Network configuration
+## Network configuration
 
 If you run into networking issues when trying to access the internet from the WSL (e.g. DNS resolution when connected from home office via VPN), consider changing the network configuration.
 
@@ -37,7 +41,7 @@ If you run into networking issues when trying to access the internet from the WS
 
 Further information about WSL configurations can be found in [Advanced settings configuration in WSL](https://learn.microsoft.com/en-us/windows/wsl/wsl-config)
 
-### SSH configuration
+## SSH configuration
 
 If the repository can only be accessed via SSH and you want to work from within a remote container with the repository, you need to:
 
@@ -49,24 +53,59 @@ If the repository can only be accessed via SSH and you want to work from within 
   ln -s /mnt/c/Users/<userid>/.ssh ~/.ssh
   ```
 
-  - in case of ssh error `Permissions 0755 for '/home/<userid>/.ssh/id_ed25519' are too open.`, change permissions
+  - In case of ssh error `Permissions 0755 for '/home/<userid>/.ssh/id_ed25519' are too open.`, change permissions
 
-  ```
-  chmod 600 ~/.ssh/id_ed25519
-  ```
+    ```
+    chmod 600 ~/.ssh/id_ed25519
+    ```
+
+  - In case the permissions do not change in the mounded _.ssh_ folder, you need to perform the following steps to be able to change the permissions
+    - For a temporary change, remount the C: drive as explained in [Chmod/Chown WSL Improvements](https://devblogs.microsoft.com/commandline/chmod-chown-wsl-improvements/)
+  
+    ```bash
+    // unmount
+    sudo umount /mnt/c
+    
+    // remount with metadata flag
+    sudo mount -t drvfs C: /mnt/c -o metadata
+    
+    // change permissions with sudo
+    sudo chmod 600 ~/.ssh/config
+    sudo chmod 600 ~/.ssh/id_ed25519
+    ```
+
+    - If the change should be applied everytime the WSL distribution starts, edit the file _/etc/wsl.conf_ in the distribution and configure the `automount` options as described in [Automount settings](https://learn.microsoft.com/en-us/windows/wsl/wsl-config#automount-settings) and [File Permissions for WSL](https://learn.microsoft.com/en-us/windows/wsl/file-permissions)
+
+    ```ini
+    [boot]
+    systemd=true
+
+    [user]
+    default=<userid>
+
+    [automount]
+    options=metadata
+    ```
 
 - Activate the SSH agent if you want to do `git` operations from a devcontainer
 
   - On Windows open a Powershell as Administrator and execute the following statements
-    ```shell
+    ```powershell
     # Make sure you're running as an Administrator
     Set-Service ssh-agent -StartupType Automatic
     Start-Service ssh-agent
     Get-Service ssh-agent
     ```
-  - On Linux (in the WSL) add the following lines to the end of _~/.bashrc_
+  - On Linux (in the WSL) 
+    - First, start the SSH Agent in the background by running the following in a terminal:
 
-    ```shell
+    ```bash
+    eval "$(ssh-agent -s)"
+    ```
+    
+    - Then add the following lines to the end of _~/.profile_ to start the `ssh-agent` automatically on login and to add the ssh keys via `ssh-add`
+
+    ```bash
     if [ -z "$SSH_AUTH_SOCK" ]; then
       # Check for a currently running instance of the agent
       RUNNING_AGENT="`ps -ax | grep 'ssh-agent -s' | grep -v grep | wc -l | tr -d '[:space:]'`"
@@ -74,33 +113,15 @@ If the repository can only be accessed via SSH and you want to work from within 
             # Launch a new instance of the agent
             ssh-agent -s &> $HOME/.ssh/ssh-agent
       fi
-      eval `cat $HOME/.ssh/ssh-agent`
+      eval `cat $HOME/.ssh/ssh-agent` > /dev/null
+      ssh-add $HOME/.ssh/id_ed25519 2> /dev/null
+      ssh-add $HOME/.ssh/id_rsa_github 2> /dev/null
     fi
     ```
 
-  - If you want that the changes are taken over without a restart, call `source ~/.bashrc`
+  - If you now restart the WSL (exit the WSL and either shutdown all WSL distributions vis `wsl --shutdown` or terminate only the concrete instance via `wsl --terminate Ubuntu-24.04` if the distribution is installed with that name) the `ssh-agent` should be started and the ssh keys should be added automatically.
 
-  - Add your ssh keys via
-
-    ```
-    ssh-add ~/.ssh/id_ed25519
-    ```
-
-  - When a new instance of the `ssh-agent` is started, it looses the added keys. In that case it might make sense to add the `ssh-add` commands also to the _.bashrc_
-    ```shell
-    if [ -z "$SSH_AUTH_SOCK" ]; then
-      # Check for a currently running instance of the agent
-      RUNNING_AGENT="`ps -ax | grep 'ssh-agent -s' | grep -v grep | wc -l | tr -d '[:space:]'`"
-      if [ "$RUNNING_AGENT" = "0" ]; then
-            # Launch a new instance of the agent
-            ssh-agent -s &> $HOME/.ssh/ssh-agent
-      fi
-      eval `cat $HOME/.ssh/ssh-agent`
-      ssh-add ~/.ssh/id_ed25519
-      ssh-add ~/.ssh/id_rsa_github
-    fi
-    ```
-    - You can check which keys are added to the ssh-agent via `ssh-add -l`
+  - You can check which keys are added to the `ssh-agent` via `ssh-add -l`
 
 - Add the following entry to _~/.ssh/config_ to enable ssh-agent forwarding to devcontainers started from the wsl
 
@@ -113,9 +134,9 @@ If the repository can only be accessed via SSH and you want to work from within 
   - [Sharing Git credentials with your container - Using SSH keys](https://code.visualstudio.com/remote/advancedcontainers/sharing-git-credentials#_using-ssh-keys)
   - [Setting up the SSH Agent](https://code.visualstudio.com/docs/remote/troubleshooting#_setting-up-the-ssh-agent)
 
-### Checkout sources
+## Checkout sources
 
-- Create folder in your home directory (e.g. _/home/\<userid\>/dev_)
+- Create folder in your home directory (e.g. _$HOME/\<userid\>/dev_)
   ```
   mkdir ~/dev
   ```
@@ -136,44 +157,160 @@ If you want to commit from a Dev Container that is started from a WSL, there can
    If you do this you might need to also configure that file mode changes are not considered changes for git. This can be done via
    `   git config core.fileMode false`
 
-### Install Docker in the WSL
+## Install Docker in the WSL
 
-- Install additional tools (curl, certificates, gnupg, git)
-  ```
-  sudo apt-get install -y apt-transport-https ca-certificates curl gnupg git lsb-release
-  ```
-- Install Docker
-  - [Install Docker on Windows (WSL) without Docker Desktop](https://dev.to/bowmanjd/install-docker-on-windows-wsl-without-docker-desktop-34m9)
-  - [Ubuntu - Docker Docs](https://docs.docker.com/engine/install/ubuntu/#install-using-the-repository)
+To install Docker in the WSL follow the steps described in the following section. These steps are also described in more detail here:
+- [Install Docker on Windows (WSL) without Docker Desktop](https://dev.to/bowmanjd/install-docker-on-windows-wsl-without-docker-desktop-34m9)
+- [Ubuntu - Docker Docs](https://docs.docker.com/engine/install/ubuntu/#install-using-the-repository)
+
+- Install/udpate additional tools (curl, certificates)
+    ```
+    sudo apt update
+    sudo apt install ca-certificates curl
+    ```
 
 1. Set up Dockers `apt` repository (WSL)
 
-   ```shell
-   # Add Docker's official GPG key:
-   sudo install -m 0755 -d /etc/apt/keyrings
-   curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
-     sudo chmod a+r /etc/apt/keyrings/docker.gpg
+    ```bash
+    # Add Docker's official GPG key:
+    sudo install -m 0755 -d /etc/apt/keyrings
+    sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+    sudo chmod a+r /etc/apt/keyrings/docker.asc
 
-   # Add the repository to Apt sources:
-   echo \
-     "deb [arch="$(dpkg --print-architecture)" signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
-     "$(. /etc/os-release && echo "$VERSION_CODENAME")" stable" | \
-     sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-   sudo apt-get -y update
-   ```
+    # Add the repository to Apt sources:
+    sudo tee /etc/apt/sources.list.d/docker.sources <<EOF
+    Types: deb
+    URIs: https://download.docker.com/linux/ubuntu
+    Suites: $(. /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}")
+    Components: stable
+    Architectures: $(dpkg --print-architecture)
+    Signed-By: /etc/apt/keyrings/docker.asc
+    EOF
+
+    sudo apt update
+    ```
 
 2. Install the latest Docker version (WSL)
-   ```
-   sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-   ```
 
-- Add user to docker group (WSL)
-  ```
-  sudo usermod -aG docker $USER
-  ```
+    ```bash
+    sudo apt install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+    ```
+
+  - After installation, verify that Docker is running:
+
+    ```bash
+    sudo systemctl status docker
+    ```
+
+  - If Docker is not running, start it manually:
+
+    ```bash
+    sudo systemctl start docker
+    ```
+
+- To be able to start `docker` without `sudo`, add your user to docker group (WSL)
+  
+    ```bash
+    sudo usermod -aG docker $USER
+    ```
+
 - Restart the WSL (Windows)
+  
+    ```powershell
+    wsl --shutdown
+    ```
+
+- Verify that you can use `docker` without `sudo` via
+  
+    ```bash
+    docker run hello-world
+    ```
+
+- If you need to be able to access the Docker API, configure the remote access on Docker daemon as described in  
+  [Configure remote access for Docker daemon](https://docs.docker.com/config/daemon/remote-access/)
+
+## Optional: Additional development tool installations
+
+In case it is planned to develop directly in the WSL instead of making use of Dev Containers, additional tools like a Java SDK, Maven or Node.js need to be installed and configured.
+
+### Install Java in the WSL
+
+If you want to develop with Java in the WSL, the easiest way to install Java is to use [SDKMAN!](https://sdkman.io/install/)
+
+- Install the necessary prerequisites
+
+  ```bash
+  sudo apt install zip unzip
   ```
-  wsl --shutdown
+
+- Start the SDKMAN! installation
+
+  ```bash
+  curl -s "https://get.sdkman.io" | bash
   ```
-- Configure remote access on Docker deamon to be able to access the Docker API  
-   [Configure remote access for Docker daemon](https://docs.docker.com/config/daemon/remote-access/)
+
+- Start the SDKMAN! init
+
+  ```bash
+  source "$HOME/.sdkman/bin/sdkman-init.sh"
+  ```
+
+- Confirm the installation success
+
+  ```bash
+  sdk version
+  ```
+
+- Install Java, e.g. Temurin 25
+
+  ```bash
+  sdk install java 25.0.4-tem
+  ```
+
+  If you want to first list the available versions to identify which version you want to install:
+
+  ```bash
+  sdk list java
+  ```
+
+- Install Maven
+
+  ```bash
+  sdk install maven
+  ```
+
+- Exit, terminate and restart the WSL so the environment changes are applied on startup (e.g. environment variables)
+
+### Install Node.js in the WSL
+
+To install Node.js to the WSL you can use [NVM (Node Version Manager)](https://www.nvmnode.com/), which is a tool that allows you to easily install, manage, and work with multiple Node.js versions on your system.
+
+- Use the installation script to download and install NVM, as described in [Download NVM](https://www.nvmnode.com/guide/download.html#nvm-for-linux-ubuntu-mac-nvm-sh)
+
+```bash
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.5/install.sh | bash
+```
+
+- Exit, terminate and restart the WSL so the environment changes are applied on startup (e.g. environment variables)
+
+- Check which versions are available
+
+```bash
+nvm ls-remote
+```
+
+- Install for example the latest LTS
+
+```bash
+nvm install --lts
+```
+
+If a Theia build is intended to be executed in the WSL, the additional tools need to be installed, like in the **postCreateCommand.sh** script in this repository:
+
+https://github.com/fipro78/vscode_theia_cookbook/blob/51ba3357fba9eebace0c8beaa5f920d5ae9278c1/.devcontainer/postCreateCommand.sh#L3-L18
+
+Also note that the `NODE_OPTIONS` environment variable probably needs to be set, as described in [Interlude: JavaScript heap out of memory](./theia_getting_started.md#interlude-javascript-heap-out-of-memory)
+
+```bash
+(echo ; echo "export NODE_OPTIONS=\"--max-old-space-size=8192\"") >> .bashrc
+```
