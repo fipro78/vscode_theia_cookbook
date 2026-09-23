@@ -144,6 +144,15 @@ If the repository can only be accessed via SSH and you want to work from within 
       (found this here [Automatically start a single instance of ssh-agent for all terminal sessions to share (bash)](https://gist.github.com/darrenpmeyer/e7ad217d929f87a7b7052b3282d1b24c) )
 
     ```bash
+    # SSH agent
+    ssh_pid_file="$HOME/.config/ssh-agent.pid"
+    SSH_AUTH_SOCK="$HOME/.config/ssh-agent.sock"
+    if [ -z "$SSH_AGENT_PID" ]
+    then
+      # no PID exported, try to get it from pidfile
+      SSH_AGENT_PID=$(cat "$ssh_pid_file")
+    fi
+
     if ! kill -0 $SSH_AGENT_PID &> /dev/null
     then
         # the agent is not running, start it
@@ -162,7 +171,7 @@ If the repository can only be accessed via SSH and you want to work from within 
     export SSH_AUTH_SOCK
     ```
 
-  - If you now restart the WSL (exit the WSL and either shutdown all WSL distributions vis `wsl --shutdown` or terminate only the concrete instance via `wsl --terminate Ubuntu-24.04` if the distribution is installed with that name) the `ssh-agent` should be started and the ssh keys should be added automatically.
+  - If you now restart the WSL (exit the WSL and either shutdown all WSL distributions via `wsl --shutdown` or terminate only the concrete instance via `wsl --terminate Ubuntu-24.04` if the distribution is installed with that name) the `ssh-agent` should be started and the ssh keys should be added automatically.
 
   - You can check which keys are added to the `ssh-agent` via `ssh-add -l`
 
