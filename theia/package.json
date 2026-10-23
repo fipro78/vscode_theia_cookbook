@@ -10,13 +10,12 @@
     "build:browser": "lerna run build --ignore electron-app",
     "build:electron": "lerna run build --ignore browser-app",
     "download:plugins": "theia download:plugins",
-    "prepare": "lerna run clean && lerna run build && npm run download:plugins",
+    "prepare": "lerna run clean && lerna run build --ignore electron-app && npm run download:plugins",
     "postinstall": "theia check:theia-version",
     "start:browser": "npm --prefix browser-app start",
     "start:electron": "npm --prefix electron-app start",
     "watch:browser": "lerna run --parallel watch --ignore electron-app",
-    "watch:electron": "lerna run --parallel watch --ignore browser-app",
-    "install:browser": "npm install --ignore-scripts && npm run postinstall"
+    "watch:electron": "lerna run --parallel watch --ignore browser-app"
   },
   "theiaPluginsDir": "plugins",
   "theiaPlugins": {
@@ -32,12 +31,25 @@
     "vscode.microsoft-authentication"
   ],
   "devDependencies": {
-    "lerna": "10.0.1"
+    "lerna": "10.1.1"
   },
   "workspaces": [
     "ai-extension",
     "theia-customization",
     "browser-app",
     "electron-app"
-  ]
+  ],
+  "allowScripts": {
+    "nx@23.3.0": true,
+    "protobufjs@7.6.6": true,
+    "@theia/ffmpeg@1.76.0": true,
+    "puppeteer@25.1.0": true,
+    "esbuild@0.28.2": true,
+    "@parcel/watcher@2.6.0": true,
+    "drivelist@12.0.2": true,
+    "keytar@7.9.0": true,
+    "native-keymap@2.5.0": true,
+    "node-pty@1.2.0-beta.12": true,
+    "msgpackr-extract@3.0.4": true
+  }
 }

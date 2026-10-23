@@ -9,7 +9,7 @@
     "src"
   ],
   "dependencies": {
-    "@theia/core": "1.75.0"
+    "@theia/core": "1.76.0"
   },
   "devDependencies": {
     "rimraf": "6.1.3",

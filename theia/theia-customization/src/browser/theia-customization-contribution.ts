@@ -1,4 +1,5 @@
 import { ApplicationShell } from "@theia/core/lib/browser";
+import { FrontendApplicationConfigProvider } from "@theia/core/lib/browser/frontend-application-config-provider";
 import { injectable, postConstruct } from "@theia/core/shared/inversify";
 
 import "../../src/browser/style/index.css";
@@ -14,7 +15,9 @@ export class TheiaCustomizationContribution extends ApplicationShell {
 
     const h1 = document.createElement("h1");
     h1.id = "example-app-title";
-    const appTitle = document.createTextNode("My Custom Theia Application");
+    const appTitle = document.createTextNode(
+      FrontendApplicationConfigProvider.get().applicationName
+    );
     h1.append(appTitle);
     div.append(h1);
 
