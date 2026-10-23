@@ -400,3 +400,45 @@ Also note that the `NODE_OPTIONS` environment variable probably needs to be set,
 ```bash
 (echo ; echo "export NODE_OPTIONS=\"--max-old-space-size=8192\"") >> .bashrc
 ```
+
+## Manage WSL disk space
+
+If you notice that the disk space of your host is running out, the size of the WSL virtual disk might be the issue. Locate the virtual disk, check the size and cleanup if necessary.
+
+- Locate the `.vhdx` file for your Linux distribution
+
+  ```powershell
+  (Get-ChildItem -Path HKCU:\Software\Microsoft\Windows\CurrentVersion\Lxss | Where-Object { $_.GetValue("DistributionName") -eq '<distribution-name>' }).GetValue("BasePath") + "\ext4.vhdx"
+  ```
+
+  For example:
+  ```powershell
+  (Get-ChildItem -Path HKCU:\Software\Microsoft\Windows\CurrentVersion\Lxss | Where-Object { $_.GetValue("DistributionName") -eq 'Ubuntu' }).GetValue("BasePath") + "\ext4.vhdx"
+  ```
+
+To cleanup the WSL disk space you can for example:
+- remove unused Docker images and container
+- delete the `node_modules` folders in projects that you are not working in currently
+
+To compact the virtual disk
+- Start `diskpart`
+- Select the vdisk in the `diskpart` shell
+
+  ```
+  select vdisk file="<VHDX_FILEPATH>"
+  ```
+
+  For example
+  ```
+  select vdisk file="C:\Users\fad8pl\AppData\Local\Packages\CanonicalGroupLimited.Ubuntu_79rhkp1fndgsc\LocalState\ext4.vhdx"
+  ```
+
+- compact the vdisk
+
+  ```
+  compact vdisk
+  ```
+
+Further information:
+- [How to manage WSL disk space](https://learn.microsoft.com/en-us/windows/wsl/disk-space)
+- [How to Shrink a WSL2 Virtual Disk](https://stephenreescarter.net/how-to-shrink-a-wsl2-virtual-disk/)
