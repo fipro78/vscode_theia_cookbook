@@ -210,6 +210,30 @@ In case you have an existing Theia project that still uses `yarn` and you want t
     ```
 - Delete the file _theia/yarn.lock_
 
+#### npm install script handling
+
+Starting with npm 12, install scripts for dependencies are blocked by default unless they are explicitly allowed. This behavior implements [RFC 868, “Make install scripts opt-in”](https://github.com/npm/rfcs/pull/868). It affects dependency `preinstall`, `install`, and `postinstall` scripts, as well as `prepare` scripts for certain non-registry dependencies. Earlier npm versions generally ran dependency install scripts by default.
+
+Some dependencies use these scripts to download or build native binaries. If a required script is skipped and the binary is not otherwise available, the application may fail at runtime. To review scripts that need approval, run `npm approve-scripts --allow-scripts-pending` from the _theia_ project directory. Approve only the dependencies you trust with `npm approve-scripts <package-name>`; npm records the approvals in the `allowScripts` field of _theia/package.json_. See the [npm documentation for `npm approve-scripts`](https://docs.npmjs.com/cli/v12/commands/npm-approve-scripts) for details.
+
+For a current Theia version the `allowScripts` field of _theia/package.json_ could look like this:
+
+```json
+  "allowScripts": {
+    "nx": true,
+    "protobufjs": true,
+    "@theia/ffmpeg": true,
+    "puppeteer": true,
+    "esbuild": true,
+    "@parcel/watcher": true,
+    "drivelist": true,
+    "keytar": true,
+    "native-keymap": true,
+    "node-pty": true,
+    "msgpackr-extract": true
+  }
+```
+
 ### Optional: Define Tasks
 
 - Open the file _.vscode/tasks.json_
@@ -626,7 +650,7 @@ This can be worked around with code like this:
 const fileUri = getUri(webview, this.context.extensionUri, [
   "webview-ui",
   "assets",
-  "myFile.yaml",
+  "myFile.yaml"
 ]);
 
 // workaround to fix file path issue with Theia
@@ -634,7 +658,7 @@ var filePath = fileUri.fsPath;
 if (fileUri.fsPath.startsWith("\\webview\\theia-resource\\file\\\\\\")) {
   filePath = fileUri.fsPath.replace(
     "\\webview\\theia-resource\\file\\\\\\",
-    "",
+    ""
   );
 }
 ```
@@ -1054,7 +1078,7 @@ Let's try to remove the Terminal view from the application, which comes in as a 
   import {
     FilterContribution,
     ContributionFilterRegistry,
-    Filter,
+    Filter
   } from "@theia/core/lib/common";
   import { injectable } from "@theia/core/shared/inversify";
 
@@ -1064,7 +1088,7 @@ Let's try to remove the Terminal view from the application, which comes in as a 
       registry.addFilters("*", [
         // Filter out the main outline contribution at:
         // https://github.com/eclipse-theia/theia/blob/master/packages/terminal/src/browser/terminal-frontend-contribution.ts
-        filterClassName((name) => name !== "TerminalFrontendContribution"),
+        filterClassName((name) => name !== "TerminalFrontendContribution")
       ]);
     }
   }
@@ -1086,7 +1110,7 @@ Let's try to remove the Terminal view from the application, which comes in as a 
   import { injectable } from "inversify";
   import {
     FrontendApplicationContribution,
-    FrontendApplication,
+    FrontendApplication
   } from "@theia/core/lib/browser";
   import { MaybePromise } from "@theia/core/lib/common/types";
   import { Widget } from "@theia/core/lib/browser/widgets";
@@ -1116,7 +1140,7 @@ Let's try to remove the Terminal view from the application, which comes in as a 
   import { TheiaCustomizationContribution } from "./theia-customization-contribution";
   import {
     ApplicationShell,
-    FrontendApplicationContribution,
+    FrontendApplicationContribution
   } from "@theia/core/lib/browser";
   import { TheiaCustomizationFilterContribution } from "./theia-customization-filter-contribution";
   import { bindContribution, FilterContribution } from "@theia/core";
@@ -1130,12 +1154,12 @@ Let's try to remove the Terminal view from the application, which comes in as a 
 
     bind(TheiaCustomizationFilterContribution).toSelf().inSingletonScope();
     bindContribution(bind, TheiaCustomizationFilterContribution, [
-      FilterContribution,
+      FilterContribution
     ]);
 
     bind(CleanupFrontendContribution).toSelf().inSingletonScope();
     bind(FrontendApplicationContribution).toService(
-      CleanupFrontendContribution,
+      CleanupFrontendContribution
     );
   });
   ```
